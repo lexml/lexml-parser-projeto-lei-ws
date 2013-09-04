@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<div id="grupoFalhas" class="grupo">
+   <span class="grupoTitulo">Remissões</span>
+   <div class="remissoesDocumento">
+      <a href="http://www.lexml.gov.br/urn/urn:lex:br:federal:lei:2008-06-19;11705">urn:lex:br:federal:lei:2008-06-19;11705</a>
+   </div>
+   <div class="remissoesDocumento">
+      <a href="http://www.lexml.gov.br/urn/urn:lex:br:federal:lei:1908;11705">urn:lex:br:federal:lei:1908;11705</a>
+   </div>
+   <div class="remissoesDocumento">
+      <a href="http://www.lexml.gov.br/urn/urn:lex:br:federal:lei:1997-09-23;9503">urn:lex:br:federal:lei:1997-09-23;9503</a>
+      <div class="remissoesFragmento">art306 (urn:lex:br:federal:lei:1997-09-23;9503!art306)
+					</div>
+      <div class="remissoesFragmento">art302 (urn:lex:br:federal:lei:1997-09-23;9503!art302)
+					</div>
+      <div class="remissoesFragmento">art303 (urn:lex:br:federal:lei:1997-09-23;9503!art303)
+					</div>
+   </div>
+   <div class="remissoesDocumento">
+      <a href="http://www.lexml.gov.br/urn/urn:lex:br:federal:decreto.lei:1940-12-07;2848">urn:lex:br:federal:decreto.lei:1940-12-07;2848</a>
+   </div>
+   <div class="remissoesDocumento">
+      <a href="http://www.lexml.gov.br/urn/urn:lex:br:federal:lei:2008;11705">urn:lex:br:federal:lei:2008;11705</a>
+   </div>
+</div>

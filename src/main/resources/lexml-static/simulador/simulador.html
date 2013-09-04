@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>Simulador de Conversão de Documentos Articulados</title>
+	
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	
+	<link type="text/css" href="css/estilos.css" media="all" rel="stylesheet"  />
+	<link type="text/css" href="css/custom-theme/jquery-ui-1.8.16.custom.css" rel="stylesheet" />	
+	
+	<script type="text/javascript" src="js/jquery.js"></script>
+	<script type="text/javascript" src="js/jquery.form.js"></script>
+	<script type="text/javascript" src="js/jquery-ui.js"></script>
+	<script type="text/javascript" src="js/jquery.maskedinput.js"></script>
+	<script type="text/javascript" src="js/jquery.transform.js"></script>
+	<script type="text/javascript" src="js/jquery.customizations.js"></script>
+	
+</head>
+<body>
+  <div class="divPrincipal">
+	<div id="titulo" class="titulo">
+		Conversor LexML de Documentos Articulados
+		<img src="img/marca-senado.png" style="float: right;">
+	</div>
+	<div class="grid_verde"></div>
+	<div class="grid_amarela"></div>
+
+	<div id="corpo" class="grupo">
+		<form 
+			id="formSubmeter" 
+			name="formSubmeter" 
+			class="formulario"
+			action="../../parseSenado"
+			enctype="multipart/form-data"
+			method="post">
+			<input type="hidden" name="requisicao" id="inputXMLRequisicao" >
+			
+			<label class="labelNomeForm">Localidade:</label> 
+				<select name="comboLocalidade" id="comboLocalidade" style="width: 200px">
+					<option value="br">Brasil</option>
+				</select> <br>
+				
+			<label class="labelNomeForm">Autoridade:</label> 
+				<select name="comboAutoridade" id="comboAutoridade" style="width: 200px">
+					<option value="senado.federal">Senado Federal</option>
+					<option value="camara.deputados">Câmara dos Deputados</option>
+					<option value="congresso.nacional">Congresso Nacional</option>
+					<option value="casa.legislativa">Casa Legislativa</option>
+					<option value="federal">Presidência da República</option>
+				</select> <br>
+				
+			<label class="labelNomeForm">Tipo de documento:</label> 
+				<select name="comboTipoNorma" id="comboTipoNorma" style="width: 200px">
+					<option value="projeto.lei;pls">PLS - Projeto de Lei</option>
+					<option value="projeto.lei.complementar;pls">PLS - Projeto de Lei Complementar</option>
+					<option value="projeto.lei;plc">PLC - Projeto de Lei</option>
+					<option value="projeto.lei.complementar;plc">PLC - Projeto de Lei Complementar</option>
+					<option value="projeto.resolucao;prs">PRS - Projeto de Resolução</option>
+					<option value="proposta.emenda.constitucional;pec">PEC - Proposta de Emenda Constitucional</option>
+					<option value="projeto.decreto.legislativo;pds">PDS - Projeto de Decreto Legislativo</option>					
+					<option value="projeto.lei;pl">PL - Projeto Lei</option>
+					<option value="medida.provisoria;mpv">MPV - Medida Provisória (Projeto)</option>
+					<option value="medida.provisoria">Medida Provisória (Norma)</option>
+				</select> <br>
+				
+			<p>
+			<a href="#" id="buttonFormGrupoInformatIdent" class="">Informar Identificação do Documento</a> 
+			</p>
+			
+			<div id="formGrupoIdentificacao" class="formGrupo">
+				<label class="labelNomeForm">Número:</label>
+					<input type="text" name="editNumero" id="editNumero" value="999" class="inputNumber"> <br>
+					
+				<label class="labelNomeForm">Ano:</label>
+					<input type="text" name="editAno" id="editAno" value="2011" class="inputNumber"> <br>
+					
+				<p>
+				<a href="#" id="buttonFormGrupoVersao" class="">Informar Versão</a> 
+				</p>
+
+				<div id="formGrupoVersao" class="formGrupo">
+					<label class="labelNomeForm">Evento:</label> 
+						<select name="comboEvento" id="comboEvento" style="width: 200px">
+							<option value="leitura">Texto inicial: leitura em Plenário</option>
+							<option value="aprovacao.substitutivo.decisao.terminativa">Redação do vencido em turno suplementar na Comissão: aprovação do substitutivo em decisão terminativa</option>
+							<option value="aprovacao.substitutivo">Redação do vencido em turno suplementar no Plenário: aprovação do substitutivo em Plenário</option>
+							<option value="apresentacao.substitutivo">Texto do substitutivo: apresentação do substitutivo</option>
+							<option value="publicacao">Publicação oficial</option>
+							<option value="republicacao">Republicação oficial</option>
+							<option value="redacao.final">Redação final</option>
+						</select> <br>
+		
+					<label class="labelNomeForm">Data do Evento:</label>
+						<input type="text" name="editEventoData" id="editEventoData" class="inputDate"> <br>
+				</div>		
+			</div>
+				
+			<label class="labelNomeForm">Documento:</label> 
+				<input type="file" name="fonte" id="inputFile"> <br> 
+			
+			<input type="submit" value="Submeter" style="left: 125px; margin-top: 10px">
+		</form>
+	</div>
+	
+	<div id="divResultado" style="display: none;"></div>
+	
+	<div id="rodape" class="rodape">
+		Prodasen
+		<div style="font-weight:normal;">
+			Telefone: 61-3303-2254
+		</div>
+		<div style="font-weight:normal;">
+			lexml@senado.gov.br
+		</div>
+		
+	</div>
+	
+	
+	<div id="dialogMessageAguardando" title="Simulador de Conversões">
+		<span class="ui-icon ui-icon-circle-check" style="float:left; margin:0 7px 50px 0;"></span>
+	
+		<div style="margin-bottom: 20px">Aguarde. Analisando matéria com o Parser...</div>
+		
+		<div id="progressbar"></div>
+			
+		<div id="labelTentativa" style="margin-top: 10px"></div>
+	</div>	
+			
+	<div id="dialogErro" title="Simulador de Conversões">
+		<span class="ui-icon ui-icon-circle-close" style="float:left; margin:0 7px 50px 0;"></span>
+	
+		<div style="margin-bottom: 20px" id="dialogErroMensagem"></div>
+	</div>	
+  </div>
+  	
+  <script type="text/javascript" src="js/simuladorUI.js"></script>
+  <script type="text/javascript" src="js/simuladorParser.js"></script>
+</body>
+</html>

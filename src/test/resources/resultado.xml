@@ -1,0 +1,87 @@
+<ParserResultado xmlns="http://www.lexml.gov.br/parser-ws"
+	xmlns:Q1="http://www.lexml.gov.br/parser-ws" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<metadado>
+		<autoridade>senado.federal</autoridade>
+		<tipoNorma>projeto.lei;pls</tipoNorma>
+		<descritorEvento>2012;999@data.evento;leitura;2012-02-22t00.00</descritorEvento>
+	</metadado>
+	<resultado>
+		<falhas></falhas>
+		<caracteristicas>
+			<caracteristica>
+				<descricao>possui titulo</descricao>
+				<presente>false</presente>
+				<suportadoLexEdit>true</suportadoLexEdit>
+			</caracteristica>
+			<caracteristica>
+				<descricao>possui imagem</descricao>
+				<presente>false</presente>
+				<suportadoLexEdit>true</suportadoLexEdit>
+			</caracteristica>
+			<caracteristica>
+				<descricao>possui pena</descricao>
+				<presente>false</presente>
+				<suportadoLexEdit>true</suportadoLexEdit>
+			</caracteristica>
+			<caracteristica>
+				<descricao>possui tabela na articulacao</descricao>
+				<presente>false</presente>
+				<suportadoLexEdit>true</suportadoLexEdit>
+			</caracteristica>
+			<caracteristica>
+				<descricao>possui alteracao</descricao>
+				<presente>true</presente>
+				<suportadoLexEdit>true</suportadoLexEdit>
+			</caracteristica>
+		</caracteristicas>
+		<saidas>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/original/documento.rtf"
+				tipoMime="text/rtf" tipoSaida="DOCUMENTO_ORIGINAL">
+				<digest>{sha-1}IWLNp3I6In+DIkAShmYlv/ZmaB0=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/original/documento.pdf"
+				tipoMime="application/pdf" tipoSaida="PDF_ORIGINAL">
+				<digest>{sha-1}6LOt4bgHXejnnLZTvXgywIojvF0=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/gerado/remissoes.xml"
+				tipoMime="text/xml" tipoSaida="XML_REMISSOES">
+				<digest>{sha-1}wRR1y0O4za18PHv7OYuPWA7OKOQ=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/gerado/documento.xml"
+				tipoMime="text/xml" tipoSaida="XML_DERIVADO">
+				<digest>{sha-1}zrfHl0XL8xpkCxAd84P/UfHyzoo=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/gerado/documento.zip"
+				tipoMime="application/zip" tipoSaida="ZIP_DERIVADO">
+				<digest>{sha-1}4sUqGlIg86swAe2Dq/h75OXJwVo=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/gerado/documento.pdf"
+				tipoMime="application/pdf" tipoSaida="PDF_DERIVADO">
+				<digest>{sha-1}ugVXupYCpw7pBmxjPPmpBjCteVw=</digest>
+			</elementoSaida>
+			<elementoSaida
+				href="http://linker.lexml.gov.br/lexml-parser/parse/result/IEZPLSE6/gerado/documento.rtf"
+				tipoMime="text/rtf" tipoSaida="RTF_DERIVADO">
+				<digest>{sha-1}UzR5C02gIp806xkNDJeiMgDfsyg=</digest>
+			</elementoSaida>
+		</saidas>
+		<digestFonte>{sha-1}IWLNp3I6In+DIkAShmYlv/ZmaB0=</digestFonte>
+		<dataHoraProcessamento>2012-02-22T17:16:25.809-02:00</dataHoraProcessamento>
+	</resultado>
+	<configuracao>
+		<componente versao="1495" nome="br.gov.lexml/lexml-xml-schemas"></componente>
+		<componente versao="2226"
+			nome="br.gov.lexml.parser.pl/parser-projeto-lei"></componente>
+		<componente versao="2036" nome="br.gov.lexml/lexml-renderer-pdf"></componente>
+		<componente versao="2219"
+			nome="br.gov.lexml.parser.pl/lexml-parser-projeto-lei-ws-api"></componente>
+		<componente versao="2033" nome="br.gov.lexml/lexml-renderer-rtf"></componente>
+	</configuracao>
+</ParserResultado>

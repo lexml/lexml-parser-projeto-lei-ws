@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_4.dtd">
+
+<web-app>
+	<context-param>
+		<param-name>parseResultDirectory</param-name>
+		<param-value>/areastorage/parser/results</param-value>
+	</context-param>
+	<context-param>
+		<param-name>resultDirectoryIncompleteCleaningIntervalMinutes</param-name>
+		<param-value>5</param-value>
+	</context-param>
+	<context-param>
+		<param-name>resultDirectoryCompleteCleaningIntervalMinutes</param-name>
+		<param-value>15</param-value>
+	</context-param>
+	<context-param>
+	<param-name>staticOverrideDirectory</param-name>
+	<param-value>/areastorage/parser</param-value>
+	</context-param>
+	<context-param>
+	<param-name>mensagemUsuarioDirectory</param-name>
+	<param-value>/areastorage/parser/mensagemUsuario</param-value>
+	</context-param>
+	<listener>
+		<listener-class>br.gov.lexml.parser.pl.ws.Initializer</listener-class>
+	</listener>
+
+	<servlet>
+		<servlet-name>Akka</servlet-name>
+		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+		<!-- And you want to configure your services -->
+		<init-param>
+			<param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+			<param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>br.gov.lexml.parser.pl.ws.resources</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Akka</servlet-name>
+		<url-pattern>/*</url-pattern>
+	</servlet-mapping>
+</web-app>

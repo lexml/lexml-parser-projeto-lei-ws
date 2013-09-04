@@ -1,0 +1,191 @@
+@CHARSET "UTF-8";
+
+body, table, th {
+	font-family: sans-serif;
+	font-size: 12px;
+	color: #494949;
+	background-color: #D9DADB;
+}
+
+a {
+	text-decoration: none;
+	font-weight: normal;
+	text-decoration: underline;
+}
+
+a:link, a:visited, a:active {
+	color: #666666;
+}
+
+a:hover {
+	color: #FF9900;
+	text-decoration: underline;
+}
+
+
+th, td {
+	text-align: left;
+}
+ 
+.divPrincipal{
+	margin-left: auto;
+	margin-right: auto;
+	width: 640px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #003155;
+} 
+ 
+.tituloBase, .titulo, .rodape, .tituloResultado, .grupo, .grid_verde, .grid_amarela {
+	width: auto;
+	display: block;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+ 
+.tituloBase, .titulo, .rodape, .tituloResultado {
+	font-weight: bolder;
+	background-color: #003155;
+	color: #B3C2CC;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+ 
+.titulo {
+	font-size: 18px;
+	height: 30px;
+	padding-top: 20px;
+	vertical-align: middle;
+}
+
+.tituloResultado {
+	font-size: 14px;
+	height: 20px;
+}
+
+.rodape{
+	text-align: right;
+	height: 45px;
+}
+
+.grid_amarela, .grid_verde {
+    height: 4px;
+}
+
+.grid_amarela{
+  	background-color: #FFE444;
+}
+
+.grid_verde{
+	margin-top: 1px;
+	background-color: #007D45;
+}
+
+.labelNome, .labelNomeForm {
+	font-weight: bolder;
+}
+
+.formulario {
+	padding: 10px;
+}
+
+.labelNomeForm{
+	width: 120px;
+	display: inline-block;
+	margin-bottom: 10px;
+}
+
+select:hover{
+	background: #fdf5ce;
+}
+
+.lavelValor{
+	
+}
+
+.inputNumber{
+	width: 60px;
+}
+
+.inputDate{
+	width: 100px;
+}
+
+.grupoTitulo {
+	display: block;
+	margin-bottom: 10px;
+	font-size: 14px;	
+	font-weight: bolder;
+}
+
+.grupo {
+	margin: 0px;
+	background-color: white;
+	padding-top: 5px;
+}
+
+.formGrupo {
+}
+
+.remissoesDocumento {
+	margin-left: 15px;
+	margin-bottom: 5px;
+}
+
+.remissoesFragmento {
+	margin-left: 25px;
+}
+
+.saidaLink {
+	display: block;
+}
+		
+.saidaTextoLink{
+	margin-left: 25px;
+	width: 200px;
+	display: block;
+	float: left;
+	padding-top: 3px;
+}
+		
+.saidaImagem_PDF, .saidaImagem_DOC, .saidaImagem_ZIP, .saidaImagem_XML, .saidaImagem_HTML, .saidaImagem_RTF, .saidaImagem_DOCX {
+	background-repeat:no-repeat;
+	background-position:right top;
+	height:20px;
+	width:20px;
+	display: block;
+	float: left;
+	clear: left;
+}
+		
+.saidaImagem_PDF{
+	background-image:url('../img/ico_pdf.jpeg');
+}
+
+.saidaImagem_DOC{
+	background-image:url('../img/ico_rtf.jpeg');
+}
+
+.saidaImagem_RTF{
+	background-image:url('../img/ico_rtf.jpeg');
+}
+
+.saidaImagem_ZIP{
+	background-image:url('../img/ico_zip.jpeg');
+}
+
+.saidaImagem_XML{
+	background-image:url('../img/ico_xml.jpeg');
+}
+
+.saidaImagem_HTML{
+	background-image:url('../img/ico_html.jpeg');
+}
+
+.saidaImagem_EPUB{
+    background-image:url('../img/ico_epub.png');
+}
+
+.saidaImagem_DOCX{
+	background-image:url('../img/ico_docx.jpg')
+}
