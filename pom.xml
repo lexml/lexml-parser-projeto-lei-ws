@@ -207,7 +207,7 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei</artifactId>
-			<version>1.9.0</version>
+			<version>1.9.1</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
