@@ -272,8 +272,13 @@ object Tasks {
     val targetName = "target" + targetExtension
     
     val cconfig = new DefaultClientConfig()
+
     val c = Client.create(cconfig)
     c.setFollowRedirects(true)    
+    //set timeout
+    c.setConnectTimeout(10*1000)
+    c.setReadTimeout(30*1000)
+    //
     val wr = c.resource("http://intra1.senado.gov.br/office-automation/upload.aspx")
     import com.sun.jersey.core.header.{FormDataContentDisposition => B}
     
