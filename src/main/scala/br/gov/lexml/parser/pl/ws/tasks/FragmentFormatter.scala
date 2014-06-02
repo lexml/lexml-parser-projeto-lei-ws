@@ -22,7 +22,6 @@ object FragmentFormatter {
     }
     
 	def format(urnFrag : String) = {
-	  println("FragmentFormatter: urnFrag = '" + urnFrag + "'")
 	  val comps = urnFrag
 	  		.split("_").toList
 	  		.flatMap(compRe.findFirstMatchIn(_))

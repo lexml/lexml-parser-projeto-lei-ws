@@ -5,8 +5,10 @@ import java.io.InputStreamReader
 import eu.medsea.mimeutil.MimeUtil2
 import eu.medsea.mimeutil.MimeUtil
 import eu.medsea.mimeutil.detector.MimeDetector
+import grizzled.slf4j.Logging
 
-object Mime {
+object Mime extends Logging {
+  
   /*lazy val ext2mime : Map[String,Set[String]]= {
       import scala.collection.JavaConversions._
       val lines = IOUtils.readLines(new InputStreamReader(classOf[MimeUtil2].getResourceAsStream("mime-types.properties"))).toList      
@@ -38,7 +40,13 @@ object Mime {
     classOf[eu.medsea.mimeutil.detector.MagicMimeMimeDetector],
     classOf[eu.medsea.mimeutil.detector.OpendesktopMimeDetector])
   def init() = synchronized {
-    detectors.foreach(c ⇒ MimeUtil.registerMimeDetector(c.getName))
+    detectors.foreach(c => try { 
+    	MimeUtil.registerMimeDetector(c.getName)
+    } catch {
+      case ex : Exception =>
+        logger.warn("Error registering mime detector",ex)
+    }
+    )   
   }
 
 }
