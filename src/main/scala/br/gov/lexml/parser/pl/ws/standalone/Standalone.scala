@@ -19,6 +19,7 @@ import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTextoEmbutido
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTipoDeSaida
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTiposDeSaidas
 import br.gov.lexml.parser.pl.ws.data.scalaxb.XML_DERIVADO
+import br.gov.lexml.parser.pl.ws.data.scalaxb.XHTML_INTERMEDIARIO
 import br.gov.lexml.parser.pl.ws.data.scalaxb.XML_REMISSOES
 import br.gov.lexml.parser.pl.ws.resources.proc.RequestContext
 import br.gov.lexml.parser.pl.ws.Initializer
@@ -67,7 +68,7 @@ object Standalone extends Logging {
       val fileData = FileUtils.readFileToByteArray(f)
       val tipoTextoOption = scalaxb.DataRecord(None, None, TipoTextoEmbutido(scalaxb.Base64Binary(fileData: _*)))
       val texto = TipoTexto(tipoMime, tipoTextoOption)
-      val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, RTF_DERIVADO)
+      val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, XHTML_INTERMEDIARIO, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, RTF_DERIVADO)
       val ttsaidas = tsaidas.map(TipoTipoDeSaida(_,EXTERNO)) 
       val saidas = TipoTiposDeSaidas(ttsaidas: _*)
       ParserRequisicao(metadado, texto, saidas)

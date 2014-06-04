@@ -136,6 +136,7 @@
 							<xsl:when test="@tipoSaida='XML_REMISSOES'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>XML de remissões</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='EPUB_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>EPUB derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='PDF_DIFF'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>PDF diferenças</xsl:element></xsl:when>
+							<xsl:when test="@tipoSaida='XHTML_INTERMEDIARIO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>XHTML Intermediário</xsl:element></xsl:when>
 						</xsl:choose>
 					</xsl:element>
 					<xsl:element name="br" />
