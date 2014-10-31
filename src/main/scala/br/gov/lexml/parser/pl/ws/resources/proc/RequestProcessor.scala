@@ -152,6 +152,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
       val xhtmlEntrada = Tasks.srcToXhtmlTask(texto, mimeType2)
+       geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
+          Some((Tasks.makeRemissoes(xhtmlEntrada),()))
+      }
       geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", None, "intermediario", "documento") {
         val xhtmlDoc = ( 
           <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
