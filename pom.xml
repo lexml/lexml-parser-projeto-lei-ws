@@ -11,13 +11,14 @@
 	<url>http://www.lexml.gov.br</url>
 	
 	<properties>
-		<scala.version>2.10</scala.version>
-		<scala.lib.version>${scala.version}.1</scala.lib.version>
+		<scala.version>2.11</scala.version>
+		<scala.lib.version>${scala.version}.4</scala.lib.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- github server corresponds to entry in ~/.m2/settings.xml -->
 		<github.global.server>github</github.global.server>
+		<akka.version>2.3.6</akka.version>
 	</properties>
 
 	<scm>
@@ -207,7 +208,7 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei</artifactId>
-			<version>1.9.10</version>
+			<version>1.9.11-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
@@ -224,7 +225,7 @@
 			<groupId>org.clapper</groupId>
 			<!-- <artifactId>argot_${scala.version}</artifactId> -->
 			<artifactId>argot_${scala.version}</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -249,12 +250,12 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
-			<version>1.5.2</version>
+			<version>1.5.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-actor_${scala.version}</artifactId>
-			<version>2.1.4</version>
+			<version>${akka.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>scala-library</artifactId>
@@ -265,7 +266,7 @@
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-slf4j_${scala.version}</artifactId>
-			<version>2.1.4</version>
+			<version>${akka.version}</version>
 			<exclusions>
 				<exclusion>
 					<artifactId>scala-library</artifactId>
@@ -338,7 +339,7 @@
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
 			<artifactId>lexml-renderer-scala</artifactId>
-			<version>1.0.2</version>
+			<version>1.0.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.jersey</groupId>

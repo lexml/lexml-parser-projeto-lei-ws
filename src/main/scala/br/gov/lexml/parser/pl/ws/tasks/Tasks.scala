@@ -1,6 +1,7 @@
 package br.gov.lexml.parser.pl.ws.tasks
 
 import java.io.File
+import scala.language.postfixOps
 import java.security.MessageDigest
 import scala.collection.JavaConversions.asScalaSet
 import scala.xml.Node
@@ -38,7 +39,7 @@ import br.gov.lexml.renderer.pdf.RendererPDF
 import br.gov.lexml.renderer.rtf.RTFBuilder
 import br.gov.lexml.renderer.rtf.RendererRTFContext
 import br.gov.lexml.renderer.rtf.RendererRTF
-import br.gov.lexml.renderer.strategies.XhtmlRenderer
+
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import com.sun.jersey.api.representation.Form
@@ -54,6 +55,7 @@ import br.gov.lexml.parser.pl.ws.data.scalaxb.OpcoesRequisicao
 import scala.util.matching.Regex
 import br.gov.lexml.parser.pl.profile.DocumentProfile
 import scala.util.matching.Regex
+import br.gov.lexml.renderer.strategies.XhtmlRenderer
 
 object Tasks {
 
@@ -141,7 +143,7 @@ object Tasks {
         config.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,"2")        
         val is = new java.io.ByteArrayInputStream(xml)
         pdfRenderer.render(is, os, config)
-        try { os.close } catch { case _ ⇒ }
+        try { os.close } catch { case _ : Exception ⇒ }
         os.toByteArray        
   }
   
@@ -159,7 +161,7 @@ object Tasks {
         val root = document.getRootElement();
         ctx.setOutputStream(os);                
         new RTFBuilder(ctx, root).build();        
-        try { os.close() } catch { case _ => }        
+        try { os.close() } catch { case _ : Exception => }        
         os.toByteArray
   }
       

@@ -1,6 +1,8 @@
 package br.gov.lexml.parser.pl.ws.standalone
 
 import java.io.File
+
+import scala.language.postfixOps
 import java.io.FileFilter
 import java.net.URI
 import org.apache.commons.io.filefilter.SuffixFileFilter
@@ -188,7 +190,7 @@ object Standalone extends Logging {
       }
     } catch {
       case e: ArgotUsageException ⇒ System.err.println(e.message)
-      case ex ⇒ ex.printStackTrace
+      case ex : Exception ⇒ ex.printStackTrace
     }
     while (true) {
       Thread.`yield`();
