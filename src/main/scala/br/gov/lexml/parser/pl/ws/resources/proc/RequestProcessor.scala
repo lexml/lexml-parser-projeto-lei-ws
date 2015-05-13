@@ -18,6 +18,7 @@ import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import eu.medsea.mimeutil.MimeType
 import br.gov.lexml.parser.pl.errors.FalhaConversaoPrimaria
 import scala.xml.XML
+import scala.xml.Elem
 
 
 final case class RequestContext(
@@ -150,9 +151,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
       val xhtmlEntrada = Tasks.srcToXhtmlTask(texto, mimeType2)
-      geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
-        Some((Tasks.makeRemissoes(xhtmlEntrada),()))
-      }
+
       val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
       logger.debug("problems = " + problems)
       val (pl, xml) = parseResult.getOrElse(throw new ParseException(problems: _*))
@@ -198,7 +197,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       numeroDiferencas = numDiffs)
 
     val ps = ParserResultado(ctx.req.metadado, res, ServiceParams.configuracao)
-    logger.info("resultado:  " + ps)
+    
     val psXml = scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope)
     val resXml = (<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?> +: psXml)
     

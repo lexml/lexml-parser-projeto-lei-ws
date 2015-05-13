@@ -84,7 +84,6 @@ object Tasks {
   
   def parse(md : Metadado, html : List[Node], opcoes : Option[OpcoesRequisicao]) : (Option[(ProjetoLei,NodeSeq)],List[ParseProblem]) = {
     import _root_.br.gov.lexml.parser.pl.validation.Validation    
-    
     val blocks = Block fromNodes html
     val baseProfile = md.profile
     
@@ -299,8 +298,5 @@ object Tasks {
     }          
   }
     
-  /*def getMensagemUsuario(prob : ParseProblem) : Option[String] = {
-    
-  }*/
 }
 
