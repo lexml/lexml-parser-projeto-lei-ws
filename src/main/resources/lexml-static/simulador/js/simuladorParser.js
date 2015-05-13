@@ -72,8 +72,9 @@ function getXMLRequisicao(){
 			+'<Q1:tipoSaida tipo="ZIP_DERIVADO" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="RTF_DERIVADO" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="XML_REMISSOES" formato="EMBUTIDO"/>'
-			+'<Q1:tipoSaida tipo="EPUB_DERIVADO" formato="EXTERNO"/>'
+			+'<Q1:tipoSaida tipo="EPUB_DERIVADO" formato="EXTERNO"/>'			
 			+'<Q1:tipoSaida tipo="PDF_DIFF" formato="EXTERNO"/>'
+			+'<Q1:tipoSaida tipo="XHTML_INTERMEDIARIO" formato="EXTERNO"/>'
 		+'</Q1:saidas>'
 		+'</Q1:ParserRequisicao>';
 }	

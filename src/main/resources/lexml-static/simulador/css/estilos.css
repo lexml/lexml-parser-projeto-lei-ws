@@ -182,6 +182,10 @@ select:hover{
 	background-image:url('../img/ico_html.jpeg');
 }
 
+.saidaImagem_XHTML{
+	background-image:url('../img/ico_html.jpeg');
+}
+
 .saidaImagem_EPUB{
     background-image:url('../img/ico_epub.png');
 }

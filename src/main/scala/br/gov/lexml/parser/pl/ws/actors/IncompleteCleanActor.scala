@@ -1,6 +1,8 @@
 package br.gov.lexml.parser.pl.ws.actors
 
 import akka.actor.Actor
+
+import scala.language.postfixOps
 import akka.actor.Actor._
 import grizzled.slf4j.Logging
 import br.gov.lexml.parser.pl.ws.ServiceParams

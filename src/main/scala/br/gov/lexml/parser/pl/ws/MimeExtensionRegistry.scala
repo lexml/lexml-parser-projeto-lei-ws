@@ -26,7 +26,8 @@ object Mime extends Logging {
     "pdf" -> "application/pdf",
     "xml" -> "text/xml",
     "zip" -> "application/zip",
-    "xsl" -> "application/xslt+xml").map { case (k, v) ⇒ (k, Set(v)) }
+    "xsl" -> "application/xslt+xml",
+    "xhtml" -> "application/xhtml+xml").map { case (k, v) ⇒ (k, Set(v)) }
   lazy val mime2ext: Map[String, Set[String]] = {
     val l = for { (k, s) ← ext2mime; t ← s } yield (t, k)
     l.foldLeft(Map[String, Set[String]]()) {

@@ -1,6 +1,7 @@
 package br.gov.lexml.parser.pl.ws.resources
 
 import java.io.ByteArrayOutputStream
+import scala.language.postfixOps
 import java.io.File
 import java.io.InputStream
 import java.net.URI
@@ -66,6 +67,9 @@ class ScalaParserService extends Logging {
   def parseSenado(@FormDataParam("requisicao") requisicaoText: String,
     @FormDataParam("fonte") fonteStream: InputStream,
     @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {    
+    if(fonteStream == null) {
+      throw new RuntimeException("Erro: fonteStream == null");
+    }
     doParseSenado(requisicaoText, Some(IOUtils.toByteArray(fonteStream)),Some(fonteDetail.getFileName))
   }
 
@@ -168,6 +172,7 @@ class ScalaParserService extends Logging {
   }
   
   private def doParseSenado(requisicaoText: String, fonte: Option[Array[Byte]] = None, fileName : Option[String] = None): Response = {
+    logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     val boot = Initializer.boot.get
     val system = boot.system
     touchSession()
@@ -206,6 +211,8 @@ class ScalaParserService extends Logging {
         logger.error("Erro durante a execução: " + ex.getMessage + ", input: " + requisicaoText, ex)
         Response.status(Response.Status.BAD_REQUEST).build()
       }
+    } finally {
+      logger.info(s"doParseSenado: ending. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     }
   }
 

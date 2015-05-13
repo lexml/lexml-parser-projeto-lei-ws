@@ -1,6 +1,7 @@
 package br.gov.lexml.parser.pl.ws
 
 import javax.servlet.{ServletContextListener, ServletContextEvent}
+
 import java.io.File
 import br.gov.lexml.parser.pl.ws.data.scalaxb._
 import javax.servlet.ServletContext
@@ -39,8 +40,9 @@ class ServiceParams(octx : Option[ServletContext] = None) extends Logging {
       }
       //octx.flatMap(ctx => Option(ctx.getInitParameter(name)).flatMap(canBuildFrom)).getOrElse(default)
     }
-      
     
+    import scala.language.implicitConversions
+        
     implicit def canBuildFile(path : String) : Option[File] = {
       val f = new File(path).getCanonicalFile()
       logger.debug("canBuildFile: path = " + path + ", f = " + f + ", exists = " + f.exists)
@@ -48,7 +50,7 @@ class ServiceParams(octx : Option[ServletContext] = None) extends Logging {
     }
     
     implicit def canBuildInt(num : String) : Option[Int] =
-      try { Some(num.toInt) } catch { case _ => None }      
+      try { Some(num.toInt) } catch { case _ : Exception => None }      
       
     var parseResultDirectory : File = option("parseResultDirectory",new File("/tmp/parser/result"))
     var incompleteCleaningIntervalMinutes : Int = option("resultDirectoryIncompleteCleaningIntervalMinutes",1)

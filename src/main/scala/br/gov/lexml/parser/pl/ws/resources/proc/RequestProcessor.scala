@@ -19,6 +19,7 @@ import eu.medsea.mimeutil.MimeType
 import br.gov.lexml.parser.pl.errors.FalhaConversaoPrimaria
 import scala.xml.XML
 import scala.xml.Elem
+import scala.xml.NodeSeq
 
 
 final case class RequestContext(
@@ -151,6 +152,20 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
       val xhtmlEntrada = Tasks.srcToXhtmlTask(texto, mimeType2)
+       geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
+          Some((Tasks.makeRemissoes(xhtmlEntrada),()))
+      }
+      geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", None, "intermediario", "documento") {
+        val xhtmlDoc = ( 
+          <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+        	<head>
+                 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+                 <title>XHTML INTERMEDIARIO</title></head>
+        		<body>{NodeSeq fromSeq xhtmlEntrada}</body>
+             </html> )
+
+        Some((( xhtmlDoc ).toString.getBytes("utf-8"),()))
+      }
 
       val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
       logger.debug("problems = " + problems)
