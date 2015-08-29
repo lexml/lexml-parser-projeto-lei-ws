@@ -39,7 +39,6 @@ import br.gov.lexml.renderer.pdf.RendererPDF
 import br.gov.lexml.renderer.rtf.RTFBuilder
 import br.gov.lexml.renderer.rtf.RendererRTFContext
 import br.gov.lexml.renderer.rtf.RendererRTF
-
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import com.sun.jersey.api.representation.Form
@@ -56,11 +55,16 @@ import scala.util.matching.Regex
 import br.gov.lexml.parser.pl.profile.DocumentProfile
 import scala.util.matching.Regex
 import br.gov.lexml.renderer.strategies.XhtmlRenderer
+import br.gov.lexml.parser.pl.ws.LexmlWsConfig
+import scala.xml.Elem
+import scala.xml.NamespaceBinding
 
 object Tasks {
-
+  
+  val config = LexmlWsConfig.config.getConfig("tasks")
+     
   def calcDigest(data: Array[Byte]): String = {
-    val alg = "sha-1"
+    val alg = config.getString("digest.algorithm")
     val md = MessageDigest.getInstance(alg)
     val hash = md.digest(data)
     "{" + alg + "}" + new Base64().encodeAsString(hash)
@@ -124,10 +128,10 @@ object Tasks {
       val zos = new java.util.zip.ZipOutputStream(bos)
       zos.setLevel(9)
       zos.setComment(pl.epigrafe.asInstanceOf[Paragraph].text)
-      zos.putNextEntry(new java.util.zip.ZipEntry("proposicao.xml"))
+      zos.putNextEntry(new java.util.zip.ZipEntry(config.getString("lexml-zip.proposicao-file-name")))
       zos.write(pl.metadado.toXMLmetadadoEditor(pl).toString.getBytes("utf-8"))
       zos.closeEntry()
-      zos.putNextEntry(new java.util.zip.ZipEntry("texto.xml"))      
+      zos.putNextEntry(new java.util.zip.ZipEntry(config.getString("lexml-zip.texto-file-name")))      
       zos.write(xml)
       zos.closeEntry()
       zos.close()
@@ -137,25 +141,25 @@ object Tasks {
   def renderPDF(xml : Array[Byte], md : Metadado) : Array[Byte] = {        
         val os = new java.io.ByteArrayOutputStream()
         val pdfRenderer = new RendererPDF()
-        val config = new java.util.HashMap[String, String]()
-        config.put(PDFConfigs.METADATA_AUTHOR, "LexML Parser")        
-        config.put(PDFConfigs.FONT_SIZE,"14")
-        config.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,"2")        
+        val pdfConfig = new java.util.HashMap[String, String]()
+        pdfConfig.put(PDFConfigs.METADATA_AUTHOR, config.getString("pdf-renderer.author-name"))
+        pdfConfig.put(PDFConfigs.FONT_SIZE,config.getString("pdf-renderer.font-size"))
+        pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("pdf-renderer.document-margin-right"))
         val is = new java.io.ByteArrayInputStream(xml)
-        pdfRenderer.render(is, os, config)
+        pdfRenderer.render(is, os, pdfConfig)
         try { os.close } catch { case _ : Exception ⇒ }
         os.toByteArray        
   }
   
   def renderRTF(xml : Array[Byte], md : Metadado) : Array[Byte] = {
         val os = new java.io.ByteArrayOutputStream()        
-        val config = new java.util.HashMap[String, String]()
-        config.put(PDFConfigs.METADATA_AUTHOR, "LexML Parser")
-        config.put(PDFConfigs.FONT_SIZE,"14")
-        config.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,"2")
+        val pdfConfig = new java.util.HashMap[String, String]()
+        pdfConfig.put(PDFConfigs.METADATA_AUTHOR, config.getString("rtf-renderer.author-name"))
+        pdfConfig.put(PDFConfigs.FONT_SIZE,config.getString("rtf-renderer.font-size"))
+        pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("rtf-renderer.document-margin-right"))
         val is = new java.io.ByteArrayInputStream(xml)        
         val ctx = new RendererRTFContext(md.profile.urnFragAutoridade,md.profile.urnFragTipoNorma)
-        ctx.addConfig(config);
+        ctx.addConfig(pdfConfig);
         val reader = new SAXReader();
         val document = reader.read(is);
         val root = document.getRootElement();
@@ -171,8 +175,9 @@ object Tasks {
     try {
       //val srcPath = srcFile.getCanonicalPath
       FileUtils.writeByteArrayToFile(srcFile, texto)
+      val abiwordPath = config.getString("tools.abiword-path")
       val cmd: Array[String] = Array(
-        "/usr/bin/abiword", "--to=pdf", srcFile.getName)
+        abiwordPath, "--to=pdf", srcFile.getName)
       val p = Runtime.getRuntime.exec(cmd, Array[String](), srcFile.getParentFile)
       p.waitFor
       if(!pdfFile.exists() || !pdfFile.isFile()) {
@@ -228,22 +233,26 @@ object Tasks {
     }.toSeq
     TRemissoes(docs : _*)    
   }
-  
+    
   def makeRemissoes(xhtml : Seq[Node]) : Array[Byte] = {
     val remissoes = buildLegislacaoCitada(xhtml)
-    val psXml = scalaxb.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope)
-    psXml.toString.getBytes("utf-8")    
+    val psXml = scalaxb.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope).
+                    head.asInstanceOf[Elem]
+    val psXml1 = psXml.copy(prefix = "tns")
+    psXml1.toString.getBytes("utf-8")    
   }
   
+  val lexmlUrlFormatString = config.getString("tools.lexml-site-urn-format")
+  
   def buildUrlLexml(urnDoc : String) : java.net.URI = {
-    new java.net.URI("http://www.lexml.gov.br/urn/" + urnDoc)
+    new java.net.URI(lexmlUrlFormatString.format(urnDoc))
   }
   
   val tagSoupParserFactory = new org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl
   
   def buidDisplayDocumento(urnDoc : String) = {    
     val parser = tagSoupParserFactory.newSAXParser()
-    val source = new org.xml.sax.InputSource("http://www.lexml.gov.br/urn/" + urnDoc)
+    val source = new org.xml.sax.InputSource(lexmlUrlFormatString.format(urnDoc))
     val adapter = new scala.xml.parsing.NoBindingFactoryAdapter
     val doc = adapter.loadXML(source, parser)
     val t = (doc \ "head" \ "title").text
@@ -280,7 +289,7 @@ object Tasks {
     c.setConnectTimeout(10*1000)
     c.setReadTimeout(30*1000)
     //
-    val wr = c.resource("http://intra1.senado.gov.br/office-automation/upload.aspx")
+    val wr = c.resource(config.getString("tools.office-automation-url"))
     import com.sun.jersey.core.header.{FormDataContentDisposition => B}
     
     val srcBodyPart = new FormDataBodyPart(

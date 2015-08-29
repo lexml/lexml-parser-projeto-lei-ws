@@ -20,6 +20,10 @@ import br.gov.lexml.parser.pl.errors.FalhaConversaoPrimaria
 import scala.xml.XML
 import scala.xml.Elem
 import scala.xml.NodeSeq
+import br.gov.lexml.parser.pl.ws.Dependencies
+import scala.xml.Node
+import scala.xml.NamespaceBinding
+import scala.xml.TopScope
 
 
 final case class RequestContext(
@@ -39,14 +43,16 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
   def buildPath(comps: String*) = comps.foldLeft(ctx.resultPath)(new File(_, _))
 
+ 
+  
   def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
         
     val (href,teso,f) = fmt match {
       case EMBUTIDO => {
-        val xml = XML.load(new java.io.ByteArrayInputStream(data))
-        (None,Some(scalaxb.DataRecord(xml)),None)
+        val xml =XML.load(new java.io.ByteArrayInputStream(data))        
+        (None,Some(scalaxb.DataRecord.fromAny(xml)),None)
       }
       case _ => {
         val ext = "." + Mime.mimeToExtension(tm.toString).getOrElse("txt")
@@ -84,19 +90,21 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val outMap: MMap[File, (String, Array[Byte])] = MMap()
     var digest: Option[String] = None
 
+    val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.tipoSaida.map(t => (t.tipo,t.formato)).toMap
+    
     def geraSaida[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
-      ctx.req.saidas.tipoSaida.filter(_.tipo == ts).headOption match {
-        case Some(tts) ⇒ {
+      reqSaidas.get(ts) match {
+        case Some(formato) ⇒ {
           logger.info("gerando saida ts = " + ts + " path = " + path)
           logger.info("mime saida = " + mime)
           data map { case (d,r) =>             
-            val (tes, of) = buildSaidaComponents(ts, tts.formato, TipoMimeSaida.fromString(mime), d, path: _*)          
+            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime), d, path: _*)          
             saidas += tes
             of foreach (f => outMap += (f -> (mime, d)))          
             (d,r)
           }
         }
-        case _ => data
+        case _ => None // data
       }
       
     }
@@ -166,32 +174,44 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
         Some((( xhtmlDoc ).toString.getBytes("utf-8"),()))
       }
-
-      val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
-      logger.debug("problems = " + problems)
-      val (pl, xml) = parseResult.getOrElse(throw new ParseException(problems: _*))
-      problems.foreach(falhas += fromProblem(_))
-      pl.caracteristicas.foreach(caracteristicas += fromCaracteristica(_))
-      lazy val xmlBytes = geraSaida(XML_DERIVADO, "text/xml", None, "gerado", "documento") {
-        Some((xml.toString.getBytes("utf-8"),()))
-      }.get._1
-      geraSaidaI(ZIP_DERIVADO, "application/zip", None, "gerado", "documento") {
-        Some((Tasks.makeLexMLZip(pl, xmlBytes),()))
-      }
-      geraSaidaI(PDF_DERIVADO, "application/pdf", None, "gerado", "documento") {
-        Some((Tasks.renderPDF(xmlBytes, metadado),()))
-      }
-      val rtfDerivado = geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
-        Some((Tasks.renderRTF(xmlBytes, metadado),()))
-      }.map(_._1)
-            
-     /* geraSaidaI(EPUB_DERIVADO, "application/epub+zip", None, "gerado", "documento") {
-        Tasks.renderEPUB(xmlBytes,metadado)
-      }*/
       
-      numDiffs = rtfDerivado.flatMap(rtf => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
-        Tasks.buildDiff(texto, mimeType,rtf,"text/rtf")
-      }).flatMap(_._2)
+      val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
+      
+      logger.debug("problems = " + problems)
+      
+      val (pl, xml) = parseResult.getOrElse(throw new ParseException(problems: _*))
+      
+      problems.foreach(falhas += fromProblem(_))
+      
+      pl.caracteristicas.foreach(caracteristicas += fromCaracteristica(_))
+      
+      lazy val oXmlBytes = geraSaida(XML_DERIVADO, "text/xml", None, "gerado", "documento") {
+        Some((xml.toString.getBytes("utf-8"),()))
+      }.map(_._1)
+      
+      oXmlBytes foreach { xmlBytes => 
+        geraSaidaI(ZIP_DERIVADO, "application/zip", None, "gerado", "documento") {
+          Some((Tasks.makeLexMLZip(pl, xmlBytes),()))
+        }
+        geraSaidaI(PDF_DERIVADO, "application/pdf", None, "gerado", "documento") {
+          Some((Tasks.renderPDF(xmlBytes, metadado),()))
+        }
+        val rtfDerivado = geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
+          Some((Tasks.renderRTF(xmlBytes, metadado),()))
+        }.map(_._1)
+        
+        /*geraSaidaI(EPUB_DERIVADO, "application/epub+zip", None, "gerado", "documento") {
+          Tasks.renderEPUB(xmlBytes,metadado)
+        }*/
+        
+        numDiffs = rtfDerivado.flatMap(rtf => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
+          Tasks.buildDiff(texto, mimeType,rtf,"text/rtf")
+        }).flatMap(_._2)
+      }
+            
+     
+      
+      
     } catch {
       case ex: ParseException ⇒ {
         falhas ++= ex.errors.map(fromProblem(_))
@@ -213,7 +233,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val ps = ParserResultado(ctx.req.metadado, res, ServiceParams.configuracao)
     
-    val psXml = scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope)
+    val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
     val resXml = (<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?> +: psXml)
     
     logger.debug("writing outputs")
@@ -232,4 +252,52 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       val mf = new File(f.getParentFile(), f.getName() + ".mime")
       FileUtils.writeStringToFile(mf, mime)      
     }
+  
+  object ScopeHelper {
+    type ScopeMap = Map[Option[String],Option[String]]
+    val emptyScopeMap : ScopeMap = Map()
+    
+    def scopeToMap(ns : NamespaceBinding) : ScopeMap = {
+      if(ns == null) {
+        Map() 
+      } else if (ns.prefix == null && ns.uri == null) {
+        scopeToMap(ns.parent)
+      } else {
+        scopeToMap(ns.parent) + (Option(ns.prefix) -> Option(ns.uri))
+      }
+    }
+    
+    def mapToScope(m : ScopeMap) : NamespaceBinding = {      
+        m.foldLeft[NamespaceBinding](TopScope) { 
+          case (parent, (okey,ouri)) => 
+             NamespaceBinding(okey orNull, ouri orNull,parent) 
+        }
+    }
+      
+    def fixScope(e : Elem, m : ScopeMap = emptyScopeMap) : Elem = {
+      val scopeMap = m ++ scopeToMap(e.scope)
+      val childs = e.child.map { case e : Elem => fixScope(e,scopeMap) ; case n => n }
+      e copy (scope = mapToScope(scopeMap), child = childs)
+    }
+    
+    def fixScopeNodeSeq(ns : NodeSeq, scopeMap : ScopeMap = emptyScopeMap) : NodeSeq =  {
+      ns.map { case e : Elem => fixScope(e,scopeMap) ; case n => n }
+    }
+    
+    def removeEmptyNs(ns : NamespaceBinding) : NamespaceBinding = { 
+       if (ns == null) { ns } 
+       else if (ns.prefix == null && ns.uri == null ) {
+         removeEmptyNs(ns.parent) 
+       }
+       else { ns copy (parent = removeEmptyNs(ns.parent)) }       
+    }
+     
+    def removeEmptyNs(e : Elem) : Elem = {
+        val newScope = Option(removeEmptyNs(e.scope)).getOrElse(TopScope)        
+        e copy (scope = newScope, child = e.child.map { case ee : Elem => removeEmptyNs(ee) ; case n => n })
+    }
+    
+    def removeEmptyNsNodeSeq(ns : NodeSeq) : NodeSeq = ns.map { case ee : Elem => removeEmptyNs(ee) ; case n => n }
+  }
+  
 }
