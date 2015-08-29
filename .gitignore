@@ -11,3 +11,5 @@
 /.cache
 /target/
 /target/
+/.cache-main
+/.cache-tests
