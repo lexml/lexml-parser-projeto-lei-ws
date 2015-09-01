@@ -2,6 +2,7 @@ package br.gov.lexml.parser.pl.ws.standalone
 
 import java.io.File
 
+
 import scala.language.postfixOps
 import java.io.FileFilter
 import java.net.URI
@@ -14,8 +15,8 @@ import br.gov.lexml.parser.pl.ws.data.scalaxb.DOCUMENTO_ORIGINAL
 import br.gov.lexml.parser.pl.ws.data.scalaxb.PDF_DERIVADO
 import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.data.scalaxb.ScalaxbTipoTextoEmbutidoFormat
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TextrtfValue
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMetadado
+import br.gov.lexml.parser.pl.ws.data.scalaxb.defaultScope
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTexto
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTextoEmbutido
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTipoDeSaida
@@ -62,7 +63,7 @@ object Standalone extends Logging {
       profile <- (DocumentProfileRegister.getProfile(autoridade,tipo) 
           orElse DocumentProfileRegister.profileByAutoridadeSigla(autoridade,tipo))      
       _ = println("profile =  " + profile)
-      tipoMime ← Mime.ext2mime.get(extension).map((s: Set[String]) ⇒ TipoMimeEntrada.fromString(s.head))
+      tipoMime ← Mime.ext2mime.get(extension).map((s: Set[String]) ⇒ TipoMimeEntrada.fromString(s.head,defaultScope))
       _ = println("tipoMime = " + tipoMime)
     } yield {
       val metadado = TipoMetadado(localidade,profile.urnFragAutoridade,profile.urnFragTipoNorma,

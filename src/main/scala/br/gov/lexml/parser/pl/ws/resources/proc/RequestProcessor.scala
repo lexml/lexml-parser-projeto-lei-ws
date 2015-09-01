@@ -98,7 +98,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
           logger.info("gerando saida ts = " + ts + " path = " + path)
           logger.info("mime saida = " + mime)
           data map { case (d,r) =>             
-            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime), d, path: _*)          
+            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)          
             saidas += tes
             of foreach (f => outMap += (f -> (mime, d)))          
             (d,r)
@@ -154,7 +154,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       //      println("Possible mime types: " + possibleMimeTypes)
       val mimeType = possibleMimeTypes.head //MimeUtil.getMostSpecificMimeType(possibleMimeTypes).toString
       logger.info("mimeType = " + mimeType)
-      val mimeType2 = TipoMimeEntrada.fromString(mimeType)
+      val mimeType2 = TipoMimeEntrada.fromString(mimeType,defaultScope)
       geraSaidaI(DOCUMENTO_ORIGINAL, mimeType, Some(hash), "original", "documento")(Some((texto,())))
       geraSaidaI(PDF_ORIGINAL, "application/pdf", None, "original", "documento") {        
         Some((Tasks.docToPDF(texto, mimeType2),()))
