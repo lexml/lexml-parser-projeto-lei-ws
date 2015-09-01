@@ -5,7 +5,7 @@
 	<groupId>br.gov.lexml.parser.pl</groupId>
 	<artifactId>lexml-parser-projeto-lei-ws</artifactId>
 	<packaging>war</packaging>
-	<version>1.5.9-SNAPSHOT</version>
+	<version>1.5.8-SNAPSHOT</version>
 	
 	<name>Web Service do Parser de Projetos de Lei do LexML</name>
 	<url>http://www.lexml.gov.br</url>
@@ -115,7 +115,7 @@
 			<plugin>
 				<groupId>com.github.github</groupId>
 				<artifactId>site-maven-plugin</artifactId>
-				<version>0.11</version>
+				<version>0.9</version>
 				<configuration>
 					<message>Maven artifacts for ${project.artifactId}
 						${project.version}</message>  <!-- git commit message -->
@@ -179,17 +179,17 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei</artifactId>
-			<version>1.9.12</version>
+			<version>1.9.11</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
 			<artifactId>lexml-renderer-pdf</artifactId>
-			<version>0.4.6</version>
+			<version>0.4.5</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
 			<artifactId>lexml-renderer-rtf</artifactId>
-			<version>0.3.11</version>
+			<version>0.3.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.clapper</groupId>
@@ -220,7 +220,7 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
-			<version>1.5.5</version>
+			<version>1.5.4</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe.akka</groupId>
@@ -309,7 +309,7 @@
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
 			<artifactId>lexml-renderer-scala</artifactId>
-			<version>1.0.4</version>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
