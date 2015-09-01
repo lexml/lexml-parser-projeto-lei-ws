@@ -143,9 +143,18 @@ function buscarResultado(caminhoResultado, tentativa){
 				  	},
 				  	success: function(){
 				  		 $("#divResultado").fadeIn("slow");
-						  var els = $(".substituteText");
+						  var els = $(".substituteText");						  
+						  var fixHttps = if (document.location.protocol == "https:") {
+								  var re = new RegExp('http://','g');
+								  return function(txt) {
+									  return txt.replace(re,'https://');
+								  };
+							  } else {
+								  return function(x) { return x;};
+							  };
 						  els.each(function (idx,el) {
-			                             el.innerHTML = el.textContent;
+							  			 var fixedContent = fixHttps(el.textContent);
+			                             el.innerHTML = fixedContent;
 			                          });
 						  
 				  	},

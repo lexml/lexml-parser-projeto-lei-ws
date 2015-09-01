@@ -13,3 +13,6 @@
 /target/
 /.cache-main
 /.cache-tests
+
+release.properties
+/**/*.swp
