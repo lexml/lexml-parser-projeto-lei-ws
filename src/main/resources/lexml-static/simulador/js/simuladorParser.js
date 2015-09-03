@@ -143,17 +143,16 @@ function buscarResultado(caminhoResultado, tentativa){
 				  	},
 				  	success: function(){
 				  		 $("#divResultado").fadeIn("slow");
+						  function fixHttps(txt) {
+						    if (document.location.protocol == "https:") {
+      							return txt.replace(new RegExp('http://','g'),'https://')
+  					  	    } else {
+    							return txt
+  						    }
+						  }
 						  var els = $(".substituteText");						  
-						  var fixHttps = if (document.location.protocol == "https:") {
-								  var re = new RegExp('http://','g');
-								  return function(txt) {
-									  return txt.replace(re,'https://');
-								  };
-							  } else {
-								  return function(x) { return x;};
-							  };
 						  els.each(function (idx,el) {
-							  			 var fixedContent = fixHttps(el.textContent);
+						     var fixedContent = fixHttps(el.textContent);
 			                             el.innerHTML = fixedContent;
 			                          });
 						  
