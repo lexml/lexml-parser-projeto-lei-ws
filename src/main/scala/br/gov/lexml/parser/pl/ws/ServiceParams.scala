@@ -55,7 +55,13 @@ class ServiceParams(octx : Option[ServletContext] = None) extends Logging {
     var parseResultDirectory : File = option("parseResultDirectory",new File("/tmp/parser/result"))
     var incompleteCleaningIntervalMinutes : Int = option("resultDirectoryIncompleteCleaningIntervalMinutes",1)
     var completeCleaningIntervalMinutes : Int = option("resultDirectoryCompleteCleaningIntervalMinutes",3)
-    var staticOverrideDirectory : File = option("staticOverrideDirectory",new File("/tmp/parser/static"))
+    val defaultStaticDir = try {
+      new File("src/main/resources").getCanonicalFile
+    } catch { case ex : Exception =>
+      logger.warn("default static directory not present", ex)
+      new File("src/main/resources")
+    }
+    var staticOverrideDirectory : File = option("staticOverrideDirectory",defaultStaticDir)    
     var diretorioMensagemUsuario : File = option("mensagemUsuarioDirectory",new File("/home/joao/workspace/lexml-parser-projeto-lei-mensagem-usuario/target"))
 }
 
