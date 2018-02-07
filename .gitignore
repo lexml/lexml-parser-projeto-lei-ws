@@ -17,3 +17,6 @@
 release.properties
 /**/*.swp
 pom.xml.releaseBackup
+
+*.iml
+.idea/
