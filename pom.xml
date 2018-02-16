@@ -82,7 +82,7 @@
 	</repositories>
 
 	<build>
-
+		<finalName>lexml-parser</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
