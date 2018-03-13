@@ -226,7 +226,10 @@ $(document).ready(function() {
     			// alert(xmlToString(responseXML));
 
     			var message = $(responseXML).find('Location').text();
-    			    		    
+                if (document.location.protocol === "https:") {
+                    message = message.replace(new RegExp('http://','g'),'https://')
+                }
+
     		    iniciarObterResultadoParser(message);
     		}
     }); 
