@@ -32,10 +32,10 @@ object MimeExtensionRegistry extends Logging {
 
   def mimeToExtension(mimeType: String): Option[String] = mime2ext.get(mimeType).map(_.head)
 
-  val detectors = List[Class[_]](
+  val detectors: List[Class[_]] = List[Class[_]](
     classOf[eu.medsea.mimeutil.detector.MagicMimeMimeDetector],
     classOf[eu.medsea.mimeutil.detector.OpendesktopMimeDetector])
-  def init() = synchronized {
+  def init(): Unit = synchronized {
     detectors.foreach(c => try { 
     	MimeUtil.registerMimeDetector(c.getName)
     } catch {
