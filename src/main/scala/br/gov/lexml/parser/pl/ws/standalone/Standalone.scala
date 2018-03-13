@@ -1,59 +1,32 @@
 package br.gov.lexml.parser.pl.ws.standalone
 
-import java.io.File
+import java.io.{File, FileFilter}
+import java.net.URI
 
+import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
+import br.gov.lexml.parser.pl.ws.{Initializer, MimeExtensionRegistry, ServiceParams}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, RTF_DERIVADO, ScalaxbTipoTextoEmbutidoFormat, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
+import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
+import grizzled.slf4j.Logging
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.FileFilterUtils
+import org.clapper.argot._
 
 import scala.language.postfixOps
-import java.io.FileFilter
-import java.net.URI
-import org.apache.commons.io.filefilter.SuffixFileFilter
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOCase
-import grizzled.slf4j.Logging
-import akka.actor.Actor._
-import br.gov.lexml.parser.pl.ws.data.scalaxb.DOCUMENTO_ORIGINAL
-import br.gov.lexml.parser.pl.ws.data.scalaxb.PDF_DERIVADO
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserRequisicao
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ScalaxbTipoTextoEmbutidoFormat
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMetadado
-import br.gov.lexml.parser.pl.ws.data.scalaxb.defaultScope
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTexto
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTextoEmbutido
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTipoDeSaida
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTiposDeSaidas
-import br.gov.lexml.parser.pl.ws.data.scalaxb.XML_DERIVADO
-import br.gov.lexml.parser.pl.ws.data.scalaxb.XHTML_INTERMEDIARIO
-import br.gov.lexml.parser.pl.ws.data.scalaxb.XML_REMISSOES
-import br.gov.lexml.parser.pl.ws.resources.proc.RequestContext
-import br.gov.lexml.parser.pl.ws.Initializer
-import br.gov.lexml.parser.pl.ws.resources.proc.RequestProcessor
-import org.clapper.argot._
-import br.gov.lexml.parser.pl.ws.ServiceParams
-import org.apache.commons.io.filefilter.FileFilterUtils
-import org.apache.commons.io.filefilter.IOFileFilter
-import org.apache.commons.io.filefilter.AbstractFileFilter
 import scala.util.matching.Regex
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMimeEntrada
-import br.gov.lexml.parser.pl.ws.data.scalaxb.EXTERNO
-import br.gov.lexml.parser.pl.ws.data.scalaxb.EMBUTIDO
-import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
-import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoSaida
-import br.gov.lexml.parser.pl.ws.data.scalaxb.PDF_DIFF
-import br.gov.lexml.parser.pl.ws.data.scalaxb.RTF_DERIVADO
-import br.gov.lexml.parser.pl.ws.data.scalaxb.OpcoesRequisicao
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserProfile
 
 object Standalone extends Logging {
 
-  val fnameRe = """([a-z.]+)_(\d+)__(\d\d\d\d)_(\d\d\d\d-\d+-\d+)_(.*)"""r
-  val fnameRe2 = """([a-z]+)(\d+)(\d\d\d\d)"""r
+  val fnameRe: Regex = """([a-z.]+)_(\d+)__(\d\d\d\d)_(\d\d\d\d-\d+-\d+)_(.*)"""r
+  val fnameRe2: Regex = """([a-z]+)(\d+)(\d\d\d\d)"""r
 
-  def getBasicInfoFromFileName(nome: String) = nome.toLowerCase match {
+  def getBasicInfoFromFileName(nome: String): Option[(String, String, String, String, String)] = nome.toLowerCase match {
     case fnameRe(tipo, num, ano, dataEvento, evento) ⇒
       Some((tipo, num, ano, dataEvento, evento))
     case fnameRe2(tipo,num,ano) => Some((tipo,num,ano,"data.evento","leitura"))
-    case _ ⇒ {println("nome não reconhecido: " + nome) ; None }
+    case _ ⇒
+      println("nome não reconhecido: " + nome)
+      None
   }
 
    def buildRequisicao(localidade : String, autoridade: String, f: File, nome: String, extension: String): Option[ParserRequisicao] = {    
@@ -81,18 +54,18 @@ object Standalone extends Logging {
   }
 
   def buildRequestContext(destDir: File, localidade : String, autoridade: String): ((File, String, String)) ⇒ Option[RequestContext] = {
-    case (f, nome, extension) ⇒ {      
+    case (f, nome, extension) ⇒
       buildRequisicao(localidade,autoridade, f, nome, extension) map { req ⇒        
         val uniqueId = f.getName.substring(0, f.getName.length - extension.length() - 1) + "_" + extension
         val resultPath = new File(destDir, uniqueId)
-        def resultBuilder(s: String*): URI = new URI(f.toURI.toURL.toExternalForm() + "/" + s.mkString("/"))
+        def resultBuilder(s: String*): URI = new URI(f.toURI.toURL.toExternalForm + "/" + s.mkString("/"))
         resultPath.mkdirs()
         val waitFile = new File(resultPath, "waitFile")
         val dataHoraProcessamento = javax.xml.datatype.DatatypeFactory.newInstance.newXMLGregorianCalendar(new java.util.GregorianCalendar())
         RequestContext(resultBuilder, uniqueId, req,
           resultPath, waitFile, dataHoraProcessamento, None, Some(f.getName))
       }
-    }
+
   }
 
   def listFiles(extensoes: Set[String]): File ⇒ List[(File, String, String)] = {
@@ -126,7 +99,8 @@ object Standalone extends Logging {
     val parser = new ArgotParser("parser-projeto-lei-standalone",
       preUsage = Some("Componentes: " + EOL + ServiceParams.configuracao1.values.mkString("\t", EOL + "\t", EOL)))
 
-    val autoridadeOpt = parser.parameter[String]("autoridade", "Especifica a autoridade: " + DocumentProfileRegister.autoridades.mkString(","), false) {
+    val mandatory = false
+    val autoridadeOpt = parser.parameter[String]("autoridade", "Especifica a autoridade: " + DocumentProfileRegister.autoridades.mkString(","), mandatory) {
       (v, opt) ⇒ if (DocumentProfileRegister.autoridades contains v) { v } else { 
             throw new ArgotConversionException("Parâmetro " + opt.name + ":\"" + v + "\" não é uma autoridade válida")          
           }        
@@ -136,7 +110,7 @@ object Standalone extends Logging {
       (s, opt) ⇒ s
     }
 
-    val inputOpt = parser.multiParameter[File]("entrada", "arquivos ou diretórios a serem processados", false) {
+    val inputOpt = parser.multiParameter[File]("entrada", "arquivos ou diretórios a serem processados", mandatory) {
       (s, opt) ⇒
         {
           val file = new File(s)
@@ -148,7 +122,7 @@ object Standalone extends Logging {
     }
 
     val destOpt = parser.option[File](List("d", "destino"), "diretório", "Diretório de destino") {
-      case (s, opt) ⇒ {
+      case (s, opt) ⇒
         val file = new File(s)
         if (!file.exists) {
           parser.usage("Arquivo \"" + s + "\" não existe.")
@@ -157,7 +131,7 @@ object Standalone extends Logging {
           parser.usage("Arquivo \"" + s + "\" não é um diretório.")
         }
         file
-      }
+
     }
     
     val localidadeOpt = parser.option[String](List("localidade"), "localidade", "Localidade no padrao LexML (default: br)") {
@@ -170,9 +144,10 @@ object Standalone extends Logging {
       //println("autoridade: " + autoridade)
       val inputs = inputOpt.value.toSet.toList
       println("inputs: " + inputs)
-      val extensoes = extensaoOpt.value.isEmpty match {
-        case true ⇒ Set("rtf")
-        case false ⇒ extensaoOpt.value.toSet
+      val extensoes = if (extensaoOpt.value.isEmpty) {
+        Set("rtf")
+      } else {
+        extensaoOpt.value.toSet
       }
       println("extensoes: " + extensoes)
       val destDir = destOpt.value.getOrElse(new File("."))
@@ -191,10 +166,10 @@ object Standalone extends Logging {
       }
     } catch {
       case e: ArgotUsageException ⇒ System.err.println(e.message)
-      case ex : Exception ⇒ ex.printStackTrace
+      case ex : Exception ⇒ ex.printStackTrace()
     }
     while (true) {
-      Thread.`yield`();
+      Thread.`yield`()
     }
   }
 

@@ -1,6 +1,8 @@
 package br.gov.lexml.parser.pl.ws.tasks
 import br.gov.lexml.parser.pl.output.LexmlRenderer
 
+import scala.util.matching.Regex
+
 
 
 object FragmentFormatter {
@@ -13,7 +15,7 @@ object FragmentFormatter {
     }
     final case class Algum(n : Int) extends Numero
   
-    val compRe = "^([a-z]+)((?:1u|[0-9-])*)$".r
+    val compRe: Regex = "^([a-z]+)((?:1u|[0-9-])*)$".r
     type Comp = (String,List[Numero])
     
     def readInt : String => Numero = {
@@ -21,11 +23,11 @@ object FragmentFormatter {
       case x => Algum(x.toInt)
     }
     
-	def format(urnFrag : String) = {
+	def format(urnFrag : String): String = {
 	  val comps = urnFrag
 	  		.split("_").toList
 	  		.flatMap(compRe.findFirstMatchIn(_))
-	  		.map(m => (m.group(1),m.group(2).split("-").toList.filter(!_.isEmpty).map(readInt(_))))
+	  		.map(m => (m.group(1),m.group(2).split("-").toList.filter(!_.isEmpty).map(readInt)))
 	  		.flatMap(formatComp(_))
 	  		.reverse
 	  comps match {
@@ -59,14 +61,14 @@ object FragmentFormatter {
         Some(("a","alínea " + formatAlfa(n.n).toLowerCase + formatComplementos(cs)))
       case ("ite",n :: cs) =>
         Some(("o","item " + n.n.toString + formatComplementos(cs)))      
-      case (tip,n :: cs) if agregadores contains tip => {
+      case (tip,n :: cs) if agregadores contains tip =>
         val (g,t) = agregadores(tip)
         val ntxt = n match {
           case Unico => "único"
-          case Algum(n) => formatRomano(n).toUpperCase
+          case Algum(num) => formatRomano(num).toUpperCase
         }
         Some((g,t + " " + ntxt))
-      }
+
       case _ => None
     }
     

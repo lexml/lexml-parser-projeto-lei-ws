@@ -1,67 +1,39 @@
 package br.gov.lexml.parser.pl.ws.tasks
 
-import java.io.File
-import scala.language.postfixOps
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.security.MessageDigest
-import scala.collection.JavaConversions.asScalaSet
-import scala.xml.Node
-import scala.xml.NodeSeq
-import scala.xml.Text
+import javax.ws.rs.core.MediaType
+
+import br.gov.lexml.parser.pl.{ProjetoLei, ProjetoLeiParser}
+import br.gov.lexml.parser.pl.block.{Block, Paragraph}
+import br.gov.lexml.parser.pl.errors.{ParseException, ParseProblem}
+import br.gov.lexml.parser.pl.linker.Linker
+import br.gov.lexml.parser.pl.metadado.{Id, Metadado}
+import br.gov.lexml.parser.pl.output.LexmlRenderer
+import br.gov.lexml.parser.pl.profile.{DocumentProfile, DocumentProfileOverride, DocumentProfileRegister}
+import br.gov.lexml.parser.pl.ws.{LexmlWsConfig, MimeExtensionRegistry}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{OpcoesRequisicao, TipoMetadado, TipoMimeEntrada}
+import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.{ScalaxbTRemissoesFormat, Simple, TRemissaoDocumento, TRemissaoFragmento, TRemissoes, defaultScope}
+import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.{defaultConverter, pipeline}
+import br.gov.lexml.renderer.pdf.{PDFConfigs, RendererPDF}
+import br.gov.lexml.renderer.rtf.{RTFBuilder, RendererRTFContext}
+import br.gov.lexml.renderer.strategies.XhtmlRenderer
+import com.sun.jersey.api.client.{Client, ClientResponse}
+import com.sun.jersey.api.client.config.DefaultClientConfig
+import com.sun.jersey.core.header.ContentDisposition
+import com.sun.jersey.multipart.{FormDataBodyPart, FormDataMultiPart}
+import com.typesafe.config.Config
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.FileUtils
 import org.dom4j.io.SAXReader
-import br.gov.lexml.parser.pl.block.Block
-import br.gov.lexml.parser.pl.block.Paragraph
-import br.gov.lexml.parser.pl.errors.ParseException
-import br.gov.lexml.parser.pl.errors.ParseProblem
-import br.gov.lexml.parser.pl.linker.Linker
-import br.gov.lexml.parser.pl.metadado.Id
-import br.gov.lexml.parser.pl.metadado.Metadado
-import br.gov.lexml.parser.pl.output.LexmlRenderer
-import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
-import br.gov.lexml.parser.pl.profile.DocumentProfileOverride
-import br.gov.lexml.parser.pl.validation.Validation
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMetadado
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMimeEntrada
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.ScalaxbTRemissoesFormat
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.Simple
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissaoDocumento
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissaoFragmento
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissoes
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.defaultScope
-import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
-import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.defaultConverter
-import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.pipeline
-import br.gov.lexml.parser.pl.ProjetoLei
-import br.gov.lexml.parser.pl.ProjetoLeiParser
-import br.gov.lexml.renderer.pdf.PDFConfigs
-import br.gov.lexml.renderer.pdf.RendererPDF
-import br.gov.lexml.renderer.rtf.RTFBuilder
-import br.gov.lexml.renderer.rtf.RendererRTFContext
-import br.gov.lexml.renderer.rtf.RendererRTF
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import com.sun.jersey.api.representation.Form
-import com.sun.jersey.api.client.Client
-import com.sun.jersey.api.client.config.DefaultClientConfig
-import com.sun.jersey.multipart.FormDataBodyPart
-import com.sun.jersey.core.header.FormDataContentDisposition
-import javax.ws.rs.core.MediaType
-import com.sun.jersey.multipart.FormDataMultiPart
-import com.sun.jersey.api.client.ClientResponse
-import com.sun.jersey.core.header.ContentDisposition
-import br.gov.lexml.parser.pl.ws.data.scalaxb.OpcoesRequisicao
+
+import scala.language.postfixOps
 import scala.util.matching.Regex
-import br.gov.lexml.parser.pl.profile.DocumentProfile
-import scala.util.matching.Regex
-import br.gov.lexml.renderer.strategies.XhtmlRenderer
-import br.gov.lexml.parser.pl.ws.LexmlWsConfig
-import scala.xml.Elem
-import scala.xml.NamespaceBinding
+import scala.xml.{Elem, Node, NodeSeq, Text}
 
 object Tasks {
   
-  val config = LexmlWsConfig.config.getConfig("tasks")
+  val config: Config = LexmlWsConfig.config.getConfig("tasks")
      
   def calcDigest(data: Array[Byte]): String = {
     val alg = config.getString("digest.algorithm")
@@ -80,7 +52,7 @@ object Tasks {
       throw ParseException(AutoridadeInvalida(metadado.autoridade))
     }    
     val profile = DocumentProfileRegister.getProfile(metadado.autoridade,metadado.tipoNorma)
-    				.getOrElse(throw new ParseException(TipoNormaInvalido(metadado.tipoNorma)))
+    				.getOrElse(throw ParseException(TipoNormaInvalido(metadado.tipoNorma)))
     
     val id = metadado.descritorEvento.map(de ⇒
       Id.fromUrnFrag(de).getOrElse(throw ParseException(DescritorEventoInvalido(de))))
@@ -89,12 +61,12 @@ object Tasks {
   }
   
   def parse(md : Metadado, html : List[Node], opcoes : Option[OpcoesRequisicao]) : (Option[(ProjetoLei,NodeSeq)],List[ParseProblem]) = {
-    import _root_.br.gov.lexml.parser.pl.validation.Validation    
+    import _root_.br.gov.lexml.parser.pl.validation.Validation
     val blocks = Block fromNodes html
     val baseProfile = md.profile
     
     val profile : DocumentProfile = opcoes.flatMap(_.profile) match {
-      case Some(p) => new DocumentProfileOverride(baseProfile,
+      case Some(p) => DocumentProfileOverride(baseProfile,
 	    				overrideRegexLocalData = p.regexLocalData.map(_.regex.toList.map(new Regex(_))),
 	    				overrideRegexJustificativa = p.regexJustificativa.map(_.regex.toList.map(new Regex(_))),
 						overrideRegexAnexos = p.regexAnexos.map(_.regex.toList.map(new Regex(_))),
@@ -114,7 +86,7 @@ object Tasks {
     }
     val (mpl1, falhas) = new ProjetoLeiParser(profile).fromBlocks(md, blocks)
     val res = for { pl <- mpl1 ; pl2 = pl.remakeEpigrafe } yield (pl2,LexmlRenderer.render(pl2))  
-    val falhasXML = if (!falhas.isEmpty) { List() } else {
+    val falhasXML = if (falhas.nonEmpty) { List() } else {
     	res.map({case (_,xml) => Validation.validaComSchema(xml).toList}).getOrElse(List())
     }
 
@@ -147,7 +119,7 @@ object Tasks {
         pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("pdf-renderer.document-margin-right"))
         val is = new java.io.ByteArrayInputStream(xml)
         pdfRenderer.render(is, os, pdfConfig)
-        try { os.close } catch { case _ : Exception ⇒ }
+        try { os.close() } catch { case _ : Exception ⇒ }
         os.toByteArray        
   }
   
@@ -159,12 +131,12 @@ object Tasks {
         pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("rtf-renderer.document-margin-right"))
         val is = new java.io.ByteArrayInputStream(xml)        
         val ctx = new RendererRTFContext(md.profile.urnFragAutoridade,md.profile.urnFragTipoNorma)
-        ctx.addConfig(pdfConfig);
-        val reader = new SAXReader();
-        val document = reader.read(is);
-        val root = document.getRootElement();
-        ctx.setOutputStream(os);                
-        new RTFBuilder(ctx, root).build();        
+        ctx.addConfig(pdfConfig)
+        val reader = new SAXReader()
+        val document = reader.read(is)
+        val root = document.getRootElement
+        ctx.setOutputStream(os)
+        new RTFBuilder(ctx, root).build()
         try { os.close() } catch { case _ : Exception => }        
         os.toByteArray
   }
@@ -180,8 +152,8 @@ object Tasks {
         abiwordPath, "--to=pdf", srcFile.getName)
       val p = Runtime.getRuntime.exec(cmd, Array[String](), srcFile.getParentFile)
       p.waitFor
-      if(!pdfFile.exists() || !pdfFile.isFile()) {
-        throw new ParseException()
+      if(!pdfFile.exists() || !pdfFile.isFile) {
+        throw ParseException()
       }
       FileUtils.readFileToByteArray(pdfFile)
     } finally {
@@ -190,7 +162,7 @@ object Tasks {
     }
   }).getOrElse(throw new RuntimeException("Tipo MIME de entrada não suportado: " + mime.toString))
   
-  def normalizeUrnForSorting(urn : String) = {
+  def normalizeUrnForSorting(urn : String): String = {
     urn.split("_").toIndexedSeq.map { comp =>
       val compl = comp.split("(?<=[a-z])(?=\\d)").toList
       val name = compl.head
@@ -204,9 +176,9 @@ object Tasks {
     }.mkString("_")
   }
   
-  val reAno = """(urn:lex:[^:]*:[^:]*:[^:]*:)(\d\d\d\d)-\d\d-\d\d(.*)""".r
+  val reAno: Regex = """(urn:lex:[^:]*:[^:]*:[^:]*:)(\d\d\d\d)-\d\d-\d\d(.*)""".r
   
-  def normalizeAno(urn : String) = 
+  def normalizeAno(urn : String): String =
     	reAno.replaceSomeIn(urn, m => Some(m.group(1) + m.group(2) + m.group(3)))
   
   def buildLegislacaoCitada(xhtmlSrc : Seq[Node]) : TRemissoes = {
@@ -221,7 +193,7 @@ object Tasks {
     })    
     val urnMap = urnFrags.groupBy(x => normalizeAno(x._1)).mapValues(l => l.map(_._2).foldLeft(Set[String]())(_ union _))
     val docs = urnMap.toIndexedSeq.sortBy(_._1).map {
-      case (urnDoc,fragSet) => {
+      case (urnDoc,fragSet) =>
         val frags = fragSet.toIndexedSeq.map(x => (normalizeUrnForSorting(x),x)).sortBy(_._1).map(_._2).map { frag =>
           val urnFrag = urnDoc + "!" + frag
           TRemissaoFragmento(new java.net.URI(urnFrag),buildDisplayFragmento(frag),buildUrlLexml(urnFrag),Simple)
@@ -229,8 +201,8 @@ object Tasks {
         TRemissaoDocumento(frags,new java.net.URI(urnDoc),
             buidDisplayDocumento(urnDoc),
             buildUrlLexml(urnDoc), Simple)
-      }
-    }.toSeq
+
+    }
     TRemissoes(docs : _*)    
   }
     
@@ -242,7 +214,7 @@ object Tasks {
     psXml1.toString.getBytes("utf-8")    
   }
   
-  val lexmlUrlFormatString = config.getString("tools.lexml-site-urn-format")
+  val lexmlUrlFormatString: String = config.getString("tools.lexml-site-urn-format")
   
   def buildUrlLexml(urnDoc : String) : java.net.URI = {
     new java.net.URI(lexmlUrlFormatString.format(urnDoc))
@@ -250,7 +222,7 @@ object Tasks {
   
   val tagSoupParserFactory = new org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl
   
-  def buidDisplayDocumento(urnDoc : String) = {    
+  def buidDisplayDocumento(urnDoc : String): String = {
     val parser = tagSoupParserFactory.newSAXParser()
     val source = new org.xml.sax.InputSource(lexmlUrlFormatString.format(urnDoc))
     val adapter = new scala.xml.parsing.NoBindingFactoryAdapter
@@ -261,7 +233,7 @@ object Tasks {
     if (res.length == 0) { urnDoc } else { res }
   }
   
-  def buildDisplayFragmento(frag : String) = FragmentFormatter.format(frag)
+  def buildDisplayFragmento(frag : String): String = FragmentFormatter.format(frag)
 
   def renderEPUB(xml : Array[Byte], md : Metadado) : Array[Byte] = {
     val renderer = XhtmlRenderer.makeRenderer()
@@ -273,7 +245,7 @@ object Tasks {
     os.toByteArray
   }
   
-  val numDiffsRe = "diffs_(\\d+)"r
+  val numDiffsRe: Regex = "diffs_(\\d+)"r
   def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
 	  Option[(Array[Byte],Option[Int])] = {
     val srcExtension = MimeExtensionRegistry.mimeToExtension(srcMime).map("." + _).getOrElse("")
@@ -302,9 +274,9 @@ object Tasks {
     fdmp.field("operacao","compare") 
     fdmp.field("formatoSaida","pdf")
     val resp = wr.`type`(MediaType.MULTIPART_FORM_DATA_TYPE).post(classOf[ClientResponse],fdmp)
-    if(resp.getStatus() == 200) {
-      val cd = new ContentDisposition(resp.getHeaders().get("Content-Disposition").get(0))
-      val fileName = cd.getFileName()      
+    if(resp.getStatus == 200) {
+      val cd = new ContentDisposition(resp.getHeaders.get("Content-Disposition").get(0))
+      val fileName = cd.getFileName
       val m = numDiffsRe.findFirstMatchIn(fileName)            
       val numDiffs = m.map(_.group(1).toInt)
       val data = resp.getEntity(classOf[Array[Byte]])

@@ -1,24 +1,20 @@
 package br.gov.lexml.parser.pl.ws.actors
 
-import akka.actor.Actor
+import java.io.{File, FileFilter}
 
-import scala.language.postfixOps
-import akka.actor.Actor._
-import grizzled.slf4j.Logging
+import akka.actor.Actor
 import br.gov.lexml.parser.pl.ws.ServiceParams
-import org.apache.commons.io.filefilter._
+import grizzled.slf4j.Logging
 import org.apache.commons.io.FileUtils
-import java.io.File
-import java.io.FileFilter
-import akka.actor.Scheduler
-import java.util.concurrent.TimeUnit.SECONDS
-import akka.actor.Scheduler
+import org.apache.commons.io.filefilter._
+
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
+import scala.language.postfixOps
 
 trait ResultCleaner {
   self: Logging ⇒
-  def delete(incomplete: Boolean, toleranceMinutes: Int) = {
+  def delete(incomplete: Boolean, toleranceMinutes: Int): Unit = {
     val dir = ServiceParams.params.parseResultDirectory
     self.logger.info("scanning " + dir.getPath + " for obsolete result dirs. " +
       "Considering incomplete = " + incomplete +
@@ -30,7 +26,7 @@ trait ResultCleaner {
         notFileFilter(ResultCleaner.containsWaitFileFilter)
       })
     for { l <- Option(dir.listFiles(filter : FileFilter)) ; f ← l } {
-      self.logger.info("cleaning " + f.getCanonicalPath())
+      self.logger.info("cleaning " + f.getCanonicalPath)
       FileUtils.deleteQuietly(f)
     }
   }
@@ -38,8 +34,10 @@ trait ResultCleaner {
 
 object ResultCleaner {
 
-  val containsWaitFileFilter = new AbstractFileFilter {
-    override def accept(f: File) = {
+  val containsWaitFileFilter: AbstractFileFilter {
+    def accept(f: File): Boolean
+  } = new AbstractFileFilter {
+    override def accept(f: File): Boolean = {
       val g = new File(f, "wait")
       g.exists()
     }
@@ -50,31 +48,32 @@ object ResultCleaner {
 case object CleanIt
 
 class IncompleteCleanActor extends Actor with Logging with ResultCleaner {
-  lazy val tolerance = ServiceParams.params.incompleteCleaningIntervalMinutes
+  lazy val tolerance: Int = ServiceParams.params.incompleteCleaningIntervalMinutes
   override def preStart() {
     logger.info("scheduling " + self.path + " to start in " + tolerance +
       " minutes, firing up again every " + (tolerance / 2.0) + " minutes")
-    implicit val dispatcher = context.system.dispatcher
+    implicit val dispatcher: ExecutionContextExecutor = context.system.dispatcher
     context.system.scheduler.schedule((tolerance * 60) seconds, (tolerance * 30) seconds, self, CleanIt)
   }
-  def receive = {
-    case CleanIt ⇒ {
-      delete(true, ServiceParams.params.incompleteCleaningIntervalMinutes)
-    }
+  def receive: PartialFunction[Any, Unit] = {
+    case CleanIt ⇒
+      val incomplete = true
+      delete(incomplete, ServiceParams.params.incompleteCleaningIntervalMinutes)
   }
 }
 
 class CompleteCleanActor extends Actor with Logging with ResultCleaner {
-  lazy val tolerance = ServiceParams.params.completeCleaningIntervalMinutes
+  lazy val tolerance: Int = ServiceParams.params.completeCleaningIntervalMinutes
   override def preStart() {
     logger.info("scheduling " + self.path + " to start in " + tolerance +
       " minutes, firing up again every " + (tolerance / 2.0) + " minutes")
-    implicit val dispatcher = context.system.dispatcher
+    implicit val dispatcher: ExecutionContextExecutor = context.system.dispatcher
     context.system.scheduler.schedule((tolerance * 60) seconds, (tolerance * 30) seconds, self, CleanIt)
   }
-  def receive = {
-    case CleanIt ⇒ {
-      delete(false, ServiceParams.params.completeCleaningIntervalMinutes)
-    }
+  def receive: PartialFunction[Any, Unit] = {
+    case CleanIt ⇒
+      val complete = false
+      delete(complete, ServiceParams.params.completeCleaningIntervalMinutes)
+
   }
 }

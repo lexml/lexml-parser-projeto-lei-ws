@@ -19,16 +19,16 @@ case object TTextoAnexoOmitido extends ProblemType(105, "Texto Anexo omitido", P
 
 case object TFalhaGeracaoPDF extends ProblemType(106, "Falha na geração de PDF", PC_ServicoWeb)
 
-final case class AutoridadeInvalida(val autoridade : String) extends ParseProblem(TAutoridadeInvalida,
+final case class AutoridadeInvalida(autoridade : String) extends ParseProblem(TAutoridadeInvalida,
     Some("Autoridade inválida: " + autoridade))
 
-final case class TipoNormaInvalido(val tipoNorma : String) extends ParseProblem(TTipoNormaInvalido, Some("Tipo de norma inválido: " + tipoNorma))
+final case class TipoNormaInvalido(tipoNorma : String) extends ParseProblem(TTipoNormaInvalido, Some("Tipo de norma inválido: " + tipoNorma))
 
-final case class DescritorEventoInvalido(val descritorEvento : String) extends ParseProblem(TDescritorEventoInvalido, Some("DescritorEvento inválido: " + descritorEvento))
+final case class DescritorEventoInvalido(descritorEvento : String) extends ParseProblem(TDescritorEventoInvalido, Some("DescritorEvento inválido: " + descritorEvento))
   
-final case class TipoTextoNaoSuportado(val tipoTexto : TipoTextoOption) extends ParseProblem(TTipoTextoNaoSuportado,Some("TipoTexto não suportado ainda: "  + tipoTexto))
+final case class TipoTextoNaoSuportado(tipoTexto : TipoTextoOption) extends ParseProblem(TTipoTextoNaoSuportado,Some("TipoTexto não suportado ainda: "  + tipoTexto))
 
-final case class FalhaConversaoXHTML(val mime : String) extends ParseProblem(TFalhaConversaoXHTML,Some("Falha na conversão para XHTML. MIME = " + mime))
+final case class FalhaConversaoXHTML(mime : String) extends ParseProblem(TFalhaConversaoXHTML,Some("Falha na conversão para XHTML. MIME = " + mime))
 
 case object TextoAnexoOmitido extends ParseProblem(TTextoAnexoOmitido,None)
 

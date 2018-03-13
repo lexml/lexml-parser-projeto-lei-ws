@@ -2,28 +2,18 @@ package br.gov.lexml.parser.pl.ws.resources.proc
 
 import java.io.File
 import java.net.URI
-import org.apache.commons.io.FileUtils
-import grizzled.slf4j.Logging
-import br.gov.lexml.parser.pl.errors.ParseException
-import br.gov.lexml.parser.pl.errors.ParseProblem
-import br.gov.lexml.parser.pl.ws.data.scalaxb._
-import br.gov.lexml.parser.pl.ws.ServiceParams
 import javax.xml.datatype.XMLGregorianCalendar
-import br.gov.lexml.parser.pl.errors.TErroSistema
+
+import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
+import br.gov.lexml.parser.pl.ws.{Dependencies, MimeExtensionRegistry, ServiceParams}
+import br.gov.lexml.parser.pl.ws.data.scalaxb._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
-import br.gov.lexml.parser.pl.errors.ErroSistema
-import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
-import eu.medsea.mimeutil.MimeUtil
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
-import eu.medsea.mimeutil.MimeType
-import br.gov.lexml.parser.pl.errors.FalhaConversaoPrimaria
-import scala.xml.XML
-import scala.xml.Elem
-import scala.xml.NodeSeq
-import br.gov.lexml.parser.pl.ws.Dependencies
-import scala.xml.Node
-import scala.xml.NamespaceBinding
-import scala.xml.TopScope
+import grizzled.slf4j.Logging
+import org.apache.commons.io.FileUtils
+
+import scala.language.postfixOps
+import scala.xml._
 
 
 final case class RequestContext(
@@ -37,29 +27,27 @@ final case class RequestContext(
   fonteFileName : Option[String])
 
 class RequestProcessor(ctx: RequestContext) extends Logging {
-  import scala.collection.mutable.{ Map ⇒ MMap, ListBuffer ⇒ MList }
+  import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
 
   type OutputFileMap = Map[File, (String, Array[Byte])]
 
-  def buildPath(comps: String*) = comps.foldLeft(ctx.resultPath)(new File(_, _))
+  def buildPath(comps: String*): File = comps.foldLeft(ctx.resultPath)(new File(_, _))
 
  
   
-  def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*) = {
+  def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (TipoElementoSaida, Option[File]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
         
     val (href,teso,f) = fmt match {
-      case EMBUTIDO => {
+      case EMBUTIDO =>
         val xml =XML.load(new java.io.ByteArrayInputStream(data))        
         (None,Some(scalaxb.DataRecord.fromAny(xml)),None)
-      }
-      case _ => {
+      case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
         val f = buildPath(extPath: _*)
         (Some(ctx.resultBuilder(extPath: _*)),None,Some(f))
-      }
     } 
     val tes = TipoElementoSaida(Some(TipoDigest(digest)), teso, ts, tm, href)    
     (tes, f)
@@ -74,7 +62,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     case (x: String, f: Boolean) ⇒ TipoCaracteristica(x, f, isCaracteristicaSupported(x))
   }
 
-  def isCaracteristicaSupported(s: String) =
+  def isCaracteristicaSupported(s: String): Boolean =
     !CaracteristicasImpeditivas.caracteristicaImpeditiva(s)
 
   def classChain(c: Class[_], l: List[String] = List()): String = c match {
@@ -82,7 +70,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     case _ ⇒ classChain(c.getSuperclass, c.getName :: l)
   }
 
-  def process() = try {
+  def process(): Unit = try {
     logger.info("process: start")
     val falhas: MList[TipoFalha] = MList()
     val caracteristicas: MList[TipoCaracteristica] = MList()
@@ -94,7 +82,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     
     def geraSaida[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
-        case Some(formato) ⇒ {
+        case Some(formato) ⇒
           logger.info("gerando saida ts = " + ts + " path = " + path)
           logger.info("mime saida = " + mime)
           data map { case (d,r) =>             
@@ -103,7 +91,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
             of foreach (f => outMap += (f -> (mime, d)))          
             (d,r)
           }
-        }
+
         case _ => None // data
       }
       
@@ -113,7 +101,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       try {
         geraSaida(ts, mime, digest, path: _*)(data)        
       } catch {
-        case ex: ParseException ⇒ falhas ++= ex.errors.map(fromProblem(_)) ; None
+        case ex: ParseException ⇒ falhas ++= ex.errors.map(fromProblem) ; None
         case ex: Exception ⇒ falhas += fromProblem(ErroSistema(ex)) ; None
       }
 
@@ -121,13 +109,12 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     try {
       val texto = ctx.req.texto.tipotextooption.value match {
         case TipoTextoEmbutido(value) ⇒ value.toArray[Byte]
-        case _: TipoTextoAnexo ⇒ ctx.fonte.getOrElse(throw new ParseException(TextoAnexoOmitido))
-        case t ⇒ throw new ParseException(TipoTextoNaoSuportado(t.getClass))
+        case _: TipoTextoAnexo ⇒ ctx.fonte.getOrElse(throw ParseException(TextoAnexoOmitido))
+        case t ⇒ throw ParseException(TipoTextoNaoSuportado(t.getClass))
       }
       val hash = Tasks.calcDigest(texto)
       digest = Some(hash)
       val metadado = Tasks.buildMetadado(ctx.req.metadado, hash)
-      import scala.collection.JavaConversions._
       
       def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
       val mimeFromExtension = ctx.fonteFileName.toList.flatMap { fname =>
@@ -137,7 +124,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         } else {
           None
         }
-        ext.toList.flatMap(MimeExtensionRegistry.ext2mime.get(_)).flatten
+        ext.toList.flatMap(MimeExtensionRegistry.ext2mime.get).flatten
       }
       val baseMimeTypeList = mimeFromExtension :+ ctx.req.texto.tipoMime.toString 
       /*val baseMimeTypeList = try {
@@ -149,7 +136,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       logger.info("baseMimeTypeList = " + baseMimeTypeList + ", accept = " + XHTMLProcessor.accept)
       val possibleMimeTypes = baseMimeTypeList.filter(accept)
       if (possibleMimeTypes.isEmpty) {
-        throw new ParseException(FalhaConversaoPrimaria)
+        throw ParseException(FalhaConversaoPrimaria)
       }
       //      println("Possible mime types: " + possibleMimeTypes)
       val mimeType = possibleMimeTypes.head //MimeUtil.getMostSpecificMimeType(possibleMimeTypes).toString
@@ -164,22 +151,22 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
           Some((Tasks.makeRemissoes(xhtmlEntrada),()))
       }
       geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", None, "intermediario", "documento") {
-        val xhtmlDoc = ( 
+        val xhtmlDoc =
           <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
         	<head>
                  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
                  <title>XHTML INTERMEDIARIO</title></head>
         		<body>{NodeSeq fromSeq xhtmlEntrada}</body>
-             </html> )
+             </html>
 
-        Some((( xhtmlDoc ).toString.getBytes("utf-8"),()))
+        Some(( xhtmlDoc.toString.getBytes("utf-8"),()))
       }
       
       val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
       
       logger.debug("problems = " + problems)
       
-      val (pl, xml) = parseResult.getOrElse(throw new ParseException(problems: _*))
+      val (pl, xml) = parseResult.getOrElse(throw ParseException(problems: _*))
       
       problems.foreach(falhas += fromProblem(_))
       
@@ -213,13 +200,11 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       
       
     } catch {
-      case ex: ParseException ⇒ {
-        falhas ++= ex.errors.map(fromProblem(_))
-      }
-      case ex: Exception ⇒ {
+      case ex: ParseException ⇒
+        falhas ++= ex.errors.map(fromProblem)
+      case ex: Exception ⇒
         logger.error("Exception in request processor(" + classChain(ex.getClass) + ") : " + ex.getMessage, ex)
         falhas += fromProblem(ErroSistema(ex))
-      }
     }
 
     logger.info("Falhas: " + falhas)
@@ -244,12 +229,12 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     ctx.waitFile.delete()
   }
 
-  def writeOutputs(m: OutputFileMap) =
+  def writeOutputs(m: OutputFileMap): Unit =
     for { (f, (mime, data)) ← m } {
       logger.debug("writing " + f)
-      FileUtils.forceMkdir(f.getParentFile())
+      FileUtils.forceMkdir(f.getParentFile)
       FileUtils.writeByteArrayToFile(f, data)
-      val mf = new File(f.getParentFile(), f.getName() + ".mime")
+      val mf = new File(f.getParentFile, f.getName + ".mime")
       FileUtils.writeStringToFile(mf, mime)      
     }
   

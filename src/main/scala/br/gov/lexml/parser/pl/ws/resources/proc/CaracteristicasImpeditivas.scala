@@ -6,7 +6,7 @@ object CaracteristicasImpeditivas  {
 	
     import Caracteristicas._
   
-    val caracteristicaImpeditiva = Set[String](
+    val caracteristicaImpeditiva: Set[String] = Set[String](
         POSSUI_TABELA_ARTICULACAO,        
         POSSUI_TITULO,
         POSSUI_PENA,

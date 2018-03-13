@@ -1,45 +1,31 @@
 package br.gov.lexml.parser.pl.ws.resources
 
-import java.io.ByteArrayOutputStream
-import scala.language.postfixOps
-import java.io.File
-import java.io.InputStream
+import java.io.{ByteArrayOutputStream, File, InputStream}
 import java.net.URI
 import java.security.SecureRandom
-import scala.collection.JavaConversions.collectionAsScalaIterable
-import scala.collection.JavaConversions.seqAsJavaList
-import scala.xml.XML
-import org.apache.commons.codec.binary.Base32
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
-import com.sun.jersey.core.header.FormDataContentDisposition
-import com.sun.jersey.multipart.FormDataParam
-import grizzled.slf4j.Logging
-import akka.actor.Actor
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ScalaxbParserRequisicaoFormat
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserRequisicao
-import br.gov.lexml.parser.pl.ws.resources.proc.RequestContext
-import br.gov.lexml.parser.pl.ws.resources.proc.RequestProcessor
-import br.gov.lexml.parser.pl.ws.ServiceParams
-import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
-import eu.medsea.mimeutil.MimeUtil
-import javax.ws.rs.core.Context
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriInfo
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import scalaxb.fromXMLEither
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.NewCookie
-import javax.xml.ws.WebServiceContext
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
+import javax.ws.rs._
+import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
+import javax.xml.ws.WebServiceContext
 import javax.xml.ws.handler.MessageContext
-import br.gov.lexml.parser.pl.ws.Initializer
+
+import akka.actor.Actor
+import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{ParserRequisicao, ScalaxbParserRequisicaoFormat}
+import br.gov.lexml.parser.pl.ws.resources.proc.RequestProcessor
+import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
+import com.sun.jersey.core.header.FormDataContentDisposition
+import com.sun.jersey.multipart.FormDataParam
+import eu.medsea.mimeutil.MimeUtil
+import grizzled.slf4j.Logging
+import org.apache.commons.codec.binary.Base32
+import org.apache.commons.io.{FileUtils, IOUtils}
+
+import scala.language.postfixOps
+import scala.util.matching.Regex
+import scala.xml.XML
+import scalaxb.fromXMLEither
 
 //import org.apache.commons.codec.binary.Base64
 
@@ -47,18 +33,17 @@ import br.gov.lexml.parser.pl.ws.Initializer
 class ScalaParserService extends Logging {
   
   @Resource
-  var context : WebServiceContext = null
+  var context : WebServiceContext = _
 
   @Context
-  var uriInfo: UriInfo = null
+  var uriInfo: UriInfo = _
 
   private def buildURIFromRelativePath(path: String*) = uriInfo match {
     case null ⇒ new URI("http://localhost:8180/parser" + path.mkString(";", ";", ""))
-    case _ ⇒ {
-      val builder = uriInfo.getBaseUriBuilder()
+    case _ ⇒
+      val builder = uriInfo.getBaseUriBuilder
       for (c ← path) builder.path(c)
       builder.build()
-    }
   }
 
   @POST
@@ -68,7 +53,7 @@ class ScalaParserService extends Logging {
     @FormDataParam("fonte") fonteStream: InputStream,
     @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {    
     if(fonteStream == null) {
-      throw new RuntimeException("Erro: fonteStream == null");
+      throw new RuntimeException("Erro: fonteStream == null")
     }
     doParseSenado(requisicaoText, Some(IOUtils.toByteArray(fonteStream)),Some(fonteDetail.getFileName))
   }
@@ -98,9 +83,9 @@ class ScalaParserService extends Logging {
   @GET
   @Path("result/{id}")
   @Produces(Array("text/xml"))
-  def readResultGet(@PathParam("id") id: String) = {
+  def readResultGet(@PathParam("id") id: String): Response = {
     logger.info("readResultGet: id = " + id)    
-    Response.temporaryRedirect(uriInfo.getRequestUriBuilder().path("resultado.xml").build()).build    
+    Response.temporaryRedirect(uriInfo.getRequestUriBuilder.path("resultado.xml").build()).build
   }
 
   
@@ -151,7 +136,7 @@ class ScalaParserService extends Logging {
 
   @Path("result/{id}/{filename}")
   @GET
-  def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String) =
+  def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String): Response =
     touchId(id) { doReadResult(id, filename) }
 
   
@@ -160,14 +145,14 @@ class ScalaParserService extends Logging {
   @GET
   @Path("result/{id}/{dir}/{filename}")
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String,
-    @PathParam("dir") dir: String) =
+    @PathParam("dir") dir: String): Response =
     touchId(id) { doReadResult(id, dir, filename) }
 
   private def touchSession() {
     if (context != null) {
-      val mc = context.getMessageContext()
+      val mc = context.getMessageContext
       val session = mc.get(MessageContext.SERVLET_REQUEST).asInstanceOf[HttpServletRequest].getSession()
-      logger.info("Session: " + session.getId())                                                                              
+      logger.info("Session: " + session.getId)
     }
   }
   
@@ -179,11 +164,11 @@ class ScalaParserService extends Logging {
     try {
       fromXMLEither[ParserRequisicao](
         XML.loadString(requisicaoText)) match {
-          case Left(error) ⇒ {
+          case Left(error) ⇒
             logger.warn("Requisicao invalida: " + error + "\ninput: " + requisicaoText)
             Response.status(Response.Status.BAD_REQUEST).build()
-          }
-          case Right(requisicao) ⇒ {
+
+          case Right(requisicao) ⇒
             var uniqueId: String = null
             var resultPath: File = null
             do {
@@ -192,7 +177,7 @@ class ScalaParserService extends Logging {
             } while (resultPath.exists())
 
             def resultURI(comps: String*): URI = {
-              buildURIFromRelativePath(("parse" :: "result" :: uniqueId :: comps.toList): _*)
+              buildURIFromRelativePath("parse" :: "result" :: uniqueId :: comps.toList : _*)
             }
 
             FileUtils.forceMkdir(resultPath)
@@ -200,17 +185,17 @@ class ScalaParserService extends Logging {
             FileUtils.touch(waitFile)
             val dataHoraProcessamento = javax.xml.datatype.DatatypeFactory.newInstance.newXMLGregorianCalendar(new java.util.GregorianCalendar())
             logger.info("sending message to actor with uniqueId=%s, requisicao=%s, resultPath=%s, waitFile=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento))
-            boot.parserServiceRouter ! (new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName)))            
+            boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
             val uri = resultURI()
             logger.info("result for " + uniqueId + ", at  " + uri)
-            Response.created(uri).entity((<Location>{ uri.toURL.toExternalForm }</Location>).toString).build()
-          }
+            Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
+
         }
     } catch {
-      case ex: Exception ⇒ {
+      case ex: Exception ⇒
         logger.error("Erro durante a execução: " + ex.getMessage + ", input: " + requisicaoText, ex)
         Response.status(Response.Status.BAD_REQUEST).build()
-      }
+
     } finally {
       logger.info(s"doParseSenado: ending. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     }
@@ -226,25 +211,25 @@ class ScalaParserService extends Logging {
     new Base32().encodeAsString(a)
   }
 
-  val notFoundBuilder = Response.status(Response.Status.NOT_FOUND).header("Cache-control", "no-cache") //"s-maxage=1")
-  val notFound = notFoundBuilder.build()
+  val notFoundBuilder: Response.ResponseBuilder = Response.status(Response.Status.NOT_FOUND).header("Cache-control", "no-cache") //"s-maxage=1")
+  val notFound: Response = notFoundBuilder.build()
 
   private lazy val resultado2XhtmlData = {
     val is = getClass.getClassLoader.getResourceAsStream("resultado2xhtml.xsl")
     val os = new ByteArrayOutputStream()
     IOUtils.copy(is, os)
-    os.toByteArray()
+    os.toByteArray
   }
 
-  private def getResultado2XhtmlData(): Array[Byte] = {
+  private def getResultado2XhtmlData: Array[Byte] = {
     resultado2XhtmlData
   }
 
   private def doReadResult(id: String, pathComps: String*): Response = {    
     pathComps match {
-      case Seq("resultado2xhtml.xsl") ⇒ {
+      case Seq("resultado2xhtml.xsl") ⇒
         Response.ok(getResultado2XhtmlData, "application/xslt+xml").build()
-      }
+
       case _ ⇒ doReadResult2(id, pathComps: _*).map(r ⇒ Response.ok(r._1, r._2))
         .getOrElse(notFoundBuilder).build()
     }
@@ -267,14 +252,14 @@ class ScalaParserService extends Logging {
       Some((reqFile, mimeType))
     }
   }
-  val idRegex = "^[A-Z0-9]+$"r
-  def touchId(id: String)(rest: ⇒ Response) = {
+  val idRegex: Regex = "^[A-Z0-9]+$"r
+  def touchId(id: String)(rest: ⇒ Response): Response = {
     touchSession()
     if (idRegex.findFirstIn(id).isDefined) {
-      ServiceParams.params.parseResultDirectory.list();
+      ServiceParams.params.parseResultDirectory.list()
       val resultDir = new File(ServiceParams.params.parseResultDirectory, id)
-      if (resultDir.exists && resultDir.isDirectory()) {
-        resultDir.listFiles();
+      if (resultDir.exists && resultDir.isDirectory) {
+        resultDir.listFiles()
         val waitFile = new File(resultDir, "wait")
         if (!waitFile.exists) {
           FileUtils.touch(resultDir)
@@ -316,27 +301,30 @@ class ScalaParserService extends Logging {
 
   @Path("static/{file: .*}")
   @GET
-  def serveStatic(@PathParam("file") file: String) = {
+  def serveStatic(@PathParam("file") file: String): Response = {
     logger.info("serveStatic: file = " + file)
-    import scala.collection.JavaConversions._
     val staticDir = ServiceParams.params.staticOverrideDirectory
-    val f = new File(new File(staticDir, "lexml-static"),file).getCanonicalFile()
+    val f = new File(new File(staticDir, "lexml-static"),file).getCanonicalFile
     logger.info("staticDir: " + staticDir)
     logger.info("serving: " + f)
     logger.info("f.exists = " + f.exists + ", f.isFile = " + f.isFile)
-    if (f.getPath.startsWith(staticDir.getPath) && f.exists() && f.isFile()) {
-      val mt = getMostSpecificMimeType(f, false)
+    val noFilterAccept = false
+    if (f.getPath.startsWith(staticDir.getPath) && f.exists() && f.isFile) {
+
+      val mt = getMostSpecificMimeType(f, noFilterAccept)
       logger.info("serveStatic: found on static dir. f = " + f + ", mt = " + mt)
       Response.ok(f, mt.getOrElse("application/binary")).header("Cache-control", "no-cache").build()
     } else {
       Option(this.getClass.getResourceAsStream("lexml-static/" + file)) match {
-        case None ⇒ { logger.info("serveStatic: not found."); notFound }
-        case Some(is) ⇒ {
+        case None ⇒
+          logger.info("serveStatic: not found.")
+          notFound
+        case Some(is) ⇒
           val d = IOUtils.toByteArray(is)
-          val mt = getMostSpecificMimeType(d, false)
+          val mt = getMostSpecificMimeType(d, noFilterAccept)
           logger.info("serveStatic: found on classpath. mt = " + mt)
           Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "no-cache").build()
-        }
+
       }
     }
   }
@@ -344,14 +332,12 @@ class ScalaParserService extends Logging {
 
 class ParserServiceActor extends Actor with Logging {
 
-  def receive = {
-    case rp: RequestProcessor ⇒ {
+  def receive: PartialFunction[Any, Unit] = {
+    case rp: RequestProcessor ⇒
       logger.info("ParserServiceActor: message received")
       rp.process()
-    }
-    case x ⇒ {
+    case x ⇒
       logger.error("Received unexpected message:  " + x)
-    }
   }
 }
 
