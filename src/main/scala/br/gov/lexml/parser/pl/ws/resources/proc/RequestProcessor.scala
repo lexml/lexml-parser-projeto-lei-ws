@@ -12,7 +12,7 @@ import javax.xml.datatype.XMLGregorianCalendar
 import br.gov.lexml.parser.pl.errors.TErroSistema
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.errors.ErroSistema
-import br.gov.lexml.parser.pl.ws.Mime
+import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
 import eu.medsea.mimeutil.MimeUtil
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import eu.medsea.mimeutil.MimeType
@@ -55,7 +55,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         (None,Some(scalaxb.DataRecord.fromAny(xml)),None)
       }
       case _ => {
-        val ext = "." + Mime.mimeToExtension(tm.toString).getOrElse("txt")
+        val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
         val f = buildPath(extPath: _*)
         (Some(ctx.resultBuilder(extPath: _*)),None,Some(f))
@@ -137,7 +137,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         } else {
           None
         }
-        ext.toList.flatMap(Mime.ext2mime.get(_)).flatten
+        ext.toList.flatMap(MimeExtensionRegistry.ext2mime.get(_)).flatten
       }
       val baseMimeTypeList = mimeFromExtension :+ ctx.req.texto.tipoMime.toString 
       /*val baseMimeTypeList = try {

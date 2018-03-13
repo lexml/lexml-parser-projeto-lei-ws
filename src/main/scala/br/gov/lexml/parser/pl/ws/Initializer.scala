@@ -1,11 +1,6 @@
 package br.gov.lexml.parser.pl.ws
 
-import javax.servlet.{ServletContextListener, ServletContextEvent}
-import java.io.File
-import br.gov.lexml.parser.pl.ws.data.scalaxb._
-import javax.servlet.ServletContext
-import grizzled.slf4j.Logging
-import br.gov.lexml.parser.pl.cfg.ParserComponentConfiguration
+import javax.servlet.{ServletContext, ServletContextEvent, ServletContextListener}
 
  /**
   * This class can be added to web.xml mappings as a listener to start and postStop Akka.

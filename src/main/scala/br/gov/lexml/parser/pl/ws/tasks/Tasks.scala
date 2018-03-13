@@ -29,7 +29,7 @@ import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissaoDocumento
 import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissaoFragmento
 import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.TRemissoes
 import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.defaultScope
-import br.gov.lexml.parser.pl.ws.Mime
+import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.defaultConverter
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.pipeline
 import br.gov.lexml.parser.pl.ProjetoLei
@@ -169,7 +169,7 @@ object Tasks {
         os.toByteArray
   }
       
-  def docToPDF(texto: Array[Byte], mime: TipoMimeEntrada): Array[Byte] = Mime.mimeToExtension(mime.toString).map( (extension : String) => {
+  def docToPDF(texto: Array[Byte], mime: TipoMimeEntrada): Array[Byte] = MimeExtensionRegistry.mimeToExtension(mime.toString).map((extension : String) => {
     val srcFile = File.createTempFile("lexml-src-render", "." + extension)
     val pdfFile = new File(srcFile.getCanonicalPath.replaceFirst(extension + "$", "pdf"))
     try {
@@ -276,8 +276,8 @@ object Tasks {
   val numDiffsRe = "diffs_(\\d+)"r
   def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
 	  Option[(Array[Byte],Option[Int])] = {
-    val srcExtension = Mime.mimeToExtension(srcMime).map("." + _).getOrElse("")
-    val targetExtension = Mime.mimeToExtension(targetMime).map("." + _).getOrElse("")
+    val srcExtension = MimeExtensionRegistry.mimeToExtension(srcMime).map("." + _).getOrElse("")
+    val targetExtension = MimeExtensionRegistry.mimeToExtension(targetMime).map("." + _).getOrElse("")
     val srcName = "source" + srcExtension
     val targetName = "target" + targetExtension
     

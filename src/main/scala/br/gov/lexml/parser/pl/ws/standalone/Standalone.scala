@@ -36,7 +36,7 @@ import scala.util.matching.Regex
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoMimeEntrada
 import br.gov.lexml.parser.pl.ws.data.scalaxb.EXTERNO
 import br.gov.lexml.parser.pl.ws.data.scalaxb.EMBUTIDO
-import br.gov.lexml.parser.pl.ws.Mime
+import br.gov.lexml.parser.pl.ws.MimeExtensionRegistry
 import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
 import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoSaida
 import br.gov.lexml.parser.pl.ws.data.scalaxb.PDF_DIFF
@@ -63,7 +63,7 @@ object Standalone extends Logging {
       profile <- (DocumentProfileRegister.getProfile(autoridade,tipo) 
           orElse DocumentProfileRegister.profileByAutoridadeSigla(autoridade,tipo))      
       _ = println("profile =  " + profile)
-      tipoMime ← Mime.ext2mime.get(extension).map((s: Set[String]) ⇒ TipoMimeEntrada.fromString(s.head,defaultScope))
+      tipoMime ← MimeExtensionRegistry.ext2mime.get(extension).map((s: Set[String]) ⇒ TipoMimeEntrada.fromString(s.head,defaultScope))
       _ = println("tipoMime = " + tipoMime)
     } yield {
       val metadado = TipoMetadado(localidade,profile.urnFragAutoridade,profile.urnFragTipoNorma,

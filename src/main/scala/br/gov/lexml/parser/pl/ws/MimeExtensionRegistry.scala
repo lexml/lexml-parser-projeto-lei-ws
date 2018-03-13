@@ -1,13 +1,8 @@
 package br.gov.lexml.parser.pl.ws
-import org.apache.commons.io.FileUtils
-import org.apache.commons.io.IOUtils
-import java.io.InputStreamReader
-import eu.medsea.mimeutil.MimeUtil2
 import eu.medsea.mimeutil.MimeUtil
-import eu.medsea.mimeutil.detector.MimeDetector
 import grizzled.slf4j.Logging
 
-object Mime extends Logging {
+object MimeExtensionRegistry extends Logging {
   
   /*lazy val ext2mime : Map[String,Set[String]]= {
       import scala.collection.JavaConversions._
