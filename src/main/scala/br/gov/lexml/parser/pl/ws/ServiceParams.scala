@@ -1,12 +1,14 @@
 package br.gov.lexml.parser.pl.ws
 
-import javax.servlet.{ServletContextListener, ServletContextEvent}
-
+import javax.servlet.{ServletContextEvent, ServletContextListener}
 import java.io.File
+
 import br.gov.lexml.parser.pl.ws.data.scalaxb._
 import javax.servlet.ServletContext
+
 import grizzled.slf4j.Logging
 import br.gov.lexml.parser.pl.cfg.ParserComponentConfiguration
+import br.gov.lexml.parser.pl.cfg.ParserComponentConfiguration.Configuration
 
 
 class ServiceParams(octx : Option[ServletContext] = None) extends Logging {  
@@ -69,7 +71,7 @@ object ServiceParams {
   
   var params : ServiceParams = new ServiceParams() 
   
-  lazy val configuracao1 = ParserComponentConfiguration.scanConfiguration(getClass)
+  lazy val configuracao1: Configuration = ParserComponentConfiguration.scanConfiguration(getClass)
   
   lazy val configuracao : TipoConfiguracao = {
     val comps = configuracao1.values.toSeq.
