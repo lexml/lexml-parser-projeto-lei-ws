@@ -13,7 +13,7 @@ import javax.xml.ws.handler.MessageContext
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
 import br.gov.lexml.parser.pl.ws.data.scalaxb.{ParserRequisicao, ScalaxbParserRequisicaoFormat}
-import br.gov.lexml.parser.pl.ws.resources.proc.RequestProcessor
+import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import com.sun.jersey.core.header.FormDataContentDisposition
 import com.sun.jersey.multipart.FormDataParam
