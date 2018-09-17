@@ -18,13 +18,18 @@ var tipoNormaByAutoridade = {
 				{"value":"projeto.lei.complementar;pls", "display":"PLS - Projeto de Lei Complementar"},
 				{"value":"projeto.lei;plc", "display":"PLC - Projeto de Lei"},
 				{"value":"projeto.lei.complementar;plc", "display":"PLC - Projeto de Lei Complementar"},
+                {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
+                {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
 				{"value":"projeto.resolucao;prs", "display":"PRS - Projeto de Resolução"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
 				{"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
+                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"}
 			],
 		"camara.deputados" :
 			[
-				{"value":"projeto.lei;pl", "display": "PL - Projeto Lei"},
+				{"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
+                {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
+                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
 			],
 		"casa.legislativa" :
@@ -33,7 +38,8 @@ var tipoNormaByAutoridade = {
 			],
 		"congresso.nacional": 
 			[
-			 	{"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"}
+			 	{"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
+                {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"}
 			],
 		"federal": 
 			[

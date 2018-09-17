@@ -51,13 +51,13 @@ object Tasks {
     if (!DocumentProfileRegister.autoridades.contains(metadado.autoridade)) {
       throw ParseException(AutoridadeInvalida(metadado.autoridade))
     }    
-    val profile = DocumentProfileRegister.getProfile(metadado.autoridade,metadado.tipoNorma)
+    val profile = DocumentProfileRegister.getProfile(metadado.autoridade,metadado.tipoNorma, Some("br"))
     				.getOrElse(throw ParseException(TipoNormaInvalido(metadado.tipoNorma)))
     
     val id = metadado.descritorEvento.map(de ⇒
       Id.fromUrnFrag(de).getOrElse(throw ParseException(DescritorEventoInvalido(de))))
 
-    Metadado(profile, id, Some(digest.getBytes("utf-8")))
+    Metadado(profile, None, None, None, id, Some(digest.getBytes("utf-8")))
   }
   
   def parse(md : Metadado, html : List[Node], opcoes : Option[OpcoesRequisicao]) : (Option[(ProjetoLei,NodeSeq)],List[ParseProblem]) = {
