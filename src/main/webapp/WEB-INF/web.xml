@@ -19,7 +19,7 @@
 	</context-param>
 	<context-param>
 	<param-name>staticOverrideDirectory</param-name>
-	<param-value>/areastorage/parser</param-value>
+	<param-value>/areastorage</param-value>
 	</context-param>
 	<context-param>
 	<param-name>mensagemUsuarioDirectory</param-name>
