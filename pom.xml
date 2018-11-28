@@ -36,56 +36,6 @@
 		</repository>
 	</distributionManagement>
 
-	<repositories>
-		<repository>
-			<id>GitHub Repository</id>
-			<url>https://raw.github.com/lexml/mvn-repo/master</url>
-			<releases>
-      			<enabled>true</enabled>
-    		</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>always</updatePolicy>
-			</snapshots>
-		</repository>
-
-		<repository>
-			<id>maven2-repository.java.net</id>
-			<name>Java.net Repository for Maven</name>
-			<url>http://download.java.net/maven/2</url>
-			<layout>default</layout>
-		</repository>
-		<repository>
-			<id>typesafe</id>
-			<name>Typesafe Repository</name>
-			<url>http://repo.typesafe.com/typesafe/releases/</url>
-		</repository>
-		<repository>
-			<id>Akka</id>
-			<name>Akka Maven2 Repository</name>
-			<url>http://akka.io/repository/ </url>
-		</repository>
-		<repository>
-			<id>scala-tools.org</id>
-			<name>Scala-tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-releases</url>
-		</repository>
-		<repository>
-			<id>scala-tools.org-snapshots</id>
-			<name>Scala-tools Maven2 Repository</name>
-			<url>http://scala-tools.org/repo-snapshots</url>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</snapshots>
-		</repository>
-                <repository>
-                    <id>jcenter</id>
-                    <name>JCenter Repository</name>
-                    <url>https://jcenter.bintray.com</url>
-                </repository>
-	</repositories>
-
 	<build>
 		<finalName>lexml-parser</finalName>
 		<plugins>
@@ -185,7 +135,7 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei</artifactId>
-			<version>1.10.6</version>
+			<version>1.10.7</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>

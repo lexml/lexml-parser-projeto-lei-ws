@@ -43,6 +43,12 @@ var tipoNormaByAutoridade = {
 			],
 		"federal": 
 			[
+                {"value" : "decreto", "display": "Decreto"},
+                {"value" : "decreto.lei", "display": "Decreto-Lei"},
+                {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
+                {"value" : "lei", "display": "Lei"},
+                {"value" : "lei.complementar", "display": "Lei Complementar"},
+                {"value" : "lei.delegada", "display": "Lei Delegada"},
 			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
 			]
 	};
