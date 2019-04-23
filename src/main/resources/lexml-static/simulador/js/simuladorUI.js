@@ -23,7 +23,8 @@ var tipoNormaByAutoridade = {
 				{"value":"projeto.resolucao;prs", "display":"PRS - Projeto de Resolução"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
 				{"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
-                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"}
+                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
+                {"value":"resolucao", "display":"Resolução"}
 			],
 		"camara.deputados" :
 			[
@@ -31,6 +32,7 @@ var tipoNormaByAutoridade = {
                 {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
                 {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
+                {"value":"resolucao", "display":"Resolução"}
 			],
 		"casa.legislativa" :
 			[
@@ -38,12 +40,15 @@ var tipoNormaByAutoridade = {
 			],
 		"congresso.nacional": 
 			[
-			 	{"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
-                {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"}
+                {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
+			    {"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
+                {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"},
+                {"value" : "resolucao", "display":"Resolução"}
 			],
 		"federal": 
 			[
                 {"value" : "decreto", "display": "Decreto"},
+                {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
                 {"value" : "decreto.lei", "display": "Decreto-Lei"},
                 {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
                 {"value" : "lei", "display": "Lei"},
