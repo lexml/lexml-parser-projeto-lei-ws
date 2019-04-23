@@ -5,7 +5,7 @@ import java.net.URI
 
 import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
 import br.gov.lexml.parser.pl.ws.{Initializer, MimeExtensionRegistry, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, RTF_DERIVADO, ScalaxbTipoTextoEmbutidoFormat, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
+import br.gov.lexml.parser.pl.ws.data.scalaxb._
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import grizzled.slf4j.Logging
 import org.apache.commons.io.FileUtils
@@ -14,6 +14,7 @@ import org.clapper.argot._
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
+import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoFormatoSaida
 
 object Standalone extends Logging {
 
@@ -45,8 +46,8 @@ object Standalone extends Logging {
       val tipoTextoOption = scalaxb.DataRecord(None, None, TipoTextoEmbutido(scalaxb.Base64Binary(fileData: _*)))
       val texto = TipoTexto(tipoMime, tipoTextoOption)
       val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, XHTML_INTERMEDIARIO, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, RTF_DERIVADO)
-      val ttsaidas = tsaidas.map(TipoTipoDeSaida(_,EXTERNO)) 
-      val saidas = TipoTiposDeSaidas(ttsaidas: _*)
+      val ttsaidas = tsaidas.map(x => TipoTipoDeSaida(Map("@tipo" -> scalaxb.DataRecord(x), "@formato" -> scalaxb.DataRecord(EXTERNO : TipoFormatoSaida)))) 
+      val saidas = TipoTiposDeSaidas(ttsaidas)
       ParserRequisicao(metadado, texto, saidas)
     }
     

@@ -13,7 +13,7 @@ import br.gov.lexml.parser.pl.output.LexmlRenderer
 import br.gov.lexml.parser.pl.profile.{DocumentProfile, DocumentProfileOverride, DocumentProfileRegister}
 import br.gov.lexml.parser.pl.ws.{LexmlWsConfig, MimeExtensionRegistry}
 import br.gov.lexml.parser.pl.ws.data.scalaxb.{OpcoesRequisicao, TipoMetadado, TipoMimeEntrada}
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.{ScalaxbTRemissoesFormat, Simple, TRemissaoDocumento, TRemissaoFragmento, TRemissoes, defaultScope}
+import br.gov.lexml.parser.pl.ws.remissoes.scalaxb._
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.{defaultConverter, pipeline}
 import br.gov.lexml.renderer.pdf.{PDFConfigs, RendererPDF}
 import br.gov.lexml.renderer.rtf.{RTFBuilder, RendererRTFContext}
@@ -192,18 +192,27 @@ object Tasks {
       }
     })    
     val urnMap = urnFrags.groupBy(x => normalizeAno(x._1)).mapValues(l => l.map(_._2).foldLeft(Set[String]())(_ union _))
+    import br.gov.lexml.parser.pl.ws.remissoes.scalaxb._
     val docs = urnMap.toIndexedSeq.sortBy(_._1).map {
       case (urnDoc,fragSet) =>
         val frags = fragSet.toIndexedSeq.map(x => (normalizeUrnForSorting(x),x)).sortBy(_._1).map(_._2).map { frag =>
-          val urnFrag = urnDoc + "!" + frag
-          TRemissaoFragmento(new java.net.URI(urnFrag),buildDisplayFragmento(frag),buildUrlLexml(urnFrag),Simple)
+          val urnFrag = urnDoc + "!" + frag          
+          TRemissaoFragmento(Map(
+              "@{http://www.lexml.gov.br/schema/remissoes}urn" -> scalaxb.DataRecord(new java.net.URI(urnFrag)),
+              "@{http://www.lexml.gov.br/schema/remissoes}display" -> scalaxb.DataRecord(buildDisplayFragmento(frag)),
+              "@{http://www.w3.org/1999/xlink}href" -> scalaxb.DataRecord(buildUrlLexml(urnFrag)),
+              "@{http://www.w3.org/1999/xlink}type" -> scalaxb.DataRecord(Simple : TypeType)
+              ) )
         }
-        TRemissaoDocumento(frags,new java.net.URI(urnDoc),
-            buidDisplayDocumento(urnDoc),
-            buildUrlLexml(urnDoc), Simple)
+        TRemissaoDocumento(frags,Map(
+            "@{http://www.lexml.gov.br/schema/remissoes}urn" -> scalaxb.DataRecord(new java.net.URI(urnDoc)),
+            "@{http://www.lexml.gov.br/schema/remissoes}display" -> scalaxb.DataRecord(buidDisplayDocumento(urnDoc)),
+            "@{http://www.w3.org/1999/xlink}href" -> scalaxb.DataRecord(buildUrlLexml(urnDoc)), 
+            "@{http://www.w3.org/1999/xlink}type" -> scalaxb.DataRecord(Simple : TypeType)
+            ))
 
     }
-    TRemissoes(docs : _*)    
+    TRemissoes(docs)    
   }
     
   def makeRemissoes(xhtml : Seq[Node]) : Array[Byte] = {

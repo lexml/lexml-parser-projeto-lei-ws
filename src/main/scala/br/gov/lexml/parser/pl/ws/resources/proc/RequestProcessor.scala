@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils
 
 import scala.language.postfixOps
 import scala.xml._
+import scalaxb.XMLStandardTypes
 
 
 final case class RequestContext(
@@ -38,18 +39,32 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
   def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (TipoElementoSaida, Option[File]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
-        
+    import XMLStandardTypes._
     val (href,teso,f) = fmt match {
       case EMBUTIDO =>
-        val xml =XML.load(new java.io.ByteArrayInputStream(data))        
-        (None,Some(scalaxb.DataRecord.fromAny(xml)),None)
+        val xml =XML.load(new java.io.ByteArrayInputStream(data))       
+        val xml1 = (<lexmlws:conteudoXML xmlns:lexmlws="http://www.lexml.gov.br/parser-ws">{xml}</lexmlws:conteudoXML>)
+        val x = scalaxb.fromXML[ConteudoXML](xml1)       
+        (None,Some(scalaxb.DataRecord(x)),None)
       case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
         val f = buildPath(extPath: _*)
         (Some(ctx.resultBuilder(extPath: _*)),None,Some(f))
     } 
-    val tes = TipoElementoSaida(Some(TipoDigest(digest)), teso, ts, tm, href)    
+    /**
+     * (digest: Option[br.gov.lexml.parser.pl.ws.data.scalaxb.TipoDigest] = None,
+  tipoelementosaidaoption: Option[scalaxb.DataRecord[Any]] = None,
+  attributes: Map[String, scalaxb.DataRecord[Any]] = Map.empty) {
+  lazy val tipoSaida = attributes("@tipoSaida").as[TipoSaida]
+  lazy val tipoMime = attributes("@tipoMime").as[TipoMimeSaida]
+  lazy val href = attributes.get("@href") map { _.as[java.net.URI]}
+}
+     */
+    val tes = TipoElementoSaida(Some(TipoDigest(digest)), teso, 
+        Map("@tipoSaida" -> scalaxb.DataRecord(ts),
+            "@tipoMime" -> scalaxb.DataRecord(tm),
+            "@href" -> scalaxb.DataRecord(href)))    
     (tes, f)
   }
 
@@ -209,9 +224,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     logger.info("Falhas: " + falhas)
     val res = TipoResultado(
-      falhas = TipoFalhas(falhas: _*),
-      caracteristicas = TipoCaracteristicas(caracteristicas: _*),
-      saidas = TipoSaidasResultado(saidas: _*),
+      falhas = TipoFalhas(falhas),
+      caracteristicas = TipoCaracteristicas(caracteristicas),
+      saidas = TipoSaidasResultado(saidas),
       digestFonte = TipoDigest(digest.getOrElse("")),
       dataHoraProcessamento = ctx.dataHoraProcessamento,
       numeroDiferencas = numDiffs)

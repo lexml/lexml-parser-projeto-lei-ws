@@ -78,7 +78,9 @@ object ServiceParams {
 
   lazy val configuracao: TipoConfiguracao = {
     val comps = configuracao1.values.toSeq.
-      map(c => TipoConfiguracaoComponente(c.groupId + "/" + c.artifactId, c.build.toString))
-    TipoConfiguracao(comps: _*)
+      map(c => TipoConfiguracaoComponente(
+          Map("@nome" -> scalaxb.DataRecord(c.groupId + "/" + c.artifactId), 
+              "@versao" -> scalaxb.DataRecord(c.build.toString))))
+    TipoConfiguracao(comps)
   }
 }
