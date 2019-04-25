@@ -34,8 +34,8 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
   def buildPath(comps: String*): File = comps.foldLeft(ctx.resultPath)(new File(_, _))
 
- 
-  
+
+
   def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (TipoElementoSaida, Option[File]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
@@ -94,27 +94,27 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     var digest: Option[String] = None
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.tipoSaida.map(t => (t.tipo,t.formato)).toMap
-    
+
     def geraSaida[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
         case Some(formato) ⇒
           logger.info("gerando saida ts = " + ts + " path = " + path)
           logger.info("mime saida = " + mime)
-          data map { case (d,r) =>             
-            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)          
+          data map { case (d,r) =>
+            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)
             saidas += tes
-            of foreach (f => outMap += (f -> (mime, d)))          
+            of foreach (f => outMap += (f -> (mime, d)))
             (d,r)
           }
 
         case _ => None // data
       }
-      
+
     }
 
     def geraSaidaI[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] =
       try {
-        geraSaida(ts, mime, digest, path: _*)(data)        
+        geraSaida(ts, mime, digest, path: _*)(data)
       } catch {
         case ex: ParseException ⇒ falhas ++= ex.errors.map(fromProblem) ; None
         case ex: Exception ⇒ falhas += fromProblem(ErroSistema(ex)) ; None
@@ -130,7 +130,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       val hash = Tasks.calcDigest(texto)
       digest = Some(hash)
       val metadado = Tasks.buildMetadado(ctx.req.metadado, hash)
-      
+
       def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
       val mimeFromExtension = ctx.fonteFileName.toList.flatMap { fname =>
         val idx = fname.lastIndexOf('.')
@@ -141,7 +141,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         }
         ext.toList.flatMap(MimeExtensionRegistry.ext2mime.get).flatten
       }
-      val baseMimeTypeList = mimeFromExtension :+ ctx.req.texto.tipoMime.toString 
+      val baseMimeTypeList = mimeFromExtension :+ ctx.req.texto.tipoMime.toString
       /*val baseMimeTypeList = try {
         MimeUtil.getMimeTypes(texto).toList
       } catch {
@@ -158,7 +158,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       logger.info("mimeType = " + mimeType)
       val mimeType2 = TipoMimeEntrada.fromString(mimeType,defaultScope)
       geraSaidaI(DOCUMENTO_ORIGINAL, mimeType, Some(hash), "original", "documento")(Some((texto,())))
-      geraSaidaI(PDF_ORIGINAL, "application/pdf", None, "original", "documento") {        
+      geraSaidaI(PDF_ORIGINAL, "application/pdf", None, "original", "documento") {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
       val xhtmlEntrada = Tasks.srcToXhtmlTask(texto, mimeType2)
@@ -176,22 +176,22 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
         Some(( xhtmlDoc.toString.getBytes("utf-8"),()))
       }
-      
+
       val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
-      
+
       logger.debug("problems = " + problems)
-      
+
       val (pl, xml) = parseResult.getOrElse(throw ParseException(problems: _*))
-      
+
       problems.foreach(falhas += fromProblem(_))
-      
+
       pl.caracteristicas.foreach(caracteristicas += fromCaracteristica(_))
-      
+
       lazy val oXmlBytes = geraSaida(XML_DERIVADO, "text/xml", None, "gerado", "documento") {
         Some((xml.toString.getBytes("utf-8"),()))
       }.map(_._1)
-      
-      oXmlBytes foreach { xmlBytes => 
+
+      oXmlBytes foreach { xmlBytes =>
         geraSaidaI(ZIP_DERIVADO, "application/zip", None, "gerado", "documento") {
           Some((Tasks.makeLexMLZip(pl, xmlBytes),()))
         }
@@ -201,19 +201,19 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         val rtfDerivado = geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
           Some((Tasks.renderRTF(xmlBytes, metadado),()))
         }.map(_._1)
-        
+
         /*geraSaidaI(EPUB_DERIVADO, "application/epub+zip", None, "gerado", "documento") {
           Tasks.renderEPUB(xmlBytes,metadado)
         }*/
-        
+
         numDiffs = rtfDerivado.flatMap(rtf => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
           Tasks.buildDiff(texto, mimeType,rtf,"text/rtf")
         }).flatMap(_._2)
       }
-            
-     
-      
-      
+
+
+
+
     } catch {
       case ex: ParseException ⇒
         falhas ++= ex.errors.map(fromProblem)
@@ -232,13 +232,14 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       numeroDiferencas = numDiffs)
 
     val ps = ParserResultado(ctx.req.metadado, res, ServiceParams.configuracao)
-    
+
     val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
-    val resXml = (<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?> +: psXml)
-    
+    val psXmlTxt = psXml.toString
+    val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>\n""" + psXmlTxt
+
     logger.debug("writing outputs")
     writeOutputs(outMap.toMap)
-    writeOutputs(Map(buildPath("resultado.xml") -> ("text/xml", resXml.toString.getBytes("utf-8"))))
+    writeOutputs(Map[File,(String,Array[Byte])](buildPath("resultado.xml") -> ("text/xml", resXml.getBytes("utf-8"))))
   } finally {
     logger.debug("deleting wait file")
     ctx.waitFile.delete()
