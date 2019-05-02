@@ -220,7 +220,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
     val psXmlTxt = psXml.toString
-    val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>\n""" + psXmlTxt
+    val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 
     logger.debug("writing outputs")
     writeOutputs(outMap.toMap)
