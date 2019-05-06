@@ -16,6 +16,11 @@ object UsuarioMensagem {
     def rid(id : String) : NodeSeq = {
       Text(id)
     }
+    def contexto(p : ParseProblem) : NodeSeq  =
+      if (p.context.isEmpty) { NodeSeq.Empty } else {
+        NodeSeq.fromSeq(<p>Contexto: </p> +: p.context.map(x => <p>{x}</p>))
+      }
+
     /**
      * Função parcial que retorna mensagem que deve ser mostrada ao usuário
      * em função do problema relatado pelo parser.
@@ -23,30 +28,34 @@ object UsuarioMensagem {
      * ignorado (apenas o seu conteúdo será aproveitado)
      */
    val mensagemUsuarioP : MsgFunc = {
-     case NiveisDiferentes(id1, id2) =>
+     case p@NiveisDiferentes(id1, id2) =>
        <div>
          <p>Dispositivos incompatíveis agrupados no mesmo nível:</p>
     	 <ul><li>{rid(id1)}</li><li>{rid(id2)}</li></ul>
     	 <p>Causa provável: erro no uso de aspas em uma alteração.</p>
+         {contexto(p)}
        </div>
-     case OrdemInvertida(id1, id2) =>
+     case p@OrdemInvertida(id1, id2) =>
        <div>
          <p>Dispositivos com ordem invertida:</p>
     	 <ul><li> {rid(id1)}</li><li>{rid(id2)}.</li></ul>
-         <p>Causa provável: erro no uso de aspas em uma alteração.</p> 
+         <p>Causa provável: erro no uso de aspas em uma alteração.</p>
+         {contexto(p)}
        </div>
 
-     case DispositivosDescontinuos(id1, id2) =>
+     case p@DispositivosDescontinuos(id1, id2) =>
        <div>
          <p>Foi detectada uma discontinuidade na sequência de dispositivos:</p>
          <ul><li> {rid(id1)}</li><li>{rid(id2)}.</li></ul>
+         {contexto(p)}
        </div>
 
-     case EmentaAusente =>
+     case p@EmentaAusente =>
        <div>
          <p>O Parser não conseguiu identificar a ementa do texto.
     		Verifique se o preâmbulo do texto segue as normas de redação.
          </p>
+         {contexto(p)}
        </div>        
    }
 }

@@ -87,7 +87,7 @@ object Tasks {
     val (mpl1, falhas) = new ProjetoLeiParser(profile).fromBlocks(md, blocks)
     val res = for { pl <- mpl1 ; pl2 = pl.remakeEpigrafe } yield (pl2,LexmlRenderer.render(pl2))  
     val falhasXML = if (falhas.nonEmpty) { List() } else {
-    	res.map({case (_,xml) => Validation.validaComSchema(xml).toList}).getOrElse(List())
+    	res.map({case (_,xml) => new Validation().validaComSchema(xml).toList}).getOrElse(List())
     }
 
     (res, falhas ++ falhasXML)    
