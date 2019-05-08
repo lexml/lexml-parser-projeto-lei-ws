@@ -143,7 +143,7 @@
 		<dependency>
 			<groupId>br.gov.lexml.parser.pl</groupId>
 			<artifactId>lexml-parser-projeto-lei</artifactId>
-			<version>1.10.11</version>
+			<version>1.10.13</version>
 		</dependency>
 		<dependency>
 			<groupId>br.gov.lexml</groupId>
