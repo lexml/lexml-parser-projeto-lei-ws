@@ -30,8 +30,9 @@ import org.dom4j.io.SAXReader
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.{Elem, Node, NodeSeq, Text}
+import grizzled.slf4j.Logging
 
-object Tasks {
+object Tasks extends Logging {
   
   val config: Config = LexmlWsConfig.config.getConfig("tasks")
      
@@ -248,6 +249,10 @@ object Tasks {
   val numDiffsRe: Regex = "diffs_(\\d+)"r
   def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
 	  Option[(Array[Byte],Option[Int])] = {
+    if(config.getBoolean("tools.skip-diff")) {
+      logger.warn("Skipping diff task")
+      None
+    } else {
     val srcExtension = MimeExtensionRegistry.mimeToExtension(srcMime).map("." + _).getOrElse("")
     val targetExtension = MimeExtensionRegistry.mimeToExtension(targetMime).map("." + _).getOrElse("")
     val srcName = "source" + srcExtension
@@ -284,6 +289,7 @@ object Tasks {
     } else {
       None
     }          
+    }
   }
     
 }
