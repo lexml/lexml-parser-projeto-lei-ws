@@ -12,7 +12,7 @@ import javax.xml.ws.handler.MessageContext
 
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{ParserRequisicao, ScalaxbParserRequisicaoFormat}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{ParserRequisicao}
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import com.sun.jersey.core.header.FormDataContentDisposition
@@ -25,7 +25,7 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.XML
-import scalaxb.fromXMLEither
+import scalaxb_1_1.fromXMLEither
 
 //import org.apache.commons.codec.binary.Base64
 
@@ -121,7 +121,7 @@ class ScalaParserService extends Logging {
       case None => Response.status(Response.Status.NOT_FOUND).build()
       case Some((resFile,_)) => {
         val xml = XML.loadFile(resFile.getPath())
-        scalaxb.fromXMLEither[ParserResultado](xml) match {
+        scalaxb_1_1.fromXMLEither[ParserResultado](xml) match {
           case Left(err) => {
             logger.error("Erro na leitura de resultado. id = " + id + ": " + err)
             Response.status(Response.Status.INTERNAL_SERVER_ERROR).build()

@@ -130,6 +130,7 @@
 							<xsl:when test="@tipoSaida='DOCUMENTO_ORIGINAL'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>Documento original</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='RTF_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>RTF derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='PDF_ORIGINAL'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>PDF original</xsl:element></xsl:when>
+							<xsl:when test="@tipoSaida='DOCX_ORIGINAL'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>DOCX original</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='PDF_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>PDF derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='ZIP_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>ZIP derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='XML_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>XML derivado</xsl:element></xsl:when>

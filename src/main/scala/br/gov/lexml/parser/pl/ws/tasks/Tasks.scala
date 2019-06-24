@@ -141,6 +141,13 @@ object Tasks extends Logging {
         try { os.close() } catch { case _ : Exception => }        
         os.toByteArray
   }
+  
+  def renderDOCX(xml : Array[Byte]) : Array[Byte] = {
+    import br.gov.lexml.renderer.docx._
+    val cfg = LexmlToDocxConfig()
+    val renderer = new LexmlToDocx(cfg)
+    renderer.convert(xml)
+  }
       
   def docToPDF(texto: Array[Byte], mime: TipoMimeEntrada): Array[Byte] = MimeExtensionRegistry.mimeToExtension(mime.toString).map((extension : String) => {
     val srcFile = File.createTempFile("lexml-src-render", "." + extension)
@@ -209,7 +216,7 @@ object Tasks extends Logging {
     
   def makeRemissoes(xhtml : Seq[Node]) : Array[Byte] = {
     val remissoes = buildLegislacaoCitada(xhtml)
-    val psXml = scalaxb.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope).
+    val psXml = scalaxb_1_1.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope).
                     head.asInstanceOf[Elem]
     val psXml1 = psXml.copy(prefix = "tns")
     psXml1.toString.getBytes("utf-8")    

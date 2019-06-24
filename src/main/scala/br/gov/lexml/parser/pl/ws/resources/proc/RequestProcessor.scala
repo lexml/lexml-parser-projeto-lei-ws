@@ -42,7 +42,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val (href,teso,f) = fmt match {
       case EMBUTIDO =>
         val xml =XML.load(new java.io.ByteArrayInputStream(data))
-        (None,Some(scalaxb.DataRecord.fromAny(xml)),None)
+        (None,Some(scalaxb_1_1.DataRecord.fromAny(xml)),None)
       case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
@@ -183,6 +183,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         geraSaidaI(PDF_DERIVADO, "application/pdf", None, "gerado", "documento") {
           Some((Tasks.renderPDF(xmlBytes, metadado),()))
         }
+        geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
+          Some((Tasks.renderDOCX(xmlBytes),()))
+        }
         val rtfDerivado = geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
           Some((Tasks.renderRTF(xmlBytes, metadado),()))
         }.map(_._1)
@@ -218,7 +221,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val ps = ParserResultado(ctx.req.metadado, res, ServiceParams.configuracao)
 
-    val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
+    val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb_1_1.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
     val psXmlTxt = psXml.toString
     val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 

@@ -5,7 +5,7 @@ import java.net.URI
 
 import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
 import br.gov.lexml.parser.pl.ws.{Initializer, MimeExtensionRegistry, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, RTF_DERIVADO, ScalaxbTipoTextoEmbutidoFormat, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, RTF_DERIVADO, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import grizzled.slf4j.Logging
 import org.apache.commons.io.FileUtils
@@ -42,7 +42,7 @@ object Standalone extends Logging {
       val metadado = TipoMetadado(localidade,profile.urnFragAutoridade,profile.urnFragTipoNorma,
         Some("%04d;%d@data.evento;leitura;2011-11-01t00.00" format (ano.toInt, num.toInt)))
       val fileData = FileUtils.readFileToByteArray(f)
-      val tipoTextoOption = scalaxb.DataRecord(None, None, TipoTextoEmbutido(scalaxb.Base64Binary(fileData: _*)))
+      val tipoTextoOption = scalaxb_1_1.DataRecord(None, None, TipoTextoEmbutido(scalaxb_1_1.Base64Binary(fileData: _*)))
       val texto = TipoTexto(tipoMime, tipoTextoOption)
       val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, XHTML_INTERMEDIARIO, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, RTF_DERIVADO)
       val ttsaidas = tsaidas.map(TipoTipoDeSaida(_,EXTERNO)) 

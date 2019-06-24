@@ -70,6 +70,7 @@ function getXMLRequisicao(){
 			+'<Q1:tipoSaida tipo="PDF_ORIGINAL" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="XML_DERIVADO" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="ZIP_DERIVADO" formato="EXTERNO"/>'
+			+'<Q1:tipoSaida tipo="DOCX_DERIVADO" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="RTF_DERIVADO" formato="EXTERNO"/>'
 			+'<Q1:tipoSaida tipo="XML_REMISSOES" formato="EMBUTIDO"/>'
 			+'<Q1:tipoSaida tipo="EPUB_DERIVADO" formato="EXTERNO"/>'			
