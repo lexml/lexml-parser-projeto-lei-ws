@@ -42,7 +42,7 @@ class ScalaParserService extends Logging {
     case null ⇒ new URI("http://localhost:8180/parser" + path.mkString(";", ";", ""))
     case _ ⇒
       val builder = uriInfo.getBaseUriBuilder
-      builder.scheme("https")
+      //builder.scheme("https")
       for (c ← path) builder.path(c)
       builder.build()
   }
