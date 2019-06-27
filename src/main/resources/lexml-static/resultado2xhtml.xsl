@@ -236,20 +236,7 @@
 				<xsl:attribute name="class">labelValor</xsl:attribute>
 				<xsl:value-of select="." />
 			</xsl:element>
-		</xsl:element>
-		<xsl:element name="div">
-			<xsl:attribute name="id">grupoVersaoParser</xsl:attribute>
-			<xsl:attribute name="class">grupo</xsl:attribute>
-			
-			<xsl:element name="span">
-				<xsl:attribute name="class">labelNome</xsl:attribute>
-				Versão do Parser:
-			</xsl:element>
-			<xsl:element name="span">
-				<xsl:attribute name="class">labelValor</xsl:attribute>
-				<a href="https://github.com/lexml/lexml-parser-projeto-lei-ws/tree/VERSAO_PARSER">VERSAO_PARSER</a>
-			</xsl:element>
-		</xsl:element>	
+		</xsl:element>			
 	</xsl:template>
 	
 	

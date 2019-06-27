@@ -127,8 +127,8 @@ $(document).ready(function() {
 	$("#editAno").mask("9999");
 	$("#editAno").val((new Date()).getFullYear());
 	
-	//oculta os grupos de formulário
-	$(".formGrupo").hide();
+	//oculta os grupos de formulário	
+	$(".formGrupo").hide();	
 	
 	//anexão efeito de exibir
 	$("#buttonFormGrupoInformatIdent").click(function (){
