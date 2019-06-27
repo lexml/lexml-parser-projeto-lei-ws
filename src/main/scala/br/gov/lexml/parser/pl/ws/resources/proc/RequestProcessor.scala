@@ -14,6 +14,7 @@ import org.apache.commons.io.FileUtils
 
 import scala.language.postfixOps
 import scala.xml._
+import java.nio.charset.Charset
 
 
 final case class RequestContext(
@@ -239,7 +240,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       FileUtils.forceMkdir(f.getParentFile)
       FileUtils.writeByteArrayToFile(f, data)
       val mf = new File(f.getParentFile, f.getName + ".mime")
-      FileUtils.writeStringToFile(mf, mime)      
+      FileUtils.writeStringToFile(mf, mime, Charset.forName("utf-8"))      
     }
   
   object ScopeHelper {

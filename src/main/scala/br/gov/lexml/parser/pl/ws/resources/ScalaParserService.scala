@@ -26,6 +26,7 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.XML
 import scalaxb_1_1.fromXMLEither
+import java.nio.charset.Charset
 
 //import org.apache.commons.codec.binary.Base64
 
@@ -248,7 +249,7 @@ class ScalaParserService extends Logging {
       None
     } else {
       val mimeFile = new File(reqFile.getParentFile, reqFile.getName + ".mime")
-      val mimeType = FileUtils.readFileToString(mimeFile)
+      val mimeType = FileUtils.readFileToString(mimeFile, Charset.forName("utf-8"))
       logger.info("responding to get with reqFile = " + reqFile + ", and mimeType = " + mimeType)
       Some((reqFile, mimeType))
     }

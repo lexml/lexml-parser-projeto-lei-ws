@@ -134,6 +134,7 @@ object Tasks extends Logging {
         val ctx = new RendererRTFContext(md.profile.urnFragAutoridade,md.profile.urnFragTipoNorma)
         ctx.addConfig(pdfConfig)
         val reader = new SAXReader()
+        reader.setEncoding("utf-8")
         val document = reader.read(is)
         val root = document.getRootElement
         ctx.setOutputStream(os)
