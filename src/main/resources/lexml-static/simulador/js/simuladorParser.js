@@ -155,8 +155,7 @@ function buscarResultado(caminhoResultado, tentativa){
 						  els.each(function (idx,el) {
 						     var fixedContent = fixHttps(el.textContent);
 			                             el.innerHTML = fixedContent;
-			                          });
-						  
+			                          });						  
 				  	},
 				  	});
 		  },

@@ -247,7 +247,7 @@
 			</xsl:element>
 			<xsl:element name="span">
 				<xsl:attribute name="class">labelValor</xsl:attribute>
-				VERSAO_PARSER
+				<a href="https://github.com/lexml/lexml-parser-projeto-lei-ws/tree/VERSAO_PARSER">VERSAO_PARSER</a>
 			</xsl:element>
 		</xsl:element>	
 	</xsl:template>
