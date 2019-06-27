@@ -123,7 +123,7 @@
 						<xsl:attribute name="class">saidaLink</xsl:attribute>
 						
 						<xsl:element name="span">
-							<xsl:attribute name="class">saidaImagem_<xsl:value-of select="substring(@tipoSaida, 1, 3)"></xsl:value-of></xsl:attribute>
+							<xsl:attribute name="class">saidaImagem_<xsl:value-of select="substring-before(@tipoSaida, '_')"></xsl:value-of></xsl:attribute>
 						</xsl:element>
 						
 						<xsl:choose>

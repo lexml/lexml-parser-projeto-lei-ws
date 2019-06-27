@@ -148,7 +148,7 @@ select:hover{
 	padding-top: 3px;
 }
 		
-.saidaImagem_PDF, .saidaImagem_DOC, .saidaImagem_ZIP, .saidaImagem_XML, .saidaImagem_HTML, .saidaImagem_RTF, .saidaImagem_DOCX {
+.saidaImagem_PDF, .saidaImagem_DOC, .saidaImagem_ZIP, .saidaImagem_XML, .saidaImagem_HTML, .saidaImagem_RTF, .saidaImagem_DOCX, .saidaImagem_XHTML {
 	background-repeat:no-repeat;
 	background-position:right top;
 	height:20px;
@@ -163,7 +163,7 @@ select:hover{
 }
 
 .saidaImagem_DOC{
-	background-image:url('../img/ico_rtf.jpeg');
+	background-image:url('../img/ico_doc.jpeg');
 }
 
 .saidaImagem_RTF{
@@ -183,7 +183,7 @@ select:hover{
 }
 
 .saidaImagem_XHTML{
-	background-image:url('../img/ico_html.jpeg');
+	background-image:url('../img/ico_xhtml.jpeg');
 }
 
 .saidaImagem_EPUB{
