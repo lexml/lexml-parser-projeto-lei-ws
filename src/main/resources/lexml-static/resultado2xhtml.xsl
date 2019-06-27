@@ -5,7 +5,9 @@
 	xmlns:xlink="http://www.w3.org/1999/xlink"
 	xmlns:xhtml="http://www.w3.org/1999/xhtml"
 	xmlns:p="http://www.lexml.gov.br/parser-ws"
-	xmlns:tns="http://www.lexml.gov.br/schema/remissoes">
+	xmlns:tns="http://www.lexml.gov.br/schema/remissoes"
+	xmlns:lookup="lookup"
+	exclude-result-prefixes="lookup">
 
 	<xsl:output method="xml" indent="yes" encoding="UTF-8"/>  
 	
@@ -107,6 +109,17 @@
 				
 	</xsl:template>
 	
+	<lookup:table id="tabelaMime">
+		<tipo mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document" ext="DOCX"/>
+		<tipo mime="application/pdf"  ext="PDF"/>
+		<tipo mime="text/xml" ext="XML"/>
+		<tipo mime="application/xhtml+xml" ext="XHTML"/>
+		<tipo mime="application/zip" ext="ZIP"/>
+		<tipo mime="text/rtf" ext="RTF"/>
+		<tipo mime="text/html" ext="HTML"/>
+		<tipo mime="application/epub+zip" ext="EPUB"/>
+	</lookup:table>
+	
 	<!-- Saídas -->
 	<xsl:template match="p:ParserResultado/p:resultado/p:saidas">
 	
@@ -117,13 +130,25 @@
 			<xsl:element name="span"><xsl:attribute name="class">grupoTitulo</xsl:attribute>Saídas</xsl:element>
 		
 			<xsl:for-each select="p:elementoSaida">
+				<xsl:variable name="tmime"><xsl:value-of select="@tipoMime"/></xsl:variable>
+				<xsl:variable name="ext"><xsl:choose>
+					<xsl:when test="@tipoMime='application/vnd.openxmlformats-officedocument.wordprocessingml.document'">DOCX</xsl:when>
+					<xsl:when test="@tipoMime='application/pdf'">PDF</xsl:when>
+					<xsl:when test="@tipoMime='text/xml'">XML</xsl:when>
+					<xsl:when test="@tipoMime='application/xhtml+xml'">XHTML</xsl:when>
+					<xsl:when test="@tipoMime='application/zip'">ZIP</xsl:when>
+					<xsl:when test="@tipoMime='text/rtf'">RTF</xsl:when>
+					<xsl:when test="@tipoMime='text/html'">HTML</xsl:when>
+					<xsl:when test="@tipoMime='application/epub+zip'">EPUB</xsl:when>
+					<xsl:otherwise>ANY</xsl:otherwise>
+				</xsl:choose></xsl:variable>
+											
 				<xsl:if test="@href">			
 					<xsl:element name="a">
 						<xsl:attribute name="href"><xsl:value-of select="@href" /></xsl:attribute>
-						<xsl:attribute name="class">saidaLink</xsl:attribute>
-						
+						<xsl:attribute name="class">saidaLink</xsl:attribute>						
 						<xsl:element name="span">
-							<xsl:attribute name="class">saidaImagem_<xsl:value-of select="substring-before(@tipoSaida, '_')"></xsl:value-of></xsl:attribute>
+							<xsl:attribute name="class">saidaImagem_<xsl:value-of select='$ext'></xsl:value-of></xsl:attribute>																				
 						</xsl:element>
 						
 						<xsl:choose>
@@ -131,6 +156,7 @@
 							<xsl:when test="@tipoSaida='RTF_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>RTF derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='PDF_ORIGINAL'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>PDF original</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='DOCX_ORIGINAL'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>DOCX original</xsl:element></xsl:when>
+							<xsl:when test="@tipoSaida='DOCX_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>DOCX derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='PDF_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>PDF derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='ZIP_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>ZIP derivado</xsl:element></xsl:when>
 							<xsl:when test="@tipoSaida='XML_DERIVADO'"><xsl:element name="span"><xsl:attribute name="class">saidaTextoLink</xsl:attribute>XML derivado</xsl:element></xsl:when>
@@ -211,7 +237,19 @@
 				<xsl:value-of select="." />
 			</xsl:element>
 		</xsl:element>
+		<xsl:element name="div">
+			<xsl:attribute name="id">grupoVersaoParser</xsl:attribute>
+			<xsl:attribute name="class">grupo</xsl:attribute>
 			
+			<xsl:element name="span">
+				<xsl:attribute name="class">labelNome</xsl:attribute>
+				Versão do Parser:
+			</xsl:element>
+			<xsl:element name="span">
+				<xsl:attribute name="class">labelValor</xsl:attribute>
+				VERSAO_PARSER
+			</xsl:element>
+		</xsl:element>	
 	</xsl:template>
 	
 	
