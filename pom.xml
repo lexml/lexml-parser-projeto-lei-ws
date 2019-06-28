@@ -224,7 +224,7 @@
 		<dependency>
 			<groupId>com.sun.jersey.contribs</groupId>
 			<artifactId>jersey-multipart</artifactId>
-			<version>1.17</version>
+			<version>1.19.4</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-codec</groupId>
@@ -234,7 +234,8 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
-			<version>2.5</version>
+                        <version>2.5</version>
+                        <scope>provide</scope>
 		</dependency>
 
 		<dependency>
@@ -271,12 +272,12 @@
 		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-client</artifactId>
-			<version>1.17</version>
+			<version>1.19.4</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-servlet</artifactId>
-			<version>1.17</version>
+			<version>1.19.4</version>
 		</dependency>
 		<dependency>
 		    <groupId>com.typesafe</groupId>
