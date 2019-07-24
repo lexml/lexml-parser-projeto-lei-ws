@@ -330,6 +330,50 @@ class ScalaParserService extends Logging {
       }
     }
   }
+  
+  @POST
+  @Path("renderDocx")    
+  @Consumes(Array(MediaType.MULTIPART_FORM_DATA))
+  @Produces(Array("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+  def renderDocx(
+    @FormDataParam("fonte") fonteStream: InputStream,
+    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {
+    System.err.println("on renderDocx")
+    if(fonteStream == null) {
+      throw new RuntimeException("Erro: fonteStream == null")
+    }
+    val source = IOUtils.toByteArray(fonteStream)
+    System.err.println(s"on renderDocx: fonteDetail=${fonteDetail}")
+    val fileName = fonteDetail.getFileName
+    System.err.println(s"on renderDocx: fileName=${fileName}")
+    val outputFileName = if(fileName.endsWith(".xml")) {
+      fileName.substring(0,fileName.lastIndexOf(".xml")) + ".docx"
+    } else { 
+      fileName + ".docx"
+    }
+    System.err.println(s"on renderDocx: outputFileName=${outputFileName}")
+    import br.gov.lexml.renderer.docx._    
+    val cfg = LexmlToDocxConfig()
+    val r = new LexmlToDocx(cfg)
+    try {
+      val res = r.convert(source)
+      System.err.println(s"on renderDocx: res.length=${res.length}")
+      Response
+        .ok(res)
+        .`type`("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        .header("Content-Disposition", s"""attachment; filename=${outputFileName}""")
+        .header("Cache-control","no-cache")
+        .build()
+    } catch {
+      case ex : Exception =>
+        val sw = new java.io.StringWriter()
+        val pw = new java.io.PrintWriter(sw)
+        ex.printStackTrace(pw)
+        pw.close()
+        Response.serverError().entity(sw.toString()).`type`("text/plain").build()
+    }
+  }
+  
 }
 
 class ParserServiceActor extends Actor with Logging {

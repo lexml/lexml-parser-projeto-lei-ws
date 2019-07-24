@@ -1,0 +1,14 @@
+#!/bin/bash
+PARSER_SERVICE="${PARSER_SERVICE:-http://127.0.0.1:8080/lexml-parser}"
+SRC="$1"
+if [[ "$2" == "" ]] ; then
+  BN=`basename "$1" .xml`
+  DN=`dirname "$1"`
+  ON="$DN/${BN}.docx"
+else
+  ON="$2"
+fi  
+
+curl -v -F "fonte=@$1" \
+  -H "Expect:" --output "$ON"  \
+  "${PARSER_SERVICE}/parse/renderDocx" 
