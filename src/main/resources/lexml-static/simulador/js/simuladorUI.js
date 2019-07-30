@@ -54,6 +54,7 @@ var tipoNormaByAutoridade = {
                 {"value" : "lei", "display": "Lei"},
                 {"value" : "lei.complementar", "display": "Lei Complementar"},
                 {"value" : "lei.delegada", "display": "Lei Delegada"},
+                {"value" : "constituicao", "display": "Constituição Federal"},
 			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
 			]
 	};
