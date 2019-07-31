@@ -82,7 +82,8 @@ object Tasks extends Logging {
 						overrideEpigrafeHead = p.epigrafeHead,
 						overrideEpigrafeTail = p.epigrafeTail,
 						overrideUrnFragAutoridade = p.urnFragAutoridade,
-						overrideAutoridadeEpigrafe = p.autoridadeEpigrafe.map(_.autoridadeEpigrafeValue))
+						overrideAutoridadeEpigrafe = p.autoridadeEpigrafe.map(_.autoridadeEpigrafeValue),
+						overrideEmentaAusente = p.ementaAusente)
       case _ => baseProfile
     }
     val (mpl1, falhas) = new ProjetoLeiParser(profile).fromBlocks(md, blocks)
