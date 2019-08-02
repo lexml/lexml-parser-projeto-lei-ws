@@ -260,7 +260,7 @@ object Tasks extends Logging {
     if(cfg.getBoolean("skip")) {
       new NullDiffTask()
     } else {
-      Option(config.getString("diff-task-impl-class")).
+      Option(cfg.getString("diff-task-impl-class")).
       flatMap(clsName => 
         try {
           val c = Class.forName(clsName).asSubclass(classOf[DiffTask])          
