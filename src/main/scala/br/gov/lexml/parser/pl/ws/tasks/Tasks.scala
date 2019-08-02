@@ -274,14 +274,8 @@ object Tasks extends Logging {
   }
   
   def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
-	  Option[(Array[Byte],Option[Int])] = {
-	  if(config.getBoolean("tools.skip-diff")) {
-      logger.warn("Skipping diff task")
-      None
-    } else {
-      diffTask.buildDiff(src,srcMime,target,targetMime)
-    }
-  }  
+	  Option[(Array[Byte],Option[Int])] = 
+      diffTask.buildDiff(src,srcMime,target,targetMime)    
     
 }
 
