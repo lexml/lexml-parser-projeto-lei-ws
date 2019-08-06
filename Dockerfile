@@ -16,7 +16,7 @@ RUN apt-get update && \
       /usr/lib/x86_64-linux-gnu/libLLVM* \
       /usr/lib/x86_64-linux-gnu/dri \
       /usr/share/icons && \
-    sed -i -e '2iexport LANG=C.UTF-8 LC_ALL=C.UTF_8' /usr/local/bin/catalina.sh
+    sed -i -e '2iexport LANG=C.UTF-8 LC_ALL=C.UTF_8' /usr/local/tomcat/bin/catalina.sh
 
 FROM lexmlbr/lexml-linker:1.0 as linker-base
 
