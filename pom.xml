@@ -4,7 +4,7 @@
   <groupId>br.gov.lexml.parser.pl</groupId>
   <artifactId>lexml-parser-projeto-lei-ws</artifactId>
   <packaging>war</packaging>
-  <version>1.6.31</version>
+  <version>1.6.32-SNAPSHOT</version>
   <name>Web Service do Parser de Projetos de Lei do LexML</name>
   <url>http://www.lexml.gov.br</url>
   <properties>
@@ -19,7 +19,7 @@
     <url>https://github.com/lexml/${project.artifactId}</url>
     <developerConnection>scm:git:https://github.com/lexml/${project.artifactId}.git</developerConnection>
     <connection>scm:git:https://github.com/lexml/${project.artifactId}.git</connection>
-    <tag>1.6.31</tag>
+    <tag>1.6.14</tag>
   </scm>
   <distributionManagement>
     <repository>
