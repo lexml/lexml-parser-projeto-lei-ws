@@ -42,7 +42,7 @@
         </repository>
     
         <repository>
-            <id>sfmvnrepo</id>
+            <id>sfmvnrepo-snapshot</id>
             <name>sfmvnrepo-snapshots</name>
             <url>http://www20.senado.leg.br/artifactory/libs-snapshots-local</url>
             <snapshots>
