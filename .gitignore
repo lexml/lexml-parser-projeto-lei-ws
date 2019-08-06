@@ -21,3 +21,4 @@ pom.xml.releaseBackup
 *.iml
 .idea/
 m2-settings.xml
+src/main/resources/lexml-static/commit-id

@@ -35,4 +35,8 @@ else
 EOF
 fi
 
+VER=`git log | head -n 1 | sed -e 's/commit *//g'`
+echo "$VER" > src/main/resources/lexml-static/commit-id
+sed -i -e "s/VERSAO_PARSER/$VER/g" src/main/resources/lexml-static/simulador/simulador.html  
+
 docker build ${EXTRA_PARAMS} --build-arg uid=2000 --build-arg gid=2000 --build-arg "version=${VERSION}" . -t "$TAG"

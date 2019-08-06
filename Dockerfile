@@ -24,13 +24,7 @@ FROM build-base as maven-base
 RUN apt-get update && \
     apt-get -y install maven
 
-FROM maven-base as build-step-1
-RUN mkdir /opt/lexml/lexml-parser-projeto-lei-ws
-WORKDIR /opt/lexml/lexml-parser-projeto-lei-ws
-COPY src/ .
-COPY pom.xml .
-
-FROM build-step-1 as build-step-2
+FROM maven-base as build-step-2
 WORKDIR /opt/lexml
 RUN mkdir -p /root/.m2
 COPY m2-settings.xml /root/.m2/settings.xml
@@ -40,15 +34,13 @@ RUN mvn -P "$MAVEN_PROFILES" dependency:go-offline && \
     rm pom.xml
 
 FROM build-step-2 as build-step-3
-WORKDIR /opt/lexml
+RUN mkdir /opt/lexml/lexml-parser-projeto-lei-ws
+WORKDIR /opt/lexml/lexml-parser-projeto-lei-ws
 ARG MAVEN_PROFILES=
-RUN mkdir lexml-parser-projeto-lei-ws
-COPY pom.xml lexm-parser-projeto-lei-ws/
-COPY src/ lexm-parser-projeto-lei-ws/
-RUN cd lexml-parser-projeto-lei-ws && \ 
-    VER=`git log | head -n 1 | sed -e 's/commit *//g'` ; echo "$VER" > src/main/resources/lexml-static/commit-id && \
-    sed -i -e "s/VERSAO_PARSER/$VER/g" src/main/resources/lexml-static/simulador/simulador.html && \ 
-    mvn -P "$MAVEN_PROFILES" clean package
+COPY pom.xml .
+COPY src ./src
+RUN find . -type f -print
+RUN mvn -P "$MAVEN_PROFILES" clean package
 
 FROM runtime-base
 ARG uid
