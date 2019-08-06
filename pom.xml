@@ -34,6 +34,23 @@
       <name>jcenter</name>
       <url>https://jcenter.bintray.com</url>
     </repository>
+    
+        <repository>
+            <id>sfmvnrepo</id>
+            <name>sfmvnrepo-releases</name>
+            <url>http://www20.senado.leg.br/artifactory/libs-releases-local</url>
+        </repository>
+    
+        <repository>
+            <id>sfmvnrepo</id>
+            <name>sfmvnrepo-snapshots</name>
+            <url>http://www20.senado.leg.br/artifactory/libs-snapshots-local</url>
+            <snapshots>
+            	<updatePolicy>always</updatePolicy>
+            	<enabled>true</enabled>
+            </snapshots>
+        </repository>
+    
   </repositories>
   <build>
     <finalName>lexml-parser</finalName>
