@@ -11,59 +11,85 @@ import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 import com.typesafe.config.Config
 import com.sun.jersey.api.client.ClientResponse
 import scala.util.matching.Regex
+import com.typesafe.config.ConfigFactory
+import java.lang.reflect.Method
+import grizzled.slf4j.Logging
 
 trait DiffTask {
   def buildDiff(from : Array[Byte], fromMime : String, to : Array[Byte], toMime : String) :
 	  Option[(Array[Byte],Option[Int])]
 }
 
-class NullDiffTask extends DiffTask {
+object DiffTask {   
+  lazy val diffTask = DelegatedDiffTask().getOrElse(NullDiffTask)    
+}
+
+object NullDiffTask extends DiffTask {
   override def buildDiff(from : Array[Byte], fromMime : String, to : Array[Byte], toMime : String) = None	  
 }
 
-class DefaultDiffTask extends DiffTask {
-  val config : Config = 
-    LexmlWsConfig.config.getConfig("tasks.diff.default-impl") 
-  
-  val numDiffsRe: Regex = "diffs_(\\d+)"r
-  
-  def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
-  	  Option[(Array[Byte],Option[Int])] = {    
-    val srcExtension = MimeExtensionRegistry.mimeToExtension(srcMime).map("." + _).getOrElse("")
-    val targetExtension = MimeExtensionRegistry.mimeToExtension(targetMime).map("." + _).getOrElse("")
-    val srcName = "source" + srcExtension
-    val targetName = "target" + targetExtension
+class DelegatedDiffTask(clazz : Class[_], m : Method) extends DiffTask {
+  import DelegatedDiffTask.logger
+  val instance = clazz.newInstance()
     
-    val cconfig = new DefaultClientConfig()
-
-    val c = Client.create(cconfig)
-    c.setFollowRedirects(true)    
-    //set timeout
-    c.setConnectTimeout(10*1000)
-    c.setReadTimeout(30*1000)
-    //
-    val wr = c.resource(config.getString("office-automation-url"))
-    import com.sun.jersey.core.header.{FormDataContentDisposition => B}
-    
-    val srcBodyPart = new FormDataBodyPart(
-        B.name("origem").fileName(srcName).build(),src,MediaType.valueOf(srcMime))
-    val targetBodyPart = new FormDataBodyPart(
-        B.name("revisao").fileName(targetName).build(),target,MediaType.valueOf(targetMime))
-    val fdmp = new FormDataMultiPart()
-    fdmp.bodyPart(srcBodyPart)
-    fdmp.bodyPart(targetBodyPart)
-    fdmp.field("operacao","compare") 
-    fdmp.field("formatoSaida","pdf")
-    val resp = wr.`type`(MediaType.MULTIPART_FORM_DATA_TYPE).post(classOf[ClientResponse],fdmp)
-    if(resp.getStatus == 200) {
-      val cd = new ContentDisposition(resp.getHeaders.get("Content-Disposition").get(0))
-      val fileName = cd.getFileName
-      val m = numDiffsRe.findFirstMatchIn(fileName)            
-      val numDiffs = m.map(_.group(1).toInt)
-      val data = resp.getEntity(classOf[Array[Byte]])
-      Some(data,numDiffs)
-    } else {
-      None
-    }              
+  override def buildDiff(from : Array[Byte], fromMime : String, to : Array[Byte], toMime : String) = {
+    try {
+      m.invoke(instance, from, fromMime, to, toMime).asInstanceOf[Option[(Array[Byte],Option[Int])]]
+    } catch {
+      case ex : Exception =>
+        logger.error(s"Error calling buildDiff method, method=${m}, class=${clazz.getName}")
+        None
+    }
   }
 }
+
+object DelegatedDiffTask extends Logging {
+  override val logger = super.logger
+  lazy val config = ConfigFactory.load().getConfig("lexml.parser.ws.diff")
+  lazy val className = try {
+    val cn = Option(config.getString("diff-task-impl-class")).filterNot(_.isEmpty())
+    if(cn.isEmpty) {
+      logger.info("Diff className was not provided. Diff task will be skipped.")
+    }
+    cn
+  } catch { case _ : Exception => None }
+  
+  lazy val buildDiffMethod = classOf[DiffTask].getMethods().filter(_.getName() == "buildDiff").head
+  lazy val buildDiffMethodParams = buildDiffMethod.getParameterTypes()  
+  lazy val clazzMethod = for {
+    clsName <- className
+    clz <- 
+      try {
+        Option(
+          Thread.currentThread()
+            .getContextClassLoader()
+            .loadClass(clsName) ) 
+      } catch { 
+        case _ : ClassNotFoundException =>
+          logger.info(s"Diff class not found: ${clsName}")
+          None 
+      }
+    canBeInstantiated = try {
+        clz.newInstance()
+        true
+      } catch {
+        case _ : Exception =>
+          logger.error(s"Diff class cannot be instantiated: ${clz.getName}")
+          false
+      } 
+    if (canBeInstantiated)
+    m <- 
+      try {
+        Option(clz.getMethod(buildDiffMethod.getName,buildDiffMethodParams : _*))
+      } catch {
+        case _ : Exception =>
+          logger.error(s"buildDiff method not found in Diff class: ${clz.getName}")
+          None  
+      }   
+  } yield ((clz : Class[_],m : Method))    
+  
+  def apply() = for {
+      (clz,m) <- clazzMethod      
+    } yield { new DelegatedDiffTask(clz,m) }     
+}
+

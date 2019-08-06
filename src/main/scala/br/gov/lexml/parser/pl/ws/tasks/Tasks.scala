@@ -254,28 +254,10 @@ object Tasks extends Logging {
     os.close()    
     os.toByteArray
   }
-  
-  lazy val diffTask : DiffTask = {    
-    val cfg = config.getConfig("diff")
-    if(cfg.getBoolean("skip")) {
-      new NullDiffTask()
-    } else {
-      Option(cfg.getString("diff-task-impl-class")).
-      flatMap(clsName => 
-        try {
-          val c = Class.forName(clsName).asSubclass(classOf[DiffTask])          
-          Some(c.newInstance())          
-        } catch {
-          case ex : Exception =>
-            logger.error(s"Não foi possível instanciar DiffTask: classe '${clsName}'")
-            None
-        }).getOrElse(new DefaultDiffTask())
-    }
-  }
-  
+      
   def buildDiff(src : Array[Byte], srcMime : String, target : Array[Byte], targetMime : String) :
 	  Option[(Array[Byte],Option[Int])] = 
-      diffTask.buildDiff(src,srcMime,target,targetMime)    
+      DiffTask.diffTask.buildDiff(src,srcMime,target,targetMime)    
     
 }
 

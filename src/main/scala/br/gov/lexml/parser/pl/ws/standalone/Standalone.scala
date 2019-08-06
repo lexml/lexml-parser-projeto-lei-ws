@@ -14,6 +14,7 @@ import org.clapper.argot._
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
+import br.gov.lexml.parser.pl.ws.data.scalaxb.DOCX_DERIVADO
 
 object Standalone extends Logging {
 
@@ -44,7 +45,7 @@ object Standalone extends Logging {
       val fileData = FileUtils.readFileToByteArray(f)
       val tipoTextoOption = scalaxb_1_1.DataRecord(None, None, TipoTextoEmbutido(scalaxb_1_1.Base64Binary(fileData: _*)))
       val texto = TipoTexto(tipoMime, tipoTextoOption)
-      val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, XHTML_INTERMEDIARIO, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, RTF_DERIVADO)
+      val tsaidas = Seq[TipoSaida](DOCUMENTO_ORIGINAL, XHTML_INTERMEDIARIO, PDF_DERIVADO,XML_REMISSOES,XML_DERIVADO,PDF_DIFF, DOCX_DERIVADO)
       val ttsaidas = tsaidas.map(TipoTipoDeSaida(_,EXTERNO)) 
       val saidas = TipoTiposDeSaidas(ttsaidas: _*)
       ParserRequisicao(metadado, texto, saidas)
