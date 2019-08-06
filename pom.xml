@@ -46,6 +46,7 @@
           <detail>true</detail>
           <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
           <tagNameFormat>@{project.version}</tagNameFormat>
+          <skipDeploy>true</skipDeploy>
         </configuration>
       </plugin>
       <plugin>
