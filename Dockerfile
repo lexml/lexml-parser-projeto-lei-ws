@@ -30,6 +30,7 @@ RUN mkdir -p /root/.m2
 COPY m2-settings.xml /root/.m2/settings.xml
 ARG MAVEN_PROFILES=
 COPY pom.xml .
+RUN sed -e '0,/<version>/s/<version>\(.*\)<\/version>/<version>0.0.0<\/version>/' -i pom.xml
 RUN mvn -P "$MAVEN_PROFILES" dependency:go-offline && \
     rm pom.xml
 
