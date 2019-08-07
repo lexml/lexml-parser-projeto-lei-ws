@@ -26,7 +26,7 @@ EXTRA_PARAMS="$EXTRA_PARAMS $(getExtraParameters)"
 echo "Extra parameters: $EXTRA_PARAMS"
 if [ -f "m2-settings.xml" ] ; then
   echo "Custom Maven settings found"
-elif [ "$EXTRA_PARAMS" ~= "MAVEN_PROFILES=.*senado" ] ; then  
+elif [ $EXTRA_PARAMS =~ "MAVEN_PROFILES=[^ ]*senado" ] ; then  
   echo "Generating m2-settings for build at Senado"
   cat > m2-settings.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
