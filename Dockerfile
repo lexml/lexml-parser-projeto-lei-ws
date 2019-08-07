@@ -31,7 +31,7 @@ COPY m2-settings.xml /root/.m2/settings.xml
 ARG MAVEN_PROFILES=
 COPY pom.xml .
 RUN sed -e '0,/<version>/s/<version>\(.*\)<\/version>/<version>0.0.0<\/version>/' -i pom.xml
-RUN mvn -P "$MAVEN_PROFILES" dependency:go-offline && \
+RUN mvn -P "$MAVEN_PROFILES" de.qaware.maven:go-offline-maven-plugin:resolve-dependencies && \
     rm pom.xml
 
 FROM build-step-2 as build-step-3
