@@ -50,6 +50,11 @@
             	<enabled>true</enabled>
             </snapshots>
         </repository>
+        <repository>
+           <id>nuxeo-public-releases</id>
+           <name>nuxeo-public-releases</name>
+           <url>https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases</url>
+        </repository>
     
   </repositories>
   <build>
