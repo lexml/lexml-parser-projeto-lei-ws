@@ -24,7 +24,8 @@ var tipoNormaByAutoridade = {
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
 				{"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
                 {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
-                {"value":"resolucao", "display":"Resolução"}
+                {"value":"resolucao", "display":"Resolução"},
+		{"value":"regimento.interno","display":"Regimento Interno"}
 			],
 		"camara.deputados" :
 			[
@@ -32,7 +33,8 @@ var tipoNormaByAutoridade = {
                 {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
                 {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
-                {"value":"resolucao", "display":"Resolução"}
+                {"value":"resolucao", "display":"Resolução"},
+		{"value":"regimento.interno","display":"Regimento Interno"}
 			],
 		"casa.legislativa" :
 			[
@@ -55,7 +57,9 @@ var tipoNormaByAutoridade = {
                 {"value" : "lei.complementar", "display": "Lei Complementar"},
                 {"value" : "lei.delegada", "display": "Lei Delegada"},
                 {"value" : "constituicao", "display": "Constituição Federal"},
-			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
+			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"},
+		{"value":"regimento.interno","display":"Regimento Comum"}
+
 			]
 	};
 
