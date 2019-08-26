@@ -147,7 +147,7 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
-      <version>1.11.11</version>
+      <version>1.11.12</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
@@ -343,6 +343,11 @@
       <artifactId>osgi_R4_core</artifactId>
       <version>1.0</version>
     </dependency>
+    <dependency>
+	    <groupId>org.ccil.cowan.tagsoup</groupId>
+	    <artifactId>tagsoup</artifactId>
+	    <version>1.2</version>
+	</dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>
@@ -370,7 +375,7 @@
         <artifactId>slf4j-api</artifactId>
         <version>1.6.1</version>
       </dependency>
-    </dependencies>
+    </dependencies>	
   </dependencyManagement>
   <profiles>
     <profile>

@@ -45,7 +45,8 @@ var tipoNormaByAutoridade = {
                 {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
 			    {"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
                 {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"},
-                {"value" : "resolucao", "display":"Resolução"}
+                {"value" : "resolucao", "display":"Resolução"},
+                {"value" : "regimento.interno", "display":"Regimento Comum"}
 			],
 		"federal": 
 			[
@@ -57,8 +58,8 @@ var tipoNormaByAutoridade = {
                 {"value" : "lei.complementar", "display": "Lei Complementar"},
                 {"value" : "lei.delegada", "display": "Lei Delegada"},
                 {"value" : "constituicao", "display": "Constituição Federal"},
-			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"},
-		{"value":"regimento.interno","display":"Regimento Comum"}
+                {"value" : "ato.disposicoes.constitucionais.transitorias", "display": "Ato de Disposições Constitucionais Transitórias"},
+			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
 
 			]
 	};
