@@ -184,10 +184,14 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         geraSaidaI(PDF_DERIVADO, "application/pdf", None, "gerado", "documento") {
           Some((Tasks.renderPDF(xmlBytes, metadado),()))
         }
-        val docxDerivado = geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
+        geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
           Some((Tasks.renderDOCX(xmlBytes),()))
-        }.map(_._1)        
-        numDiffs = docxDerivado.flatMap(docx => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
+        }.map(_._1)
+        
+        val docxParaDiff = geraSaidaI(DOCXDIFF_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
+          Some((Tasks.renderDOCXDIFF(xmlBytes),()))
+        }.map(_._1)     
+        numDiffs = docxParaDiff.flatMap(docx => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
           Tasks.buildDiff(texto, mimeType,docx,"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         }).flatMap(_._2)
       }

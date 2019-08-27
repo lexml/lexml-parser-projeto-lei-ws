@@ -30,6 +30,9 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.{Elem, Node, NodeSeq, Text}
 import grizzled.slf4j.Logging
+import br.gov.lexml.parser.pl.ws.tasks.FalhaConversaoXHTML
+import br.gov.lexml.renderer.docx.renderers.Constants
+import br.gov.lexml.parser.pl.ws.tasks.FalhaConversaoXHTML
 
 object Tasks extends Logging {
   
@@ -127,6 +130,16 @@ object Tasks extends Logging {
   def renderDOCX(xml : Array[Byte]) : Array[Byte] = {
     import br.gov.lexml.renderer.docx._
     val cfg = LexmlToDocxConfig()
+    val renderer = new LexmlToDocx(cfg)
+    renderer.convert(xml)
+  }
+  
+  def renderDOCXDIFF(xml : Array[Byte]) : Array[Byte] = {
+    import br.gov.lexml.renderer.docx._
+    
+    val cfg = LexmlToDocxConfig().copy(
+        constants = Constants.default.copy(skipHyperlink = true))
+    
     val renderer = new LexmlToDocx(cfg)
     renderer.convert(xml)
   }
