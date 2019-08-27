@@ -16,7 +16,6 @@ import br.gov.lexml.parser.pl.ws.data.scalaxb.{OpcoesRequisicao, TipoMetadado, T
 import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.{ScalaxbTRemissoesFormat, Simple, TRemissaoDocumento, TRemissaoFragmento, TRemissoes, defaultScope}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.{defaultConverter, pipeline}
 import br.gov.lexml.renderer.pdf.{PDFConfigs, RendererPDF}
-import br.gov.lexml.renderer.rtf.{RTFBuilder, RendererRTFContext}
 import br.gov.lexml.renderer.strategies.XhtmlRenderer
 import com.sun.jersey.api.client.{Client, ClientResponse}
 import com.sun.jersey.api.client.config.DefaultClientConfig
@@ -123,25 +122,6 @@ object Tasks extends Logging {
         pdfRenderer.render(is, os, pdfConfig)
         try { os.close() } catch { case _ : Exception ⇒ }
         os.toByteArray        
-  }
-  
-  def renderRTF(xml : Array[Byte], md : Metadado) : Array[Byte] = {
-        val os = new java.io.ByteArrayOutputStream()        
-        val pdfConfig = new java.util.HashMap[String, String]()
-        pdfConfig.put(PDFConfigs.METADATA_AUTHOR, config.getString("rtf-renderer.author-name"))
-        pdfConfig.put(PDFConfigs.FONT_SIZE,config.getString("rtf-renderer.font-size"))
-        pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("rtf-renderer.document-margin-right"))
-        val is = new java.io.ByteArrayInputStream(xml)        
-        val ctx = new RendererRTFContext(md.profile.urnFragAutoridade,md.profile.urnFragTipoNorma)
-        ctx.addConfig(pdfConfig)
-        val reader = new SAXReader()
-        reader.setEncoding("utf-8")
-        val document = reader.read(is)
-        val root = document.getRootElement
-        ctx.setOutputStream(os)
-        new RTFBuilder(ctx, root).build()
-        try { os.close() } catch { case _ : Exception => }        
-        os.toByteArray
   }
   
   def renderDOCX(xml : Array[Byte]) : Array[Byte] = {

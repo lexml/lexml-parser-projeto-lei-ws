@@ -186,23 +186,11 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         }
         val docxDerivado = geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
           Some((Tasks.renderDOCX(xmlBytes),()))
-        }.map(_._1)
-        /*geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
-          Some((Tasks.renderRTF(xmlBytes, metadado),()))
-        }.map(_._1) */
-
-        /*geraSaidaI(EPUB_DERIVADO, "application/epub+zip", None, "gerado", "documento") {
-          Tasks.renderEPUB(xmlBytes,metadado)
-        }*/
-
+        }.map(_._1)        
         numDiffs = docxDerivado.flatMap(docx => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
           Tasks.buildDiff(texto, mimeType,docx,"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         }).flatMap(_._2)
       }
-
-
-
-
     } catch {
       case ex: ParseException ⇒
         falhas ++= ex.errors.map(fromProblem)

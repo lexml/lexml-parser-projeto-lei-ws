@@ -5,7 +5,7 @@ import java.net.URI
 
 import br.gov.lexml.parser.pl.profile.DocumentProfileRegister
 import br.gov.lexml.parser.pl.ws.{Initializer, MimeExtensionRegistry, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, RTF_DERIVADO, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.{DOCUMENTO_ORIGINAL, EXTERNO, PDF_DERIVADO, PDF_DIFF, ParserRequisicao, TipoMetadado, TipoMimeEntrada, TipoSaida, TipoTexto, TipoTextoEmbutido, TipoTipoDeSaida, TipoTiposDeSaidas, XHTML_INTERMEDIARIO, XML_DERIVADO, XML_REMISSOES, defaultScope}
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import grizzled.slf4j.Logging
 import org.apache.commons.io.FileUtils
@@ -107,7 +107,7 @@ object Standalone extends Logging {
           }        
     }
 
-    val extensaoOpt = parser.multiOption[String](List("e", "extensao"), "extensão", "Extensão de arquivo a ser considerada no percorrimento de diretórios (default: somente \".rtf\")") {
+    val extensaoOpt = parser.multiOption[String](List("e", "extensao"), "extensão", "Extensão de arquivo a ser considerada no percorrimento de diretórios (default: somente \".docx\")") {
       (s, opt) ⇒ s
     }
 
@@ -146,7 +146,7 @@ object Standalone extends Logging {
       val inputs = inputOpt.value.toSet.toList
       println("inputs: " + inputs)
       val extensoes = if (extensaoOpt.value.isEmpty) {
-        Set("rtf")
+        Set("docx")
       } else {
         extensaoOpt.value.toSet
       }
