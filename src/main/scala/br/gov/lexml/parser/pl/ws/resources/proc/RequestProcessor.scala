@@ -184,19 +184,19 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         geraSaidaI(PDF_DERIVADO, "application/pdf", None, "gerado", "documento") {
           Some((Tasks.renderPDF(xmlBytes, metadado),()))
         }
-        geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
+        val docxDerivado = geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", None, "gerado", "documento") {
           Some((Tasks.renderDOCX(xmlBytes),()))
-        }
-        val rtfDerivado = geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
-          Some((Tasks.renderRTF(xmlBytes, metadado),()))
         }.map(_._1)
+        /*geraSaidaI(RTF_DERIVADO, "text/rtf", None, "gerado", "documento") {
+          Some((Tasks.renderRTF(xmlBytes, metadado),()))
+        }.map(_._1) */
 
         /*geraSaidaI(EPUB_DERIVADO, "application/epub+zip", None, "gerado", "documento") {
           Tasks.renderEPUB(xmlBytes,metadado)
         }*/
 
-        numDiffs = rtfDerivado.flatMap(rtf => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
-          Tasks.buildDiff(texto, mimeType,rtf,"text/rtf")
+        numDiffs = docxDerivado.flatMap(docx => geraSaidaI(PDF_DIFF, "application/pdf", None, "gerado", "diff") {
+          Tasks.buildDiff(texto, mimeType,docx,"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         }).flatMap(_._2)
       }
 
