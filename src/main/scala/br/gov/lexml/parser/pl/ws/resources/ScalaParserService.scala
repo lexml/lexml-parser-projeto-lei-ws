@@ -30,6 +30,7 @@ import java.nio.charset.Charset
 import scala.sys.process.ProcessBuilder
 import com.sun.mail.handlers.text_xml
 import java.util.regex.Pattern
+import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 
 //import org.apache.commons.codec.binary.Base64
 
@@ -381,6 +382,9 @@ class ScalaParserService extends Logging {
   private val linkerHrefPattern = 
     Pattern.compile("""<a href="http://homologa.lexml.gov.br/urn/(urn:lex:[^"]*)"[^>]*>(.*?)</a>""",
         Pattern.DOTALL)
+  
+  private val linkerToolPath =
+    LexmlWsConfig.config.getString("linkerTool")
         
   @POST
   @Path("linkerDecorator")
@@ -392,8 +396,7 @@ class ScalaParserService extends Logging {
       content : Array[Byte]) : Array[Byte] = {    
     val context = Option(contextStr).map(_.trim()).filterNot(_.isEmpty)
     val somenteLinks = request.getParameterMap.containsKey("somenteLinks")
-    val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")
-    System.err.println(s"linkerDecorator: contextStr=${contextStr}, somenteLinks=${somenteLinks} request=${request}, content=${new String(content,"utf-8")}")
+    val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")    
     import scala.sys.process._
     val tipo = request.getContentType match {      
       case MediaType.TEXT_HTML => "--hxml"
@@ -404,7 +407,7 @@ class ScalaParserService extends Logging {
     val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
     val output = new java.io.ByteArrayOutputStream
     val pb = 
-      Process(Seq("/home/joao/.cabal/bin/linkertool",tipo,saida,ctx))
+      Process(Seq(linkerToolPath,tipo,saida,ctx))
         .#<(new java.io.ByteArrayInputStream(content))
         .#>(output)
         .!(ProcessLogger(_ => ()))
