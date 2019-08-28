@@ -54,7 +54,7 @@ RUN mkdir -p /areastorage/parser/mensagemUsuario && \
     chown -R tomcat. /usr/local/tomcat && \
     chown -R tomcat. /areastorage
 VOLUME /areastorage/parser
-COPY --from=linker-base /usr/bin/simplelinker /usr/bin/linkertool /usr/local/bin
+COPY --from=linker-base /usr/bin/simplelinker /usr/bin/linkertool /usr/local/bin/
 USER tomcat:tomcat
 WORKDIR /usr/local/tomcat
 COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/target/lexml-parser.war ./webapps
