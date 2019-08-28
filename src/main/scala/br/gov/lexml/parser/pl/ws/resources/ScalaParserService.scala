@@ -28,7 +28,6 @@ import scala.xml.XML
 import scalaxb_1_1.fromXMLEither
 import java.nio.charset.Charset
 import scala.sys.process.ProcessBuilder
-import com.sun.mail.handlers.text_xml
 import java.util.regex.Pattern
 import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 
