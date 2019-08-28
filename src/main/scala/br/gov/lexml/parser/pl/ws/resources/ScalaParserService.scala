@@ -27,6 +27,9 @@ import scala.util.matching.Regex
 import scala.xml.XML
 import scalaxb_1_1.fromXMLEither
 import java.nio.charset.Charset
+import scala.sys.process.ProcessBuilder
+import com.sun.mail.handlers.text_xml
+import java.util.regex.Pattern
 
 //import org.apache.commons.codec.binary.Base64
 
@@ -374,6 +377,44 @@ class ScalaParserService extends Logging {
     }
   }
   
+  
+  private val linkerHrefPattern = 
+    Pattern.compile("""<a href="http://homologa.lexml.gov.br/urn/(urn:lex:[^"]*)"[^>]*>(.*?)</a>""",
+        Pattern.DOTALL)
+        
+  @POST
+  @Path("linkerDecorator")
+  @Consumes(Array(MediaType.TEXT_PLAIN,MediaType.TEXT_HTML,MediaType.TEXT_XML))
+  @Produces(Array(MediaType.TEXT_HTML))
+  def linkerDecorator(
+      @QueryParam("contexto") contextStr : String,      
+      @Context request : HttpServletRequest,
+      content : Array[Byte]) : Array[Byte] = {    
+    val context = Option(contextStr).map(_.trim()).filterNot(_.isEmpty)
+    val somenteLinks = request.getParameterMap.containsKey("somenteLinks")
+    val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")
+    System.err.println(s"linkerDecorator: contextStr=${contextStr}, somenteLinks=${somenteLinks} request=${request}, content=${new String(content,"utf-8")}")
+    import scala.sys.process._
+    val tipo = request.getContentType match {      
+      case MediaType.TEXT_HTML => "--hxml"
+      case MediaType.TEXT_XML => "--hxml"
+      case _ => "--text"
+    }
+    val saida = if (somenteLinks) { "--urns" } else { "--html" }
+    val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
+    val output = new java.io.ByteArrayOutputStream
+    val pb = 
+      Process(Seq("/home/joao/.cabal/bin/linkertool",tipo,saida,ctx))
+        .#<(new java.io.ByteArrayInputStream(content))
+        .#>(output)
+        .!(ProcessLogger(_ => ()))
+    val out = output.toByteArray()
+    val outStr = new String(out,"utf-8")
+    if(!linksParaSiteLexml && !somenteLinks) {
+      linkerHrefPattern.matcher(outStr).replaceAll("""<remissao xlink:href="$1">$2</remissao>""")
+          .getBytes("utf-8")
+    } else { outStr.getBytes("utf-8") }
+  }  
 }
 
 class ParserServiceActor extends Actor with Logging {
