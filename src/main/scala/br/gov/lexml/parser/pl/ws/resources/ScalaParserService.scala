@@ -387,7 +387,7 @@ class ScalaParserService extends Logging {
         
   @POST
   @Path("linkerDecorator")
-  @Consumes(Array(MediaType.TEXT_PLAIN,MediaType.TEXT_HTML,MediaType.TEXT_XML))
+  //@Consumes(Array(MediaType.TEXT_PLAIN,MediaType.TEXT_HTML,MediaType.TEXT_XML))
   @Produces(Array(MediaType.TEXT_HTML))
   def linkerDecorator(
       @QueryParam("contexto") contextStr : String,      
@@ -397,11 +397,10 @@ class ScalaParserService extends Logging {
     val somenteLinks = request.getParameterMap.containsKey("somenteLinks")
     val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")    
     import scala.sys.process._
-    val tipo = request.getContentType match {      
-      case MediaType.TEXT_HTML => "--hxml"
-      case MediaType.TEXT_XML => "--hxml"
-      case _ => "--text"
-    }
+    val tipo = 
+      if (request.getContentType.startsWith(MediaType.TEXT_PLAIN)) { "--text" }
+      else { "--hxml" }
+    
     val saida = if (somenteLinks) { "--urns" } else { "--html" }
     val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
     val output = new java.io.ByteArrayOutputStream
