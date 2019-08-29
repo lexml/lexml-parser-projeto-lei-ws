@@ -30,11 +30,20 @@ import java.nio.charset.Charset
 import scala.sys.process.ProcessBuilder
 import java.util.regex.Pattern
 import br.gov.lexml.parser.pl.ws.LexmlWsConfig
+import javax.ws.rs.core.CacheControl
+import io.prometheus.client.Counter
+import io.prometheus.client.Gauge
 
-//import org.apache.commons.codec.binary.Base64
+
+
+object ScalaParserService {
+  val parserJobsCounter = Counter.build().name("parser_jobs_counter").help("Total de trabalhos do Parser").register()
+  val parserJobsInProgress = Gauge.build().name("parser_jobs_inprogress").help("Trabalhos do Parser em execução").register()
+}
 
 @Path("/parse")
 class ScalaParserService extends Logging {
+  import ScalaParserService._
   
   @Resource
   var context : WebServiceContext = _
@@ -190,6 +199,8 @@ class ScalaParserService extends Logging {
             FileUtils.touch(waitFile)
             val dataHoraProcessamento = javax.xml.datatype.DatatypeFactory.newInstance.newXMLGregorianCalendar(new java.util.GregorianCalendar())
             logger.info("sending message to actor with uniqueId=%s, requisicao=%s, resultPath=%s, waitFile=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento))
+            parserJobsCounter.inc()
+            parserJobsInProgress.inc()
             boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
             val uri = resultURI()
             logger.info("result for " + uniqueId + ", at  " + uri)
@@ -231,13 +242,14 @@ class ScalaParserService extends Logging {
   }
 
   private def doReadResult(id: String, pathComps: String*): Response = {    
-    pathComps match {
+    val res = pathComps match {
       case Seq("resultado2xhtml.xsl") ⇒
-        Response.ok(getResultado2XhtmlData, "application/xslt+xml").build()
+        Response.ok(getResultado2XhtmlData, "application/xslt+xml")
 
       case _ ⇒ doReadResult2(id, pathComps: _*).map(r ⇒ Response.ok(r._1, r._2))
-        .getOrElse(notFoundBuilder).build()
+        .getOrElse(notFoundBuilder)
     }
+    res.header("Cache-Control","private").build()
   }
 
   private def doReadResult2(id: String, pathComps: String*): Option[(File, String)] = {    
@@ -303,23 +315,23 @@ class ScalaParserService extends Logging {
       Some(MimeUtil.getMostSpecificMimeType(accepted).toString)
     }
   }
-
+   
   @Path("static/{file: .*}")
   @GET
   def serveStatic(@PathParam("file") file: String): Response = {
-    logger.info("serveStatic: file = " + file)
+    logger.debug("serveStatic: file = " + file)    
     val staticDir = ServiceParams.params.staticOverrideDirectory
     val f = new File(new File(staticDir, "lexml-static"),file).getCanonicalFile
-    logger.info("staticDir: " + staticDir)
-    logger.info("serving: " + f)
-    logger.info("f.exists = " + f.exists + ", f.isFile = " + f.isFile)
+    logger.debug("staticDir: " + staticDir)
+    logger.debug("serving: " + f)
+    logger.debug("f.exists = " + f.exists + ", f.isFile = " + f.isFile)
     val noFilterAccept = false
     if (f.getPath.startsWith(staticDir.getPath) && f.exists() && f.isFile) {
 
       val mt = getMostSpecificMimeType(f, noFilterAccept)
-      logger.info("serveStatic: found on static dir. f = " + f + ", mt = " + mt)
-      Response.ok(f, mt.getOrElse("application/binary")).header("Cache-control", "no-cache").build()
-    } else {
+      logger.debug("serveStatic: found on static dir. f = " + f + ", mt = " + mt)
+      Response.ok(f, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
+    } else {      
       Option(this.getClass.getResourceAsStream("lexml-static/" + file)) match {
         case None ⇒
           logger.info("serveStatic: not found.")
@@ -327,8 +339,8 @@ class ScalaParserService extends Logging {
         case Some(is) ⇒
           val d = IOUtils.toByteArray(is)
           val mt = getMostSpecificMimeType(d, noFilterAccept)
-          logger.info("serveStatic: found on classpath. mt = " + mt)
-          Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "no-cache").build()
+          logger.debug("serveStatic: found on classpath. mt = " + mt)
+          Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
 
       }
     }
@@ -340,40 +352,32 @@ class ScalaParserService extends Logging {
   @Produces(Array("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
   def renderDocx(
     @FormDataParam("fonte") fonteStream: InputStream,
-    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {
-    System.err.println("on renderDocx")
+    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {    
     if(fonteStream == null) {
       throw new RuntimeException("Erro: fonteStream == null")
     }
-    val source = IOUtils.toByteArray(fonteStream)
-    System.err.println(s"on renderDocx: fonteDetail=${fonteDetail}")
-    val fileName = fonteDetail.getFileName
-    System.err.println(s"on renderDocx: fileName=${fileName}")
+    val source = IOUtils.toByteArray(fonteStream)    
+    val fileName = fonteDetail.getFileName    
     val outputFileName = if(fileName.endsWith(".xml")) {
       fileName.substring(0,fileName.lastIndexOf(".xml")) + ".docx"
     } else { 
       fileName + ".docx"
-    }
-    System.err.println(s"on renderDocx: outputFileName=${outputFileName}")
+    }    
     import br.gov.lexml.renderer.docx._    
     val cfg = LexmlToDocxConfig()
     val r = new LexmlToDocx(cfg)
     try {
-      val res = r.convert(source)
-      System.err.println(s"on renderDocx: res.length=${res.length}")
+      val res = r.convert(source)     
       Response
         .ok(res)
         .`type`("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         .header("Content-Disposition", s"""attachment; filename=${outputFileName}""")
-        .header("Cache-control","no-cache")
+        .header("Cache-control","no-cache, no-store, no-transform, must-revalidate")
         .build()
     } catch {
-      case ex : Exception =>
-        val sw = new java.io.StringWriter()
-        val pw = new java.io.PrintWriter(sw)
-        ex.printStackTrace(pw)
-        pw.close()
-        Response.serverError().entity(sw.toString()).`type`("text/plain").build()
+      case ex : Exception =>        
+        logger.error("erro na geração de DOCX: " + ex.getMessage,ex)        
+        Response.serverError().build()
     }
   }
   
@@ -390,12 +394,15 @@ class ScalaParserService extends Logging {
   //@Consumes(Array(MediaType.TEXT_PLAIN,MediaType.TEXT_HTML,MediaType.TEXT_XML))
   @Produces(Array(MediaType.TEXT_HTML))
   def linkerDecorator(
-      @QueryParam("contexto") contextStr : String,      
-      @Context request : HttpServletRequest,
+      @QueryParam("contexto") contextStr : String,
+      @QueryParam("resolver") resolverStr : String,
+      @Context request : HttpServletRequest,      
       content : Array[Byte]) : Array[Byte] = {    
     val context = Option(contextStr).map(_.trim()).filterNot(_.isEmpty)
     val somenteLinks = request.getParameterMap.containsKey("somenteLinks")
-    val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")    
+    val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")
+    val resolver = Option(resolverStr).map(_.trim).filter(_.contains("URNLEXML"))
+          .getOrElse("http://www.lexml.gov.br/urn/URNLEXML")
     import scala.sys.process._
     val tipo = 
       if (request.getContentType.startsWith(MediaType.TEXT_PLAIN)) { "--text" }
@@ -415,7 +422,56 @@ class ScalaParserService extends Logging {
       linkerHrefPattern.matcher(outStr).replaceAll("""<remissao xlink:href="$1">$2</remissao>""")
           .getBytes("utf-8")
     } else { outStr.getBytes("utf-8") }
-  }  
+  }
+        
+}
+
+@Path("/sfstatus")
+class ParserServiceHealth extends Logging {
+
+  private val noCache = {
+    val cacheControl = new CacheControl()
+    cacheControl.setMustRevalidate(true)
+    cacheControl.setNoCache(true)
+    cacheControl.setNoStore(true)
+    cacheControl
+  }
+  
+  @GET
+  @Path("ping")  
+  def ping() : Response = {    
+    Response.ok().cacheControl(noCache).build()
+  }
+  
+  @GET
+  @Path("health")  
+  def health() : Response = {
+    val rb = try {
+        if(HealthCheck.check()) {
+          Response.ok()
+        } else {
+          Response.serverError()
+        }
+      } catch {
+        case ex : Exception =>
+          logger.error("Erro em health check:" + ex, ex)
+          Response.serverError()
+      }
+    rb.cacheControl(noCache).build()
+  }
+  
+ /* @GET
+  @Path("metrics")
+  def metrics() : Response = {
+    Response.ok().cacheControl(noCache).build()
+  } */
+  
+}
+
+object HealthCheck {
+  def check() : Boolean = {    
+    true
+  }
 }
 
 class ParserServiceActor extends Actor with Logging {

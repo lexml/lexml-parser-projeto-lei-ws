@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, OneForOneStrategy, Props}
 import akka.routing._
 import br.gov.lexml.parser.pl.ws.actors.{CompleteCleanActor, IncompleteCleanActor}
 import br.gov.lexml.parser.pl.ws.resources.ParserServiceActor
+import io.prometheus.client.hotspot.DefaultExports
 
 class Boot {
 
@@ -24,5 +25,7 @@ class Boot {
   val completeCleanActor: ActorRef = system.actorOf(Props[CompleteCleanActor])
     
   MimeExtensionRegistry.init()
+  
+  DefaultExports.initialize()
 }
 

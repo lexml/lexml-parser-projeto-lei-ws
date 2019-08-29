@@ -15,6 +15,10 @@ import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
 import scala.xml._
 import java.nio.charset.Charset
+import br.gov.lexml.parser.pl.ws.resources.ScalaParserService
+import io.prometheus.client.Counter
+import io.prometheus.client.Summary
+
 
 
 final case class RequestContext(
@@ -27,7 +31,46 @@ final case class RequestContext(
   fonte: Option[Array[Byte]],
   fonteFileName : Option[String])
 
+object RequestProcessor {
+  val createdFilesCount = Counter.build().name("parse_created_files_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
+  val bytesWritten = Counter.build().name("parse_written_bytes_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
+  val failureCount = Counter.build().name("parse_job_failure_count").help("Número de falhas no Parser")
+          .labelNames("codigo_tipo_falha").register()
+  val parserLatency = Summary.build().name("parse_job_parser_latency").help("Duração da execução do parser").register()
+  val srcToXhtmlLatency = Summary.build().name("parse_job_src_to_xhtml").help("Duração da coversão da fonte em XHTML").register()
+  val geracaoLatency = 
+    Summary.build().name("parse_job_geracao_latency").help("Duração de geração de saídas do parser")
+      .labelNames("tipo_saida").register()
+/*  private var _geracaoLatency : Map[TipoSaida,Summary] = Map()
+  def geracaoLatency(ts : TipoSaida) : Summary = synchronized {
+    _geracaoLatency.get(ts) match {
+      case Some(x) => x
+      case None =>
+        val x = Summary.build().name("parse_job_geracao_latency_" + ts.toString.toLowerCase)
+            .help("Latência na geração de saída de tipo " + ts.toString).register()
+        _geracaoLatency = _geracaoLatency + (ts -> x)
+        x
+    }
+  } */
+  
+  /* private var _falhaCounts : Map[Int,Counter] = Map()
+  def falhaCount(tf : TipoFalha) : Counter = synchronized {
+    _falhaCounts.get(tf.codigoTipoFalha) match {
+      case Some(x) => x
+      case None =>
+        val x = Counter.build().name("parse_job_falha_" + tf.nomeTipoFalha.toLowerCase)
+            .help("Número de falhas de tipo " + tf.nomeTipoFalha.toString).register()
+        _falhaCounts = _falhaCounts + (tf.codigoTipoFalha -> x)
+        x
+    }
+  }  */
+  
+  val problemCount = Summary.build().name("parse_job_problem_count").help("Número de problemas na execução do parser")
+    .labelNames("codigo_problema").register()
+}
+  
 class RequestProcessor(ctx: RequestContext) extends Logging {
+  import RequestProcessor._
   import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
 
   type OutputFileMap = Map[File, (String, Array[Byte])]
@@ -84,28 +127,33 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     def geraSaida[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
         case Some(formato) ⇒
-          logger.info("gerando saida ts = " + ts + " path = " + path)
-          logger.info("mime saida = " + mime)
-          data map { case (d,r) =>
-            val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)
-            saidas += tes
-            of foreach (f => outMap += (f -> (mime, d)))
-            (d,r)
+          val timer = geracaoLatency.labels(ts.toString).startTimer()
+          try {
+            logger.info("gerando saida ts = " + ts + " path = " + path)
+            logger.info("mime saida = " + mime)
+            data map { case (d,r) =>
+              val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)
+              saidas += tes
+              of foreach (f => outMap += (f -> (mime, d)))
+              (d,r)
+            }
+          }  finally {
+            timer.observeDuration()
           }
-
         case _ => None // data
       }
 
     }
 
-    def geraSaidaI[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] =
-      try {
+    def geraSaidaI[T](ts: TipoSaida, mime: String, digest: Option[String], path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {      
+      try {        
         geraSaida(ts, mime, digest, path: _*)(data)
       } catch {
         case ex: ParseException ⇒ falhas ++= ex.errors.map(fromProblem) ; None
         case ex: Exception ⇒ falhas += fromProblem(ErroSistema(ex)) ; None
       }
-
+    }
+    
     var numDiffs : Option[Int] = None
     try {
       val texto = ctx.req.texto.tipotextooption.value match {
@@ -116,7 +164,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       val hash = Tasks.calcDigest(texto)
       digest = Some(hash)
       val metadado = Tasks.buildMetadado(ctx.req.metadado, hash)
-
+      
       def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
       val mimeFromExtension = ctx.fonteFileName.toList.flatMap { fname =>
         val idx = fname.lastIndexOf('.')
@@ -147,8 +195,15 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       geraSaidaI(PDF_ORIGINAL, "application/pdf", None, "original", "documento") {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
-      val xhtmlEntrada = Tasks.srcToXhtmlTask(texto, mimeType2)
-       geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
+      val xhtmlEntrada = {
+        val timer = srcToXhtmlLatency.startTimer()
+        try { 
+          Tasks.srcToXhtmlTask(texto, mimeType2)
+        } finally {
+          timer.observeDuration()
+        }
+      }
+      geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
           Some((Tasks.makeRemissoes(xhtmlEntrada),()))
       }
       geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", None, "intermediario", "documento") {
@@ -163,10 +218,21 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         Some(( xhtmlDoc.toString.getBytes("utf-8"),()))
       }
 
-      val (parseResult, problems) = Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
-
+      val (parseResult, problems) = {
+        val timer = parserLatency.startTimer()
+        try {      
+          Tasks.parse(metadado, xhtmlEntrada, ctx.req.opcoes)
+        } finally {
+          timer.observeDuration()
+        }
+      } 
+           
       logger.debug("problems = " + problems)
-
+      
+      problems.groupBy(_.problemType).mapValues(_.size).foreach {
+        case (pt,count) => problemCount.labels(pt.description).observe(problems.length)
+      }
+      
       val (pl, xml) = parseResult.getOrElse(throw ParseException(problems: _*))
 
       problems.foreach(falhas += fromProblem(_))
@@ -203,7 +269,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         falhas += fromProblem(ErroSistema(ex))
     }
 
-    logger.info("Falhas: " + falhas)
+    logger.info("Falhas: " + falhas)    
+    falhas.foreach(f => failureCount.labels(f.nomeTipoFalha).inc())
+    
     val res = TipoResultado(
       falhas = TipoFalhas(falhas: _*),
       caracteristicas = TipoCaracteristicas(caracteristicas: _*),
@@ -222,8 +290,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     writeOutputs(outMap.toMap)
     writeOutputs(Map[File,(String,Array[Byte])](buildPath("resultado.xml") -> ("text/xml", resXml.getBytes("utf-8"))))
   } finally {
-    logger.debug("deleting wait file")
+    logger.debug("deleting wait file")    
     ctx.waitFile.delete()
+    ScalaParserService.parserJobsInProgress.dec()
   }
 
   def writeOutputs(m: OutputFileMap): Unit =
@@ -231,7 +300,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       logger.debug("writing " + f)
       FileUtils.forceMkdir(f.getParentFile)
       FileUtils.writeByteArrayToFile(f, data)
-      val mf = new File(f.getParentFile, f.getName + ".mime")
+      createdFilesCount.inc()
+      bytesWritten.inc(data.length)
+      val mf = new File(f.getParentFile, f.getName + ".mime")      
       FileUtils.writeStringToFile(mf, mime, Charset.forName("utf-8"))      
     }
   

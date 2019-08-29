@@ -30,9 +30,7 @@ import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.{Elem, Node, NodeSeq, Text}
 import grizzled.slf4j.Logging
-import br.gov.lexml.parser.pl.ws.tasks.FalhaConversaoXHTML
 import br.gov.lexml.renderer.docx.renderers.Constants
-import br.gov.lexml.parser.pl.ws.tasks.FalhaConversaoXHTML
 
 object Tasks extends Logging {
   
