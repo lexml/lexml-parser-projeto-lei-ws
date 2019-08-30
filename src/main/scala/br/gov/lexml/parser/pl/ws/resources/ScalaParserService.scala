@@ -37,8 +37,8 @@ import io.prometheus.client.Gauge
 
 
 object ScalaParserService {
-  val parserJobsCounter = Counter.build().name("parser_jobs_counter").help("Total de trabalhos do Parser").register()
-  val parserJobsInProgress = Gauge.build().name("parser_jobs_inprogress").help("Trabalhos do Parser em execução").register()
+  val parserJobsCounter = Counter.build().name("lexml_parser_job_count").help("Total de trabalhos do Parser").register()
+  val parserJobsInProgress = Gauge.build().name("lexml_parser_jobs_inprogress").help("Trabalhos do Parser em execução").register()
 }
 
 @Path("/parse")

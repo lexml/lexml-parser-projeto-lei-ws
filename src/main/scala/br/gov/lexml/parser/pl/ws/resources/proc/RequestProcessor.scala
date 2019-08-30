@@ -32,14 +32,14 @@ final case class RequestContext(
   fonteFileName : Option[String])
 
 object RequestProcessor {
-  val createdFilesCount = Counter.build().name("parse_created_files_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
-  val bytesWritten = Counter.build().name("parse_written_bytes_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
-  val failureCount = Counter.build().name("parse_job_failure_count").help("Número de falhas no Parser")
+  val createdFilesCount = Counter.build().name("lexml_parser_created_files_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
+  val bytesWritten = Counter.build().name("lexml_parser_written_bytes_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
+  val failureCount = Counter.build().name("lexml_parser_failure_count").help("Número de falhas no Parser")
           .labelNames("codigo_tipo_falha").register()
-  val parserLatency = Summary.build().name("parse_job_parser_latency").help("Duração da execução do parser").register()
-  val srcToXhtmlLatency = Summary.build().name("parse_job_src_to_xhtml").help("Duração da coversão da fonte em XHTML").register()
+  val parserLatency = Summary.build().name("lexml_parser_job_latency").help("Duração da execução do parser").register()
+  val srcToXhtmlLatency = Summary.build().name("lexml_parser_src_to_xhtml_latency").help("Duração da coversão da fonte em XHTML").register()
   val geracaoLatency = 
-    Summary.build().name("parse_job_geracao_latency").help("Duração de geração de saídas do parser")
+    Summary.build().name("lexml_parser_geracao_latency").help("Duração de geração de saídas do parser")
       .labelNames("tipo_saida").register()
 /*  private var _geracaoLatency : Map[TipoSaida,Summary] = Map()
   def geracaoLatency(ts : TipoSaida) : Summary = synchronized {
