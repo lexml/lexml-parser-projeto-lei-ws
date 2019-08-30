@@ -412,7 +412,7 @@ class ScalaParserService extends Logging {
     val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
     val output = new java.io.ByteArrayOutputStream
     val pb = 
-      Process(Seq(linkerToolPath,tipo,saida,ctx))
+      Process(Seq(linkerToolPath,tipo,saida,ctx,s"--enderecoresolver=${resolver}"))
         .#<(new java.io.ByteArrayInputStream(content))
         .#>(output)
         .!(ProcessLogger(_ => ()))
