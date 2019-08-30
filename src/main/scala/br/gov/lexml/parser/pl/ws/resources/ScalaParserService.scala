@@ -419,6 +419,10 @@ class ScalaParserService extends Logging {
     val out = output.toByteArray()
     val outStr = new String(out,"utf-8")
     if(!linksParaSiteLexml && !somenteLinks) {
+      val pat = resolver.replaceAll("URNLEXML","""(urn:lex:[^"]*)""")
+      val linkerHrefPattern =         
+        Pattern.compile(s"""<a href="${pat}"[^>]*>(.*?)</a>""",
+          Pattern.DOTALL)
       linkerHrefPattern.matcher(outStr).replaceAll("""<remissao xlink:href="$1">$2</remissao>""")
           .getBytes("utf-8")
     } else { outStr.getBytes("utf-8") }
