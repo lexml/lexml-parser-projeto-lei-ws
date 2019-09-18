@@ -68,8 +68,16 @@
           <detail>true</detail>
           <allowTimestampedSnapshots>true</allowTimestampedSnapshots>
           <tagNameFormat>@{project.version}</tagNameFormat>
-          <skipDeploy>true</skipDeploy>
+          <skipDeploy>true</skipDeploy>          
         </configuration>
+        <executions>
+          <execution>
+            <goal>perform</goal>
+            <configuration>
+              <goals>package</goals>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <!-- <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
