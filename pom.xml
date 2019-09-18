@@ -72,7 +72,9 @@
         </configuration>
         <executions>
           <execution>
-            <goal>perform</goal>
+            <goals>
+              <goal>perform</goal>
+            </goals>
             <configuration>
               <goals>package</goals>
             </configuration>
