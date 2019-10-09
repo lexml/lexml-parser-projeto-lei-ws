@@ -41,7 +41,7 @@ COPY src ./src
 RUN find . -type f -print
 RUN mvn clean && \
     mvn dependency:analyze-report && \
-    cp target/dependency-analysis.html src/main/resources/exlml-static/ && \
+    cp target/dependency-analysis.html src/main/resources/lexml-static/ && \
     mvn package
 
 FROM runtime-base
