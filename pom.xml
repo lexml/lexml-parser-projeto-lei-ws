@@ -143,7 +143,7 @@
           <scalaVersion>${scala.version}</scalaVersion>
           <!-- <javaRebelPath>/home/joao/jrebel/jrebel.jar</javaRebelPath> -->
         </configuration>
-      </plugin>
+      </plugin>      
     </plugins>
   </build>
   <dependencies>
@@ -378,6 +378,11 @@
 	  <artifactId>simpleclient_servlet</artifactId>
 	  <version>0.6.0</version>
 	</dependency>
+	  <dependency>
+          <groupId>br.gov.lexml.parser.pl</groupId>
+          <artifactId>lexml-parser-projeto-lei-ws-nuxeo-diff</artifactId>
+          <version>1.1.11.5</version>
+        </dependency>
 	<!-- Pushgateway exposition-->
 <!-- 	<dependency>
 	  <groupId>io.prometheus</groupId>
@@ -413,17 +418,5 @@
         <version>1.6.1</version>
       </dependency>
     </dependencies>	
-  </dependencyManagement>
-  <profiles>
-    <profile>
-      <id>senado</id>
-      <dependencies>
-        <dependency>
-          <groupId>br.gov.lexml.parser.pl</groupId>
-          <artifactId>lexml-parser-projeto-lei-ws-nuxeo-diff</artifactId>
-          <version>1.1.11.5</version>
-        </dependency>
-      </dependencies>
-    </profile>
-  </profiles>
+  </dependencyManagement>  
 </project>

@@ -28,20 +28,21 @@ FROM maven-base as build-step-2
 WORKDIR /opt/lexml
 RUN mkdir -p /root/.m2
 COPY m2-settings.xml /root/.m2/settings.xml
-ARG MAVEN_PROFILES=
 COPY pom.xml .
 RUN sed -e '0,/<version>/s/<version>\(.*\)<\/version>/<version>0.0.0<\/version>/' -i pom.xml
-RUN mvn -P "$MAVEN_PROFILES" de.qaware.maven:go-offline-maven-plugin:resolve-dependencies && \
+RUN mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies && \
     rm pom.xml
 
 FROM build-step-2 as build-step-3
 RUN mkdir /opt/lexml/lexml-parser-projeto-lei-ws
 WORKDIR /opt/lexml/lexml-parser-projeto-lei-ws
-ARG MAVEN_PROFILES=
 COPY pom.xml .
 COPY src ./src
 RUN find . -type f -print
-RUN mvn -P "$MAVEN_PROFILES" clean package
+RUN mvn clean && \
+    mvn dependency:analyze-report && \
+    cp target/dependency-analysis.html src/main/resources/exlml-static/ && \
+    mvn package
 
 FROM runtime-base
 ARG uid
@@ -59,3 +60,4 @@ USER tomcat:tomcat
 WORKDIR /usr/local/tomcat
 COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/target/lexml-parser.war ./webapps
 COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/src/main/resources/lexml-static/ /areastorage/lexml-static
+COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/pom.xml /areastorage/lexml-static/lexml-parser-projeto-lei.pom

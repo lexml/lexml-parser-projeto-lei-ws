@@ -22,11 +22,9 @@ function getExtraParameters {
     echo ""
   fi
 }
-EXTRA_PARAMS="$EXTRA_PARAMS $(getExtraParameters)"
-echo "Extra parameters: $EXTRA_PARAMS"
 if [ -f "m2-settings.xml" ] ; then
   echo "Custom Maven settings found"
-elif [[ $EXTRA_PARAMS =~ MAVEN_PROFILES=[^\ ]*senado ]] ; then  
+  else  
   echo "Generating m2-settings for build at Senado"
   cat > m2-settings.xml <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -41,17 +39,10 @@ elif [[ $EXTRA_PARAMS =~ MAVEN_PROFILES=[^\ ]*senado ]] ; then
   </mirrors>
 </settings>  
 EOF
-else
-  echo "Generating general m2-settings"
-  cat > m2-settings.xml <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
-</settings>  
-EOF
 fi
 
 VER=`git log | head -n 1 | sed -e 's/commit *//g'`
 echo "$VER" > src/main/resources/lexml-static/commit-id
 sed -i -e "s/VERSAO_PARSER/$VER/g" src/main/resources/lexml-static/simulador/simulador.html  
 
-docker build ${EXTRA_PARAMS} --build-arg uid=2000 --build-arg gid=2000 --build-arg "version=${VERSION}" . -t "$TAG"
+docker build --build-arg uid=2000 --build-arg gid=2000 --build-arg "version=${VERSION}" . -t "$TAG"
