@@ -182,8 +182,8 @@ object Tasks extends Logging {
   def normalizeAno(urn : String): String =
     	reAno.replaceSomeIn(urn, m => Some(m.group(1) + m.group(2) + m.group(3)))
   
-  def buildLegislacaoCitada(xhtmlSrc : Seq[Node]) : TRemissoes = {
-    val (urns,_) = Linker.findLinks(Text((NodeSeq fromSeq xhtmlSrc).text))
+  def buildLegislacaoCitada(xhtmlSrc : Seq[Node], urnContexto : String) : TRemissoes = {
+    val (urns,_) = Linker.findLinks(urnContexto,Text((NodeSeq fromSeq xhtmlSrc).text))
     val urnFrags = urns map ( urn => {
       val p = urn.indexOf('!')
       if(p>=0) {
@@ -207,8 +207,8 @@ object Tasks extends Logging {
     TRemissoes(docs : _*)    
   }
     
-  def makeRemissoes(xhtml : Seq[Node]) : Array[Byte] = {
-    val remissoes = buildLegislacaoCitada(xhtml)
+  def makeRemissoes(xhtml : Seq[Node], urnContexto : String) : Array[Byte] = {
+    val remissoes = buildLegislacaoCitada(xhtml,urnContexto)
     val psXml = scalaxb_1_1.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope).
                     head.asInstanceOf[Elem]
     val psXml1 = psXml.copy(prefix = "tns")

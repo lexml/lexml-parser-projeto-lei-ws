@@ -18,6 +18,7 @@ import java.nio.charset.Charset
 import br.gov.lexml.parser.pl.ws.resources.ScalaParserService
 import io.prometheus.client.Counter
 import io.prometheus.client.Summary
+import br.gov.lexml.parser.pl.metadado.Id
 
 
 
@@ -164,6 +165,8 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       val hash = Tasks.calcDigest(texto)
       digest = Some(hash)
       val metadado = Tasks.buildMetadado(ctx.req.metadado, hash)
+      val urnContexto = metadado.urnContextoLinker        
+        
       
       def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
       val mimeFromExtension = ctx.fonteFileName.toList.flatMap { fname =>
@@ -204,7 +207,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         }
       }
       geraSaidaI(XML_REMISSOES, "text/xml", None, "gerado", "remissoes") {
-          Some((Tasks.makeRemissoes(xhtmlEntrada),()))
+          Some((Tasks.makeRemissoes(xhtmlEntrada,urnContexto),()))
       }
       geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", None, "intermediario", "documento") {
         val xhtmlDoc =
