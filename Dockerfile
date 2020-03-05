@@ -18,7 +18,7 @@ RUN apt-get update && \
       /usr/share/icons && \
     sed -i -e '2iexport LANG=C.UTF-8 LC_ALL=C.UTF_8' /usr/local/tomcat/bin/catalina.sh
 
-FROM lexmlbr/lexml-linker:1.3.2 as linker-base
+FROM lexmlbr/lexml-linker:1.4.0 as linker-base
 
 FROM build-base as maven-base
 RUN apt-get update && \
