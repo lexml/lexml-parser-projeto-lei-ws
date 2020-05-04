@@ -13,7 +13,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
-    <akka.version>2.3.6</akka.version>
+    <akka.version>2.5.31</akka.version>
   </properties>
   <scm>
     <url>https://github.com/lexml/${project.artifactId}</url>
