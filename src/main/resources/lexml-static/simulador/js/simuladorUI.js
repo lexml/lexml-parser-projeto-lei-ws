@@ -54,7 +54,7 @@ var tipoNormaByAutoridade = {
                 {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
                 {"value" : "decreto.lei", "display": "Decreto-Lei"},
                 {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
-                {"value" : "emenda.constitucional.revisão", "display": "Emenda Constitucional de Revisão"},
+                {"value" : "emenda.constitucional.revisao", "display": "Emenda Constitucional de Revisão"},
                 {"value" : "lei", "display": "Lei"},
                 {"value" : "lei.complementar", "display": "Lei Complementar"},
                 {"value" : "lei.delegada", "display": "Lei Delegada"},
