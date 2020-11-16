@@ -22,3 +22,7 @@ pom.xml.releaseBackup
 .idea/
 m2-settings.xml
 src/main/resources/lexml-static/commit-id
+/.m2.
+./settings.xml
+/settings.xml
+/.m2

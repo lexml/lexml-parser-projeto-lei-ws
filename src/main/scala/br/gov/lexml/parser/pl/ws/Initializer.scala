@@ -30,7 +30,7 @@ object Initializer {
     
   }
   def stop() {
-    boot.foreach(_.system.shutdown)
+    boot.foreach(_.system.terminate())
     boot = None
   }
 }

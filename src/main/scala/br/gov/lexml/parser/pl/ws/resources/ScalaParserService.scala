@@ -12,7 +12,7 @@ import javax.xml.ws.handler.MessageContext
 
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{ParserRequisicao}
+import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import com.sun.jersey.core.header.FormDataContentDisposition
@@ -25,9 +25,8 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.XML
-import scalaxb_1_1.fromXMLEither
+import scalaxb.fromXMLEither
 import java.nio.charset.Charset
-import scala.sys.process.ProcessBuilder
 import java.util.regex.Pattern
 import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 import javax.ws.rs.core.CacheControl
@@ -37,8 +36,8 @@ import io.prometheus.client.Gauge
 
 
 object ScalaParserService {
-  val parserJobsCounter = Counter.build().name("lexml_parser_job_count").help("Total de trabalhos do Parser").register()
-  val parserJobsInProgress = Gauge.build().name("lexml_parser_jobs_inprogress").help("Trabalhos do Parser em execução").register()
+  val parserJobsCounter: Counter = Counter.build().name("lexml_parser_job_count").help("Total de trabalhos do Parser").register()
+  val parserJobsInProgress: Gauge = Gauge.build().name("lexml_parser_jobs_inprogress").help("Trabalhos do Parser em execução").register()
 }
 
 @Path("/parse")
@@ -173,7 +172,6 @@ class ScalaParserService extends Logging {
   private def doParseSenado(requisicaoText: String, fonte: Option[Array[Byte]] = None, fileName : Option[String] = None): Response = {
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     val boot = Initializer.boot.get
-    val system = boot.system
     touchSession()
     try {
       fromXMLEither[ParserRequisicao](
@@ -289,30 +287,26 @@ class ScalaParserService extends Logging {
   }
 
   private def getMostSpecificMimeType(f: File, filterAccept: Boolean = true): Option[String] = {
-    import scala.collection.JavaConversions._
+    import scala.jdk.javaapi.CollectionConverters._
     def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
-    val availableMimes = MimeUtil.
-      getMimeTypes(f).
-      toList
+    val availableMimes = asScala(MimeUtil.getMimeTypes(f)).toList
     val accepted = if (filterAccept) { availableMimes.filter(accept) } else { availableMimes }
     if (accepted.isEmpty) {
       None
     } else {
-      Some(MimeUtil.getMostSpecificMimeType(accepted).toString)
+      Some(MimeUtil.getMostSpecificMimeType(asJava(accepted)).toString)
     }
   }
   
   private def getMostSpecificMimeType(b : Array[Byte], filterAccept: Boolean): Option[String] = {
-    import scala.collection.JavaConversions._
+    import scala.jdk.javaapi.CollectionConverters._
     def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
-    val availableMimes = MimeUtil.
-      getMimeTypes(b).
-      toList
+    val availableMimes = asScala(MimeUtil.getMimeTypes(b)).toList
     val accepted = if (filterAccept) { availableMimes.filter(accept) } else { availableMimes }
     if (accepted.isEmpty) {
       None
     } else {
-      Some(MimeUtil.getMostSpecificMimeType(accepted).toString)
+      Some(MimeUtil.getMostSpecificMimeType(asJava(accepted)).toString)
     }
   }
    
@@ -371,7 +365,7 @@ class ScalaParserService extends Logging {
       Response
         .ok(res)
         .`type`("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-        .header("Content-Disposition", s"""attachment; filename=${outputFileName}""")
+        .header("Content-Disposition", s"""attachment; filename=$outputFileName""")
         .header("Cache-control","no-cache, no-store, no-transform, must-revalidate")
         .build()
     } catch {
@@ -381,10 +375,6 @@ class ScalaParserService extends Logging {
     }
   }
   
-  
-  private val linkerHrefPattern = 
-    Pattern.compile("""<a href="http://homologa.lexml.gov.br/urn/(urn:lex:[^"]*)"[^>]*>(.*?)</a>""",
-        Pattern.DOTALL)
   
   private val linkerToolPath =
     LexmlWsConfig.config.getString("linkerTool")
@@ -411,17 +401,16 @@ class ScalaParserService extends Logging {
     val saida = if (somenteLinks) { "--urns" } else { "--html" }
     val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
     val output = new java.io.ByteArrayOutputStream
-    val pb = 
-      Process(Seq(linkerToolPath,tipo,saida,ctx,s"--enderecoresolver=${resolver}"))
+    Process(Seq(linkerToolPath,tipo,saida,ctx,s"--enderecoresolver=$resolver"))
         .#<(new java.io.ByteArrayInputStream(content))
         .#>(output)
         .!(ProcessLogger(_ => ()))
-    val out = output.toByteArray()
+    val out = output.toByteArray
     val outStr = new String(out,"utf-8")
     if(!linksParaSiteLexml && !somenteLinks) {
       val pat = resolver.replaceAll("URNLEXML","""(urn:lex:[^"]*)""")
       val linkerHrefPattern =         
-        Pattern.compile(s"""<a href="${pat}"[^>]*>(.*?)</a>""",
+        Pattern.compile(s"""<a href="$pat"[^>]*>(.*?)</a>""",
           Pattern.DOTALL)
       linkerHrefPattern.matcher(outStr).replaceAll("""<remissao xlink:href="$1">$2</remissao>""")
           .getBytes("utf-8")

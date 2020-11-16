@@ -3,8 +3,6 @@ package br.gov.lexml.parser.pl.ws
 import java.io.File
 import javax.servlet.ServletContext
 
-import br.gov.lexml.parser.pl.cfg.ParserComponentConfiguration
-import br.gov.lexml.parser.pl.cfg.ParserComponentConfiguration.Configuration
 import br.gov.lexml.parser.pl.ws.data.scalaxb._
 import grizzled.slf4j.Logging
 
@@ -74,11 +72,7 @@ object ServiceParams {
 
   var params: ServiceParams = new ServiceParams()
 
-  lazy val configuracao1: Configuration = ParserComponentConfiguration.scanConfiguration(getClass)
-
   lazy val configuracao: TipoConfiguracao = {
-    val comps = configuracao1.values.toSeq.
-      map(c => TipoConfiguracaoComponente(c.groupId + "/" + c.artifactId, c.build.toString))
-    TipoConfiguracao(comps: _*)
+    TipoConfiguracao()
   }
 }

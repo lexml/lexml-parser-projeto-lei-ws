@@ -8,19 +8,20 @@ import io.prometheus.client.hotspot.DefaultExports
 
 class Boot {
 
-  val system = ActorSystem("lexml-parser-system")
+  val system: ActorSystem = ActorSystem("lexml-parser-system")
   
   
   import akka.actor.SupervisorStrategy._
   
   val parserServiceSupervisionStrategy: OneForOneStrategy = OneForOneStrategy() {
-    case ex : Exception => Restart
+    case _ : Exception => Restart
   }
   
-  val parserServiceRouter: ActorRef = system.actorOf(Props[ParserServiceActor].
-      withRouter(SmallestMailboxRouter(
-          nrOfInstances=8, supervisorStrategy = parserServiceSupervisionStrategy)))
-          
+  val parserServiceRouter: ActorRef =
+    system.actorOf(Props[ParserServiceActor].withRouter(SmallestMailboxPool(8,
+    supervisorStrategy = parserServiceSupervisionStrategy)))
+
+
   val incompleteCleanActor: ActorRef = system.actorOf(Props[IncompleteCleanActor])
   val completeCleanActor: ActorRef = system.actorOf(Props[CompleteCleanActor])
     

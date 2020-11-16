@@ -88,7 +88,7 @@ object DelegatedDiffTask extends Logging {
     lazy val buildDiffMethod = classOf[DiffTask].getMethods().filter(_.getName() == "buildDiff").head
     logger.debug(s"buildDiffMethod=${buildDiffMethod}")
     lazy val buildDiffMethodParams = buildDiffMethod.getParameterTypes()
-    logger.debug(s"buildDiffMethodParams=${buildDiffMethodParams.to[Seq]}")
+    logger.debug(s"buildDiffMethodParams=${buildDiffMethodParams.to(Seq)}")
     for {
       clsName <- className
       _ = logger.debug(s"clsName=${clsName}")        
