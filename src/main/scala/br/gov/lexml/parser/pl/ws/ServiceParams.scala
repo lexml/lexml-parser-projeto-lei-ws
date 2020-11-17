@@ -72,5 +72,7 @@ object ServiceParams {
 
   var params: ServiceParams = new ServiceParams()
 
-  lazy val configuracao: Vector[Componente] = Vector()
+  lazy val configuracao: Vector[Componente] = Vector(
+    Componente(nome="parser", versao="1.0")
+  )
 }

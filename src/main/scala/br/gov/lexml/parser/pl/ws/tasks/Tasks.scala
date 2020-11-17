@@ -223,6 +223,7 @@ object Tasks extends Logging {
   def buidDisplayDocumento(urnDoc : String): String = {
     val parser = tagSoupParserFactory.newSAXParser()
     val source = new org.xml.sax.InputSource(lexmlUrlFormatString.format(urnDoc))
+    source.setEncoding("UTF-8")
     val adapter = new scala.xml.parsing.NoBindingFactoryAdapter
     val doc = adapter.loadXML(source, parser)
     val t = (doc \ "head" \ "title").text

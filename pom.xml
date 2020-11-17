@@ -245,7 +245,7 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
-      <version>1.6.3</version>
+      <version>1.6.4</version>
     </dependency>
     <dependency>
       <groupId>com.typesafe.akka</groupId>
