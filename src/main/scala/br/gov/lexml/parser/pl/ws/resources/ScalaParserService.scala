@@ -3,16 +3,16 @@ package br.gov.lexml.parser.pl.ws.resources
 import java.io.{ByteArrayOutputStream, File, InputStream}
 import java.net.URI
 import java.security.SecureRandom
+
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import javax.ws.rs._
 import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
 import javax.xml.ws.handler.MessageContext
-
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.ParserRequisicao
+import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import com.sun.jersey.core.header.FormDataContentDisposition
@@ -25,9 +25,10 @@ import org.apache.commons.io.{FileUtils, IOUtils}
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.XML
-import scalaxb.fromXMLEither
 import java.nio.charset.Charset
+import java.time.ZonedDateTime
 import java.util.regex.Pattern
+
 import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 import javax.ws.rs.core.CacheControl
 import io.prometheus.client.Counter
@@ -79,20 +80,6 @@ class ScalaParserService extends Logging {
     doParseSenado(requisicaoText)
   }
 
-  /*  @GET
-  @Path("parseSenado") 
-  @Produces(Array("text/html"))  
-  def getParsePage() : InputStream =
-    Response.temporaryRedirect()
-  	getClass.getClassLoader.getResourceAsStream("pages/parserSimulador.html")
-*/
-  /*
-  @GET
-  @Path("parseSenado/{page: .+}") //@Produces(Array("application/html"))  
-  def getParsePages(@PathParam("page") page: String): InputStream =
-    getClass.getClassLoader.getResourceAsStream("pages/" + page)
-  */
-
   @GET
   @Path("result/{id}")
   @Produces(Array("text/xml"))
@@ -102,51 +89,6 @@ class ScalaParserService extends Logging {
   }
 
   
-  /*  @GET
-  @Path("result/{id}")
-  @Produces(Array("text/html"))
-  def readResultGetHtml(@PathParam("id") id : String) = touchId(id) {
-    logger.info("readResultGetHtml: id = " + id)
-    doReadResult2(id,"resultado.xml") match {
-      case Some((file,"text/xml")) => {
-        logger.info("readResultGetHtml: xml retrieved. applying transform")
-        val s = new StreamSource(new BufferedInputStream(new FileInputStream(file)))
-        val tf = newTransform()        
-        val bos = new java.io.ByteArrayOutputStream()
-        val res = new javax.xml.transform.stream.StreamResult(bos)
-        newTransform().transform(s,res)
-        logger.info("readResultGetHtml: transform applied, returning result")
-        Response.ok(bos.toByteArray(),"application/xhtml+xml").build()
-      }
-      case None => {
-        logger.info("readResultGetHtml: result not found!")
-        notFound
-      }
-    }        
-  }*/
-
-  /*@GET
-  @Path("result/{id}")
-  @Produces(Array("text/html"))	  	
-  def readResult(@PathParam("id") id : String) : Response = touchId(id) {
-    doReadResult2(id,"resultado.xml") match {
-      case None => Response.status(Response.Status.NOT_FOUND).build()
-      case Some((resFile,_)) => {
-        val xml = XML.loadFile(resFile.getPath())
-        scalaxb_1_1.fromXMLEither[ParserResultado](xml) match {
-          case Left(err) => {
-            logger.error("Erro na leitura de resultado. id = " + id + ": " + err)
-            Response.status(Response.Status.INTERNAL_SERVER_ERROR).build()
-          }
-          case Right(resultado) => {
-            val xml = geraHtmlResultado(resultado)
-            Response.ok(xml,MediaType.APPLICATION_XHTML_XML).build()
-          }
-        }
-      }
-    }
-  }*/
-
   @Path("result/{id}/{filename}")
   @GET
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String): Response =
@@ -173,38 +115,31 @@ class ScalaParserService extends Logging {
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     val boot = Initializer.boot.get
     touchSession()
-    try {
-      fromXMLEither[ParserRequisicao](
-        XML.loadString(requisicaoText)) match {
-          case Left(error) ⇒
-            logger.warn("Requisicao invalida: " + error + "\ninput: " + requisicaoText)
-            Response.status(Response.Status.BAD_REQUEST).build()
+    try{
+      val requisicao = ParserRequisicao.fromXML(XML.loadString(requisicaoText))
 
-          case Right(requisicao) ⇒
-            var uniqueId: String = null
-            var resultPath: File = null
-            do {
-              uniqueId = newExecutionId()
-              resultPath = new File(ServiceParams.params.parseResultDirectory, uniqueId)
-            } while (resultPath.exists())
+      var uniqueId: String = null
+      var resultPath: File = null
+      do {
+        uniqueId = newExecutionId()
+        resultPath = new File(ServiceParams.params.parseResultDirectory, uniqueId)
+      } while (resultPath.exists())
 
-            def resultURI(comps: String*): URI = {
-              buildURIFromRelativePath("parse" :: "result" :: uniqueId :: comps.toList : _*)
-            }
+      def resultURI(comps: String*): URI = {
+        buildURIFromRelativePath("parse" :: "result" :: uniqueId :: comps.toList : _*)
+      }
 
-            FileUtils.forceMkdir(resultPath)
-            val waitFile = new File(resultPath, "wait")
-            FileUtils.touch(waitFile)
-            val dataHoraProcessamento = javax.xml.datatype.DatatypeFactory.newInstance.newXMLGregorianCalendar(new java.util.GregorianCalendar())
-            logger.info("sending message to actor with uniqueId=%s, requisicao=%s, resultPath=%s, waitFile=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento))
-            parserJobsCounter.inc()
-            parserJobsInProgress.inc()
-            boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
-            val uri = resultURI()
-            logger.info("result for " + uniqueId + ", at  " + uri)
-            Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
-
-        }
+      FileUtils.forceMkdir(resultPath)
+      val waitFile = new File(resultPath, "wait")
+      FileUtils.touch(waitFile)
+      val dataHoraProcessamento = ZonedDateTime.now()
+      logger.info("sending message to actor with uniqueId=%s, requisicao=%s, resultPath=%s, waitFile=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento))
+      parserJobsCounter.inc()
+      parserJobsInProgress.inc()
+      boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
+      val uri = resultURI()
+      logger.info("result for " + uniqueId + ", at  " + uri)
+      Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
     } catch {
       case ex: Exception ⇒
         logger.error("Erro durante a execução: " + ex.getMessage + ", input: " + requisicaoText, ex)

@@ -2,11 +2,10 @@ package br.gov.lexml.parser.pl.ws.resources.proc
 
 import java.io.File
 import java.net.URI
-import javax.xml.datatype.XMLGregorianCalendar
 
 import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
 import br.gov.lexml.parser.pl.ws.{Dependencies, MimeExtensionRegistry, ServiceParams}
-import br.gov.lexml.parser.pl.ws.data.scalaxb._
+import br.gov.lexml.parser.pl.ws.data._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import grizzled.slf4j.Logging
@@ -15,6 +14,8 @@ import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
 import scala.xml._
 import java.nio.charset.Charset
+import java.time.ZonedDateTime
+
 import br.gov.lexml.parser.pl.ws.resources.ScalaParserService
 import io.prometheus.client.Counter
 import io.prometheus.client.Summary
@@ -27,7 +28,7 @@ final case class RequestContext(
   req: ParserRequisicao,
   resultPath: File,
   waitFile: File,
-  dataHoraProcessamento: XMLGregorianCalendar,
+  dataHoraProcessamento: ZonedDateTime,
   fonte: Option[Array[Byte]],
   fonteFileName : Option[String])
 
@@ -79,49 +80,44 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
 
 
-  def buildSaidaComponents(ts: TipoSaida, fmt : TipoFormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (TipoElementoSaida, Option[File]) = {
+  def buildSaidaComponents(ts: TipoSaida, fmt : FormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (ElementoSaida, Option[File]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
 
     val (href,teso,f) = fmt match {
-      case EMBUTIDO =>
-        val xml =XML.load(new java.io.ByteArrayInputStream(data))
-        (None,Some(scalaxb.DataRecord.fromAny(xml, x => throw new RuntimeException(s"Unexpected unhandled: $x"))),None)
+      case FS_EMBUTIDO =>
+        val xml = XML.load(new java.io.ByteArrayInputStream(data))
+        (None,Some(ConteudoXML(xml)),None)
       case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
         val f = buildPath(extPath: _*)
         (Some(ctx.resultBuilder(extPath)),None,Some(f))
     }
-    import scalaxb._
-    import br.gov.lexml.parser.pl.ws.data.scalaxb._
-    val tes = TipoElementoSaida(
-      digest = Some(TipoDigest(digest)),
-      tipoelementosaidaoption  = teso.map(x => DataRecord(x)),
-      attributes = Map(
-        "@tipoSaida" -> DataRecord(ts),
-        "@tipoMime" -> DataRecord(tm)) ++
-        href.map(uri => ("@href",DataRecord(uri)))
+
+    val tes = ElementoSaida(
+      digest = Some(digest),
+      tipoSaida = ts,
+      tipoMime = tm,
+      href = href,
+      conteudoSaida = teso
     )
-    /*
-    (digest: Option[br.gov.lexml.parser.pl.ws.data.scalaxb.TipoDigest] = None,
-  tipoelementosaidaoption: Option[scalaxb.DataRecord[Any]] = None,
-  attributes: Map[String, scalaxb.DataRecord[Any]] = Map.empty) {
-  lazy val tipoSaida = attributes("@tipoSaida").as[TipoSaida]
-  lazy val tipoMime = attributes("@tipoMime").as[TipoMimeSaida]
-  lazy val href = attributes.get("@href") map { _.as[java.net.URI]}
-}
-     */
     (tes, f)
   }
 
-  def fromProblem(p: ParseProblem): TipoFalha = {
+  def fromProblem(p: ParseProblem): Falha = {
     val msg = UsuarioMensagem.mensagemUsuario(p).map(_.toString)
-    TipoFalha(p.problemType.code, p.problemType.description, p.pos, p.message, msg)
+    Falha(
+      codigoTipoFalha = p.problemType.code,
+      nomeTipoFalha = p.problemType.description,
+      descricao = p.toString,
+      posicoes = p.pos.toVector,
+      mensagemUsuario = msg)
   }
 
-  def fromCaracteristica: ((String, Boolean)) ⇒ TipoCaracteristica = {
-    case (x: String, f: Boolean) ⇒ TipoCaracteristica(x, f, isCaracteristicaSupported(x))
+  def fromCaracteristica: ((String, Boolean)) ⇒ Caracteristica = {
+    case (x: String, f: Boolean) ⇒ Caracteristica(
+      descricao = x, presente = f, suportadoLexEdit = isCaracteristicaSupported(x))
   }
 
   def isCaracteristicaSupported(s: String): Boolean =
@@ -134,13 +130,13 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
   def process(): Unit = try {
     logger.info("process: start")
-    val falhas: MList[TipoFalha] = MList()
-    val caracteristicas: MList[TipoCaracteristica] = MList()
-    val saidas: MList[TipoElementoSaida] = MList()
+    val falhas: MList[Falha] = MList()
+    val caracteristicas: MList[Caracteristica] = MList()
+    val saidas: MList[ElementoSaida] = MList()
     val outMap: MMap[File, (String, Array[Byte])] = MMap()
     var digest: Option[String] = None
 
-    val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.tipoSaida.map(t => (t.tipo,t.formato)).toMap
+    val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
 
     def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
@@ -150,7 +146,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
             logger.info("gerando saida ts = " + ts + " path = " + path)
             logger.info("mime saida = " + mime)
             data map { case (d,r) =>
-              val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida.fromString(mime,defaultScope), d, path: _*)
+              val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida(mime), d, path: _*)
               saidas += tes
               of foreach (f => outMap += (f -> (mime, d)))
               (d,r)
@@ -174,9 +170,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     
     var numDiffs : Option[Int] = None
     try {
-      val texto = ctx.req.texto.tipotextooption.value match {
-        case TipoTextoEmbutido(value) ⇒ value.toArray[Byte]
-        case _: TipoTextoAnexo ⇒ ctx.fonte.getOrElse(throw ParseException(TextoAnexoOmitido))
+      val texto = ctx.req.textoEntrada match {
+        case TE_TextoEmbutido(value) ⇒ value
+        case _: TE_TextoAnexo ⇒ ctx.fonte.getOrElse(throw ParseException(TextoAnexoOmitido))
         case t ⇒ throw ParseException(TipoTextoNaoSuportado(t.getClass))
       }
       val hash = Tasks.calcDigest(texto)
@@ -195,7 +191,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         }
         ext.toList.flatMap(MimeExtensionRegistry.ext2mime.get).flatten
       }
-      val baseMimeTypeList = mimeFromExtension :+ ctx.req.texto.tipoMime.toString
+      val baseMimeTypeList = mimeFromExtension :+ ctx.req.tipoMime.value
       /*val baseMimeTypeList = try {
         MimeUtil.getMimeTypes(texto).toList
       } catch {
@@ -210,9 +206,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       //      println("Possible mime types: " + possibleMimeTypes)
       val mimeType = possibleMimeTypes.head //MimeUtil.getMostSpecificMimeType(possibleMimeTypes).toString
       logger.info("mimeType = " + mimeType)
-      val mimeType2 = TipoMimeEntrada.fromString(mimeType,defaultScope)
-      geraSaidaI(DOCUMENTO_ORIGINAL, mimeType, "original", "documento")(Some((texto,())))
-      geraSaidaI(PDF_ORIGINAL, "application/pdf", "original", "documento") {
+      val mimeType2 = MimeEntrada(mimeType)
+      geraSaidaI(TS_DOCUMENTO_ORIGINAL, mimeType, "original", "documento")(Some((texto,())))
+      geraSaidaI(TS_PDF_ORIGINAL, "application/pdf", "original", "documento") {
         Some((Tasks.docToPDF(texto, mimeType2),()))
       }
       val xhtmlEntrada = {
@@ -223,10 +219,10 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
           timer.observeDuration()
         }
       }
-      geraSaidaI(XML_REMISSOES, "text/xml", "gerado", "remissoes") {
+      geraSaidaI(TS_XML_REMISSOES, "text/xml", "gerado", "remissoes") {
           Some((Tasks.makeRemissoes(xhtmlEntrada,urnContexto),()))
       }
-      geraSaidaI(XHTML_INTERMEDIARIO, "application/xhtml+xml", "intermediario", "documento") {
+      geraSaidaI(TS_XHTML_INTERMEDIARIO, "application/xhtml+xml", "intermediario", "documento") {
         val xhtmlDoc =
           <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
         	<head>
@@ -259,25 +255,25 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
       pl.caracteristicas.foreach(caracteristicas += fromCaracteristica(_))
 
-      lazy val oXmlBytes = geraSaida(XML_DERIVADO, "text/xml", "gerado", "documento") {
+      lazy val oXmlBytes = geraSaida(TS_XML_DERIVADO, "text/xml", "gerado", "documento") {
         Some((xml.toString.getBytes("utf-8"),()))
       }.map(_._1)
 
       oXmlBytes foreach { xmlBytes =>
-        geraSaidaI(ZIP_DERIVADO, "application/zip", "gerado", "documento") {
+        geraSaidaI(TS_ZIP_DERIVADO, "application/zip", "gerado", "documento") {
           Some((Tasks.makeLexMLZip(pl, xmlBytes),()))
         }
-        geraSaidaI(PDF_DERIVADO, "application/pdf", "gerado", "documento") {
+        geraSaidaI(TS_PDF_DERIVADO, "application/pdf", "gerado", "documento") {
           Some((Tasks.renderPDF(xmlBytes, metadado),()))
         }
-        geraSaidaI(DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "gerado", "documento") {
+        geraSaidaI(TS_DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "gerado", "documento") {
           Some((Tasks.renderDOCX(xmlBytes),()))
         }.map(_._1)
         
-        val docxParaDiff = geraSaidaI(DOCXDIFF_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "gerado", "documento") {
+        val docxParaDiff = geraSaidaI(TS_DOCXDIFF_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "gerado", "documento") {
           Some((Tasks.renderDOCXDIFF(xmlBytes),()))
         }.map(_._1)     
-        numDiffs = docxParaDiff.flatMap(docx => geraSaidaI(PDF_DIFF, "application/pdf", "gerado", "diff") {
+        numDiffs = docxParaDiff.flatMap(docx => geraSaidaI(TS_PDF_DIFF, "application/pdf", "gerado", "diff") {
           Tasks.buildDiff(texto, mimeType,docx,"application/vnd.openxmlformats-officedocument.wordprocessingml.document")
         }).flatMap(_._2)
       }
@@ -292,17 +288,17 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     logger.info("Falhas: " + falhas)    
     falhas.foreach(f => failureCount.labels(f.nomeTipoFalha).inc())
     
-    val res = TipoResultado(
-      falhas = TipoFalhas(falhas.to(Seq)),
-      caracteristicas = TipoCaracteristicas(caracteristicas.to(Seq)),
-      saidas = TipoSaidasResultado(saidas.to(Seq)),
-      digestFonte = TipoDigest(digest.getOrElse("")),
+    val ps = ParserResultado(
+      metadado = ctx.req.metadado,
+      falhas = falhas.toVector,
+      caracteristicas = caracteristicas.toVector,
+      saidas = saidas.toVector,
+      digestFonte = digest.getOrElse(""),
       dataHoraProcessamento = ctx.dataHoraProcessamento,
-      numeroDiferencas = numDiffs)
+      numeroDiferencas = numDiffs,
+      componentes = ServiceParams.configuracao)
 
-    val ps = ParserResultado(ctx.req.metadado, res, ServiceParams.configuracao)
-
-    val psXml = ScopeHelper.removeEmptyNsNodeSeq(scalaxb.toXML[ParserResultado](ps, None, Some("ParserResultado"), defaultScope))
+    val psXml = ScopeHelper.removeEmptyNsNodeSeq(ps.asXML)
     val psXmlTxt = psXml.toString
     val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 

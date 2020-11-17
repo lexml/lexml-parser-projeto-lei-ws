@@ -1,7 +1,6 @@
 package br.gov.lexml.parser.pl.ws.tasks
 
 import br.gov.lexml.parser.pl.errors._
-import br.gov.lexml.parser.pl.ws.data.scalaxb.TipoTextoOption
 
 case object PC_ServicoWeb extends ProblemCategory(20,"Erro do serviço Web")
 
@@ -26,7 +25,7 @@ final case class TipoNormaInvalido(tipoNorma : String) extends ParseProblem(TTip
 
 final case class DescritorEventoInvalido(descritorEvento : String) extends ParseProblem(TDescritorEventoInvalido, Some("DescritorEvento inválido: " + descritorEvento))
   
-final case class TipoTextoNaoSuportado(tipoTexto : TipoTextoOption) extends ParseProblem(TTipoTextoNaoSuportado,Some("TipoTexto não suportado ainda: "  + tipoTexto))
+//final case class TipoTextoNaoSuportado(tipoTexto : TipoTextoOption) extends ParseProblem(TTipoTextoNaoSuportado,Some("TipoTexto não suportado ainda: "  + tipoTexto))
 
 final case class FalhaConversaoXHTML(mime : String) extends ParseProblem(TFalhaConversaoXHTML,Some("Falha na conversão para XHTML. MIME = " + mime))
 

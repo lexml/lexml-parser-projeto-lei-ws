@@ -2,7 +2,6 @@ package br.gov.lexml.parser.pl.ws.tasks
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.security.MessageDigest
-import javax.ws.rs.core.MediaType
 
 import br.gov.lexml.parser.pl.{ProjetoLei, ProjetoLeiParser}
 import br.gov.lexml.parser.pl.block.{Block, Paragraph}
@@ -12,26 +11,20 @@ import br.gov.lexml.parser.pl.metadado.{Id, Metadado}
 import br.gov.lexml.parser.pl.output.LexmlRenderer
 import br.gov.lexml.parser.pl.profile.{DocumentProfile, DocumentProfileOverride, DocumentProfileRegister}
 import br.gov.lexml.parser.pl.ws.{LexmlWsConfig, MimeExtensionRegistry}
-import br.gov.lexml.parser.pl.ws.data.scalaxb.{OpcoesRequisicao, TipoMetadado, TipoMimeEntrada}
-import br.gov.lexml.parser.pl.ws.remissoes.scalaxb.{Simple, TRemissaoDocumento, TRemissaoFragmento, TRemissoes, defaultScope}
+import br.gov.lexml.parser.pl.ws.data.{OpcoesRequisicao, Metadado => RMetadado, MimeEntrada}
+import br.gov.lexml.parser.pl.ws.data.{RemissaoDocumento, RemissaoFragmento, Remissoes, XT_Simple}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.{defaultConverter, pipeline}
 import br.gov.lexml.renderer.pdf.{PDFConfigs, RendererPDF}
 import br.gov.lexml.renderer.strategies.XhtmlRenderer
-import com.sun.jersey.api.client.{Client, ClientResponse}
-import com.sun.jersey.api.client.config.DefaultClientConfig
-import com.sun.jersey.core.header.ContentDisposition
-import com.sun.jersey.multipart.{FormDataBodyPart, FormDataMultiPart}
 import com.typesafe.config.Config
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.FileUtils
-import org.dom4j.io.SAXReader
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.{Elem, Node, NodeSeq, Text}
 import grizzled.slf4j.Logging
 import br.gov.lexml.renderer.docx.renderers.Constants
-import scalaxb._
 
 object Tasks extends Logging {
   
@@ -46,10 +39,10 @@ object Tasks extends Logging {
 
   final case class SrcToXhtmlResult(res: List[Node], digest: String)
 
-  def srcToXhtmlTask(texto: Array[Byte], mime: TipoMimeEntrada): List[Node] =
-    pipeline(texto, mime.toString, defaultConverter).getOrElse(throw ParseException(FalhaConversaoXHTML(mime.toString)))
+  def srcToXhtmlTask(texto: Array[Byte], mime: MimeEntrada): List[Node] =
+    pipeline(texto, mime.value, defaultConverter).getOrElse(throw ParseException(FalhaConversaoXHTML(mime.value)))
 
-  def buildMetadado(metadado: TipoMetadado, digest: String): Metadado = {
+  def buildMetadado(metadado: RMetadado, digest: String): Metadado = {
     if (!DocumentProfileRegister.autoridades.contains(metadado.autoridade)) {
       throw ParseException(AutoridadeInvalida(metadado.autoridade))
     }    
@@ -69,21 +62,21 @@ object Tasks extends Logging {
     
     val profile : DocumentProfile = opcoes.flatMap(_.profile) match {
       case Some(p) => DocumentProfileOverride(baseProfile,
-	    				overrideRegexLocalData = p.regexLocalData.map(_.regex.toList.map(new Regex(_))),
-	    				overrideRegexJustificativa = p.regexJustificativa.map(_.regex.toList.map(new Regex(_))),
-						overrideRegexAnexos = p.regexAnexos.map(_.regex.toList.map(new Regex(_))),
-						overrideRegexLegislacaoCitada = p.regexLegislacaoCitada.map(_.regex.toList.map(new Regex(_))),
-						overrideRegexAssinatura = p.regexAssinatura.map(_.regex.toList.map(new Regex(_))),
-						overrideRegexEpigrafe = p.regexEpigrafe.map(_.regex.toList.map(new Regex(_))),
-						overrideRegexPosEpigrafe = p.regexPosEpigrafe.map(_.regex.toList.map(new Regex(_))),        				
-        				overrideEpigrafeObrigatoria = p.epigrafeObrigatoria,
-        				overridePreEpigrafePermitida = p.preEpigrafePermitida,
-        				overrideRegexPreambulo = p.regexPreambulo.map(_.regex.toList.map(new Regex(_))),
+	    				overrideRegexLocalData = p.regexLocalData.map(_.toList.map(new Regex(_))),
+	    				overrideRegexJustificativa = p.regexJustificativa.map(_.toList.map(new Regex(_))),
+						overrideRegexAnexos = p.regexAnexos.map(_.toList.map(new Regex(_))),
+						overrideRegexLegislacaoCitada = p.regexLegislacaoCitada.map(_.toList.map(new Regex(_))),
+						overrideRegexAssinatura = p.regexAssinatura.map(_.toList.map(new Regex(_))),
+						overrideRegexEpigrafe = p.regexEpigrafe.map(_.toList.map(new Regex(_))),
+						overrideRegexPosEpigrafe = p.regexPosEpigrafe.map(_.toList.map(new Regex(_))),
+     				overrideEpigrafeObrigatoria = p.epigrafeObrigatoria,
+     				overridePreEpigrafePermitida = p.preEpigrafePermitida,
+     				overrideRegexPreambulo = p.regexPreambulo.map(_.toList.map(new Regex(_))),
 						overrideUrnFragTipoNorma = p.urnFragTipoNorma,
 						overrideEpigrafeHead = p.epigrafeHead,
 						overrideEpigrafeTail = p.epigrafeTail,
 						overrideUrnFragAutoridade = p.urnFragAutoridade,
-						overrideAutoridadeEpigrafe = p.autoridadeEpigrafe.map(_.autoridadeEpigrafeValue),
+						overrideAutoridadeEpigrafe = p.autoridadeEpigrafe,
 						overrideEmentaAusente = p.ementaAusente)
       case _ => baseProfile
     }
@@ -143,7 +136,7 @@ object Tasks extends Logging {
     renderer.convert(xml)
   }
       
-  def docToPDF(texto: Array[Byte], mime: TipoMimeEntrada): Array[Byte] = MimeExtensionRegistry.mimeToExtension(mime.toString).map((extension : String) => {
+  def docToPDF(texto: Array[Byte], mime: MimeEntrada): Array[Byte] = MimeExtensionRegistry.mimeToExtension(mime.value).map((extension : String) => {
     val srcFile = File.createTempFile("lexml-src-render", "." + extension)
     val pdfFile = new File(srcFile.getCanonicalPath.replaceFirst(extension + "$", "pdf"))
     try {
@@ -162,7 +155,7 @@ object Tasks extends Logging {
         srcFile.delete
         pdfFile.delete
     }
-  }).getOrElse(throw new RuntimeException("Tipo MIME de entrada não suportado: " + mime.toString))
+  }).getOrElse(throw new RuntimeException("Tipo MIME de entrada não suportado: " + mime))
   
   def normalizeUrnForSorting(urn : String): String = {
     urn.split("_").toIndexedSeq.map { comp =>
@@ -183,7 +176,7 @@ object Tasks extends Logging {
   def normalizeAno(urn : String): String =
     	reAno.replaceSomeIn(urn, m => Some(m.group(1) + m.group(2) + m.group(3)))
   
-  def buildLegislacaoCitada(xhtmlSrc : Seq[Node], urnContexto : String) : TRemissoes = {
+  def buildLegislacaoCitada(xhtmlSrc : Seq[Node], urnContexto : String) : Remissoes = {
     val (urns,_) = Linker.findLinks(urnContexto,Text((NodeSeq fromSeq xhtmlSrc).text))
     val urnFrags = urns map ( urn => {
       val p = urn.indexOf('!')
@@ -193,44 +186,30 @@ object Tasks extends Logging {
         (urn,Set[String]())
       }
     })    
-    val urnMap = urnFrags.groupBy(x => normalizeAno(x._1)).mapValues(l => l.map(_._2).foldLeft(Set[String]())(_ union _))
-    import br.gov.lexml.parser.pl.ws.data.scalaxb._
-    import br.gov.lexml.parser.pl.ws.remissoes.scalaxb._
-    import scalaxb._
-    val docs = urnMap.toIndexedSeq.sortBy(_._1).map {
+    val urnMap = urnFrags.groupBy(x => normalizeAno(x._1)).view.mapValues(l => l.map(_._2).foldLeft(Set[String]())(_ union _)).toMap
+    val docs = urnMap.toVector.sortBy(_._1).map {
       case (urnDoc,fragSet) =>
-        val frags = fragSet.toIndexedSeq.map(x => (normalizeUrnForSorting(x),x)).sortBy(_._1).map(_._2).map { frag =>
+        val frags = fragSet.toVector.map(x => (normalizeUrnForSorting(x),x)).sortBy(_._1).map(_._2).map { frag =>
           val urnFrag = urnDoc + "!" + frag
-          import scalaxb.XMLStandardTypes._
-
-          TRemissaoFragmento(
-            Map("@{http://www.lexml.gov.br/schema/remissoes}urn" -> DataRecord(new java.net.URI(urnFrag)),
-              "@{http://www.lexml.gov.br/schema/remissoes}display" -> DataRecord(buidDisplayDocumento(frag)),
-              "@{http://www.w3.org/1999/xlink}href" -> DataRecord(buildUrlLexml(urnFrag)),
-              "@{http://www.w3.org/1999/xlink}type" -> DataRecord[TypeType](Simple)))
-
-          /*
-          lazy val urn = attributes("@{http://www.lexml.gov.br/schema/remissoes}urn").as[java.net.URI]
-  lazy val display = attributes("@{http://www.lexml.gov.br/schema/remissoes}display").as[String]
-  lazy val xlinkhref = attributes("@{http://www.w3.org/1999/xlink}href").as[java.net.URI]
-  lazy val xlinktype = attributes("@{http://www.w3.org/1999/xlink}type").as[TypeType]
-           */
+          RemissaoFragmento(
+            urn = java.net.URI.create(urnFrag),
+            display = buidDisplayDocumento(frag),
+            href = buildUrlLexml(urnFrag),
+            linkType = XT_Simple)
         }
-        import scalaxb.XMLStandardTypes._
-        TRemissaoDocumento(frags,
-           Map("@{http://www.lexml.gov.br/schema/remissoes}urn" -> DataRecord(new java.net.URI(urnDoc)),
-             "@{http://www.lexml.gov.br/schema/remissoes}display" -> DataRecord(buidDisplayDocumento(urnDoc)),
-             "@{http://www.w3.org/1999/xlink}href" -> DataRecord(buildUrlLexml(urnDoc)),
-             "@{http://www.w3.org/1999/xlink}type" -> DataRecord[TypeType](Simple)))
-
+        RemissaoDocumento(
+          urn = java.net.URI.create(urnDoc),
+          display = buidDisplayDocumento(urnDoc),
+          href = buildUrlLexml(urnDoc),
+          linkType = XT_Simple,
+          fragmentos = frags)
     }
-    TRemissoes(docs )
+    Remissoes(documentos = docs )
   }
     
   def makeRemissoes(xhtml : Seq[Node], urnContexto : String) : Array[Byte] = {
     val remissoes = buildLegislacaoCitada(xhtml,urnContexto)
-    val psXml = scalaxb.toXML[TRemissoes](remissoes, None, Some("Remissoes"), defaultScope).
-                    head.asInstanceOf[Elem]
+    val psXml = remissoes.asXML
     val psXml1 = psXml.copy(prefix = "tns")
     psXml1.toString.getBytes("utf-8")    
   }

@@ -3,7 +3,7 @@ package br.gov.lexml.parser.pl.ws
 import java.io.File
 import javax.servlet.ServletContext
 
-import br.gov.lexml.parser.pl.ws.data.scalaxb._
+import br.gov.lexml.parser.pl.ws.data.Componente
 import grizzled.slf4j.Logging
 
 
@@ -72,7 +72,5 @@ object ServiceParams {
 
   var params: ServiceParams = new ServiceParams()
 
-  lazy val configuracao: TipoConfiguracao = {
-    TipoConfiguracao()
-  }
+  lazy val configuracao: Vector[Componente] = Vector()
 }
