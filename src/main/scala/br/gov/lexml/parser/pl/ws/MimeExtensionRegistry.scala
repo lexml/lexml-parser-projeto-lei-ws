@@ -22,11 +22,11 @@ object MimeExtensionRegistry extends Logging {
     "xml" -> "text/xml",
     "zip" -> "application/zip",
     "xsl" -> "application/xslt+xml",
-    "xhtml" -> "application/xhtml+xml").map { case (k, v) ⇒ (k, Set(v)) }
+    "xhtml" -> "application/xhtml+xml").map { case (k, v) => (k, Set(v)) }
   lazy val mime2ext: Map[String, Set[String]] = {
-    val l = for { (k, s) ← ext2mime; t ← s } yield (t, k)
+    val l = for { (k, s) <- ext2mime; t <- s } yield (t, k)
     l.foldLeft(Map[String, Set[String]]()) {
-      case (m, (t, k)) ⇒ m + (t -> (m.getOrElse(t, Set[String]()) + k))
+      case (m, (t, k)) => m + (t -> (m.getOrElse(t, Set[String]()) + k))
     }
   }
 

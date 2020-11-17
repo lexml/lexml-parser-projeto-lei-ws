@@ -165,6 +165,9 @@
             <jvmArg>-Xms64m</jvmArg>
             <jvmArg>-Xmx1024m</jvmArg>
           </jvmArgs>
+          <args>
+            <arg>-deprecation</arg>
+          </args>
           <scalaVersion>${scala.version}</scalaVersion>
           <!-- <javaRebelPath>/home/joao/jrebel/jrebel.jar</javaRebelPath> -->
         </configuration>

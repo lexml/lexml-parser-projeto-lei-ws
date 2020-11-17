@@ -23,7 +23,7 @@ import io.prometheus.client.Summary
 
 
 final case class RequestContext(
-  resultBuilder: Seq[String] ⇒ URI,
+  resultBuilder: Seq[String] => URI,
   uniqueId: String,
   req: ParserRequisicao,
   resultPath: File,
@@ -115,8 +115,8 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       mensagemUsuario = msg)
   }
 
-  def fromCaracteristica: ((String, Boolean)) ⇒ Caracteristica = {
-    case (x: String, f: Boolean) ⇒ Caracteristica(
+  def fromCaracteristica: ((String, Boolean)) => Caracteristica = {
+    case (x: String, f: Boolean) => Caracteristica(
       descricao = x, presente = f, suportadoLexEdit = isCaracteristicaSupported(x))
   }
 
@@ -124,8 +124,8 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     !CaracteristicasImpeditivas.caracteristicaImpeditiva(s)
 
   def classChain(c: Class[_], l: List[String] = List()): String = c match {
-    case null ⇒ l.mkString(">")
-    case _ ⇒ classChain(c.getSuperclass, c.getName :: l)
+    case null => l.mkString(">")
+    case _ => classChain(c.getSuperclass, c.getName :: l)
   }
 
   def process(): Unit = try {
@@ -138,9 +138,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
 
-    def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
+    def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: => Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
-        case Some(formato) ⇒
+        case Some(formato) =>
           val timer = geracaoLatency.labels(ts.toString).startTimer()
           try {
             logger.info("gerando saida ts = " + ts + " path = " + path)
@@ -159,21 +159,21 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     }
 
-    def geraSaidaI[T](ts: TipoSaida, mime: String, /*digest: Option[String],*/ path: String*)(data: ⇒ Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
+    def geraSaidaI[T](ts: TipoSaida, mime: String, /*digest: Option[String],*/ path: String*)(data: => Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       try {        
         geraSaida(ts, mime, path: _*)(data)
       } catch {
-        case ex: ParseException ⇒ falhas ++= ex.errors.map(fromProblem) ; None
-        case ex: Exception ⇒ falhas += fromProblem(ErroSistema(ex)) ; None
+        case ex: ParseException => falhas ++= ex.errors.map(fromProblem) ; None
+        case ex: Exception => falhas += fromProblem(ErroSistema(ex)) ; None
       }
     }
     
     var numDiffs : Option[Int] = None
     try {
       val texto = ctx.req.textoEntrada match {
-        case TE_TextoEmbutido(value) ⇒ value
-        case _: TE_TextoAnexo ⇒ ctx.fonte.getOrElse(throw ParseException(TextoAnexoOmitido))
-        case t ⇒ throw ParseException(TipoTextoNaoSuportado(t.getClass))
+        case TE_TextoEmbutido(value) => value
+        case _: TE_TextoAnexo => ctx.fonte.getOrElse(throw ParseException(TextoAnexoOmitido))
+        case t => throw ParseException(TipoTextoNaoSuportado(t.getClass))
       }
       val hash = Tasks.calcDigest(texto)
       digest = Some(hash)
@@ -195,7 +195,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       /*val baseMimeTypeList = try {
         MimeUtil.getMimeTypes(texto).toList
       } catch {
-        case _: IllegalArgumentException ⇒ List(ctx.req.texto.tipoMime.toString())
+        case _: IllegalArgumentException => List(ctx.req.texto.tipoMime.toString())
       }*/
       //      println("baseMimeTypeList = " + baseMimeTypeList)
       logger.info("baseMimeTypeList = " + baseMimeTypeList + ", accept = " + XHTMLProcessor.accept)
@@ -264,7 +264,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
           Some((Tasks.makeLexMLZip(pl, xmlBytes),()))
         }
         geraSaidaI(TS_PDF_DERIVADO, "application/pdf", "gerado", "documento") {
-          Some((Tasks.renderPDF(xmlBytes, metadado),()))
+          Some((Tasks.renderPDF(xmlBytes),()))
         }
         geraSaidaI(TS_DOCX_DERIVADO, "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "gerado", "documento") {
           Some((Tasks.renderDOCX(xmlBytes),()))
@@ -278,9 +278,9 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
         }).flatMap(_._2)
       }
     } catch {
-      case ex: ParseException ⇒
+      case ex: ParseException =>
         falhas ++= ex.errors.map(fromProblem)
-      case ex: Exception ⇒
+      case ex: Exception =>
         logger.error("Exception in request processor(" + classChain(ex.getClass) + ") : " + ex.getMessage, ex)
         falhas += fromProblem(ErroSistema(ex))
     }
@@ -312,7 +312,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
   }
 
   def writeOutputs(m: OutputFileMap): Unit =
-    for { (f, (mime, data)) ← m } {
+    for { (f, (mime, data)) <- m } {
       logger.debug("writing " + f)
       FileUtils.forceMkdir(f.getParentFile)
       FileUtils.writeByteArrayToFile(f, data)

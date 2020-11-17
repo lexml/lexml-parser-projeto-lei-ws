@@ -52,11 +52,11 @@ class ScalaParserService extends Logging {
   var uriInfo: UriInfo = _
 
   private def buildURIFromRelativePath(path: String*) = uriInfo match {
-    case null ⇒ new URI("http://localhost:8180/parser" + path.mkString(";", ";", ""))
-    case _ ⇒
+    case null => new URI("http://localhost:8180/parser" + path.mkString(";", ";", ""))
+    case _ =>
       val builder = uriInfo.getBaseUriBuilder
       //builder.scheme("https")
-      for (c ← path) builder.path(c)
+      for (c <- path) builder.path(c)
       builder.build()
   }
 
@@ -141,7 +141,7 @@ class ScalaParserService extends Logging {
       logger.info("result for " + uniqueId + ", at  " + uri)
       Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
     } catch {
-      case ex: Exception ⇒
+      case ex: Exception =>
         logger.error("Erro durante a execução: " + ex.getMessage + ", input: " + requisicaoText, ex)
         Response.status(Response.Status.BAD_REQUEST).build()
 
@@ -176,10 +176,10 @@ class ScalaParserService extends Logging {
 
   private def doReadResult(id: String, pathComps: String*): Response = {    
     val res = pathComps match {
-      case Seq("resultado2xhtml.xsl") ⇒
+      case Seq("resultado2xhtml.xsl") =>
         Response.ok(getResultado2XhtmlData, "application/xslt+xml")
 
-      case _ ⇒ doReadResult2(id, pathComps: _*).map(r ⇒ Response.ok(r._1, r._2))
+      case _ => doReadResult2(id, pathComps: _*).map(r => Response.ok(r._1, r._2))
         .getOrElse(notFoundBuilder)
     }
     res.header("Cache-Control","private").build()
@@ -203,7 +203,7 @@ class ScalaParserService extends Logging {
     }
   }
   val idRegex: Regex = "^[A-Z0-9]+$"r
-  def touchId(id: String)(rest: ⇒ Response): Response = {
+  def touchId(id: String)(rest: => Response): Response = {
     touchSession()
     if (idRegex.findFirstIn(id).isDefined) {
       ServiceParams.params.parseResultDirectory.list()
@@ -262,10 +262,10 @@ class ScalaParserService extends Logging {
       Response.ok(f, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
     } else {      
       Option(this.getClass.getResourceAsStream("lexml-static/" + file)) match {
-        case None ⇒
+        case None =>
           logger.info("serveStatic: not found.")
           notFound
-        case Some(is) ⇒
+        case Some(is) =>
           val d = IOUtils.toByteArray(is)
           val mt = getMostSpecificMimeType(d, noFilterAccept)
           logger.debug("serveStatic: found on classpath. mt = " + mt)
@@ -405,10 +405,10 @@ object HealthCheck {
 class ParserServiceActor extends Actor with Logging {
 
   def receive: PartialFunction[Any, Unit] = {
-    case rp: RequestProcessor ⇒
+    case rp: RequestProcessor =>
       logger.info("ParserServiceActor: message received")
       rp.process()
-    case x ⇒
+    case x =>
       logger.error("Received unexpected message:  " + x)
   }
 }

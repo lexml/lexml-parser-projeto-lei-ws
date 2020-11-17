@@ -22,7 +22,7 @@ import org.apache.commons.io.FileUtils
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
-import scala.xml.{Elem, Node, NodeSeq, Text}
+import scala.xml.{Node, NodeSeq, Text}
 import grizzled.slf4j.Logging
 import br.gov.lexml.renderer.docx.renderers.Constants
 
@@ -49,7 +49,7 @@ object Tasks extends Logging {
     val profile = DocumentProfileRegister.getProfile(metadado.autoridade,metadado.tipoNorma, Some("br"))
     				.getOrElse(throw ParseException(TipoNormaInvalido(metadado.tipoNorma)))
     
-    val id = metadado.descritorEvento.map(de ⇒
+    val id = metadado.descritorEvento.map(de =>
       Id.fromUrnFrag(de).getOrElse(throw ParseException(DescritorEventoInvalido(de))))
 
     Metadado(profile, None, None, None, id, Some(digest.getBytes("utf-8")))
@@ -106,7 +106,7 @@ object Tasks extends Logging {
       bos.toByteArray    
   }  
   
-  def renderPDF(xml : Array[Byte], md : Metadado) : Array[Byte] = {        
+  def renderPDF(xml : Array[Byte]) : Array[Byte] = {
         val os = new java.io.ByteArrayOutputStream()
         val pdfRenderer = new RendererPDF()
         val pdfConfig = new java.util.HashMap[String, String]()
@@ -115,7 +115,7 @@ object Tasks extends Logging {
         pdfConfig.put(PDFConfigs.DOCUMENT_MARGIN_RIGHT,config.getString("pdf-renderer.document-margin-right"))
         val is = new java.io.ByteArrayInputStream(xml)
         pdfRenderer.render(is, os, pdfConfig)
-        try { os.close() } catch { case _ : Exception ⇒ }
+        try { os.close() } catch { case _ : Exception => }
         os.toByteArray        
   }
   
@@ -209,9 +209,7 @@ object Tasks extends Logging {
     
   def makeRemissoes(xhtml : Seq[Node], urnContexto : String) : Array[Byte] = {
     val remissoes = buildLegislacaoCitada(xhtml,urnContexto)
-    val psXml = remissoes.asXML
-    val psXml1 = psXml.copy(prefix = "tns")
-    psXml1.toString.getBytes("utf-8")    
+    remissoes.asXML.toString.getBytes("utf-8")
   }
   
   val lexmlUrlFormatString: String = config.getString("tools.lexml-site-urn-format")
@@ -235,7 +233,7 @@ object Tasks extends Logging {
   
   def buildDisplayFragmento(frag : String): String = FragmentFormatter.format(frag)
 
-  def renderEPUB(xml : Array[Byte], md : Metadado) : Array[Byte] = {
+  def renderEPUB(xml : Array[Byte]) : Array[Byte] = {
     val renderer = XhtmlRenderer.makeRenderer()
     val xml1 = scala.xml.XML.load(new ByteArrayInputStream(xml))
     val epub = renderer.render(xml1)
