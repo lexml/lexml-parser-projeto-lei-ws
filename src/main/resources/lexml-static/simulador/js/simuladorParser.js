@@ -101,13 +101,17 @@ function cancelarProcessamento(){
 	processamentoCancelado = true;
 }
 
-var numMaxTentativas = 25;
-var tempoEntreTentativas = 1800; //segundos
+var tempoEntreTentativas = 1000;
+
+function numMaxTentativas() {
+  var tempoTotal = $("#INP_TIMEOUT")[0].value;
+  return (tempoTotal * 1000 / tempoEntreTentativas);
+}
 
 function buscarResultado(caminhoResultado, tentativa){
 	
-	$("#labelTentativa").text("Esta operação ainda poderá levar "+((numMaxTentativas-tentativa)*tempoEntreTentativas)/1000+" segundos.");
-	atualizarProgressBar(tentativa*100 / numMaxTentativas);
+	$("#labelTentativa").text("Esta operação ainda poderá levar "+((numMaxTentativas()-tentativa)*tempoEntreTentativas)/1000+" segundos.");
+	atualizarProgressBar(tentativa*100 / numMaxTentativas());
 	
 	//cancelado
 	if (processamentoCancelado){
@@ -119,7 +123,7 @@ function buscarResultado(caminhoResultado, tentativa){
 	}
 	
 	//timeout
-	if (tentativa>= numMaxTentativas){
+	if (tentativa>= numMaxTentativas()){
 	    $("#dialogMessageAguardando").dialog("close");
 
 		msgErro("Desculpe, não foi possível converter o documento ou obter retorno do processador de matérias.");

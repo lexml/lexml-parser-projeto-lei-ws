@@ -147,6 +147,11 @@ $(document).ready(function() {
 		return false;
 	});
 
+	$("#buttonFormGrupoParametros").click(function (){
+		abrirFormGrupoEffect("#formGrupoParametros");
+		return false;
+	});
+
 
 	$("#comboLocalidade").change(function(){
 		changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
