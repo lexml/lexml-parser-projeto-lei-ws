@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<title>Simulador de Conversão de Documentos Articulados</title>
+	<title>Simulador de Conversão de Documentos Articulados (v. 1)</title>
 	
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 	
@@ -42,35 +42,10 @@
 				
 			<label class="labelNomeForm">Autoridade:</label> 
 				<select name="comboAutoridade" id="comboAutoridade" style="width: 200px">
-					<option value="senado.federal">Senado Federal</option>
-					<option value="camara.deputados">Câmara dos Deputados</option>
-					<option value="congresso.nacional">Congresso Nacional</option>
-					<option value="casa.legislativa">Casa Legislativa</option>
-					<option value="federal">Presidência da República (Federal)</option>
 				</select> <br>
 				
 			<label class="labelNomeForm">Tipo de documento:</label> 
 				<select name="comboTipoNorma" id="comboTipoNorma" style="width: 200px">
-                    <option value="decreto">Decreto</option>
-                    <option value="decreto.lei">Decreto-Lei</option>
-                    <option value="decreto.legislativo">Decreto Legislativo</option>
-                    <option value="emenda.constitucional">Emenda Constitucional</option>
-                    <option value="lei">Lei</option>
-                    <option value="lei.complementar">Lei Complementar</option>
-                    <option value="lei.delegada">Lei Delegada</option>
-					<option value="projeto.lei;pls">PLS - Projeto de Lei</option>
-					<option value="projeto.lei.complementar;pls">PLS - Projeto de Lei Complementar</option>
-					<option value="projeto.lei;plc">PLC - Projeto de Lei</option>
-					<option value="projeto.lei.complementar;plc">PLC - Projeto de Lei Complementar</option>
-					<option value="projeto.resolucao;prs">PRS - Projeto de Resolução</option>
-					<option value="proposta.emenda.constitucional;pec">PEC - Proposta de Emenda Constitucional</option>
-					<option value="projeto.decreto.legislativo;pds">PDS - Projeto de Decreto Legislativo</option>
-                    <option value="projeto.decreto.legislativo;pdl">PDL - Projeto de Decreto Legislativo</option>
-					<option value="projeto.lei;pl">PL - Projeto de Lei</option>
-					<option value="projeto.lei.complementar;plp">PLP - Projeto de Lei Complementar</option>
-					<option value="medida.provisoria;mpv">MPV - Medida Provisória (Projeto)</option>
-					<option value="medida.provisoria">Medida Provisória (Norma)</option>
-                    <option value="resolucao">Resolução</option>
 				</select> <br>
 				
 			<p>
@@ -104,7 +79,24 @@
 						<input type="text" name="editEventoData" id="editEventoData" class="inputDate"> <br>
 				</div>		
 			</div>
-				
+
+			<p>
+				<a href="#" id="buttonFormGrupoSaidas" class="">Saídas</a>
+			</p>
+
+			<div id="formGrupoSaidas" class="formGrupo">
+				<label class="labelNomeForm">XML derivado:</label><input type="checkbox" name="CHK_XML_DERIVADO" id="CHK_XML_DERIVADO" checked="1" class="inputCheckBox"> <br>
+				<label class="labelNomeForm">DOCX Derivado:</label><input type="checkbox" name="CHK_DOCX_DERIVADO" id="CHK_DOCX_DERIVADO" class="inputCheckBox"> <br>
+				<label class="labelNomeForm">PDF Diff:</label><input type="checkbox" name="CHK_PDF_DIFF" id="CHK_PDF_DIFF" class="inputCheckBox"> <br>
+				<label class="labelNomeForm">PDF Derivado:</label><input type="checkbox" name="CHK_PDF_DERIVADO" id="CHK_PDF_DERIVADO"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">Documento Original:</label><input type="checkbox" name="CHK_DOCUMENTO_ORIGINAL" id="CHK_DOCUMENTO_ORIGINAL"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">PDF Original:</label><input type="checkbox" name="CHK_PDF_ORIGINAL" id="CHK_PDF_ORIGINAL"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">ZIP Derivado:</label><input type="checkbox" name="CHK_ZIP_DERIVADO" id="CHK_ZIP_DERIVADO"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">XML Remissoes:</label><input type="checkbox" name="CHK_XML_REMISSOES" id="CHK_XML_REMISSOES"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">EPUB Derivado:</label><input type="checkbox" name="CHK_EPUB_DERIVADO" id="CHK_EPUB_DERIVADO"  class="inputCheckBox"> <br>
+				<label class="labelNomeForm">XHTML Intermediário:</label><input type="checkbox" name="CHK_XHTML_INTERMEDIARIO" id="CHK_XHTML_INTERMEDIARIO"  class="inputCheckBox"> <br>
+			</div>
+
 			<label class="labelNomeForm">Documento:</label> 
 				<input type="file" name="fonte" id="inputFile"> <br> 
 			
@@ -122,7 +114,7 @@
 		<div style="font-weight:normal;">
 			lexml@senado.gov.br
 		</div>		
-		versão do parser: <a href="https://github.com/lexml/lexml-parser-projeto-lei-ws/tree/b74a48f84acf0136d812323e2f57927ed71369d9">b74a48f84acf0136d812323e2f57927ed71369d9</a>		
+		<a href="../lexml-parser-projeto-lei.pom">POM</a>
 	</div>
 	
 	

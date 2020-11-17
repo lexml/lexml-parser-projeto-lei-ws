@@ -3,29 +3,28 @@
 var autoridadeByLocalidade = {
 		"br": 
 			[
+				{"value":"federal", "display":"Presidência da República"},
 				{"value":"senado.federal", "display":"Senado Federal"},
-				{"value":"camara.deputados", "display":"Câmara dos Deputados"},
-				{"value":"casa.legislativa", "display":"Casa Legislativa"},
 				{"value":"congresso.nacional", "display":"Congresso Nacional"},
-				{"value":"federal", "display":"Presidência da República"}
+				{"value":"camara.deputados", "display":"Câmara dos Deputados"}
 			]
 	};
 
 var tipoNormaByAutoridade = {
 		"senado.federal": 
 			[
+                {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
 				{"value":"projeto.lei;pls", "display":"PLS - Projeto de Lei"},
 				{"value":"projeto.lei.complementar;pls", "display":"PLS - Projeto de Lei Complementar"},
 				{"value":"projeto.lei;plc", "display":"PLC - Projeto de Lei"},
 				{"value":"projeto.lei.complementar;plc", "display":"PLC - Projeto de Lei Complementar"},
-                {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
                 {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
 				{"value":"projeto.resolucao;prs", "display":"PRS - Projeto de Resolução"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
 				{"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
                 {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
                 {"value":"resolucao", "display":"Resolução"},
-		{"value":"regimento.interno","display":"Regimento Interno"}
+		        {"value":"regimento.interno","display":"Regimento Interno"}
 			],
 		"camara.deputados" :
 			[
@@ -34,13 +33,9 @@ var tipoNormaByAutoridade = {
                 {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
 				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
                 {"value":"resolucao", "display":"Resolução"},
-		{"value":"regimento.interno","display":"Regimento Interno"}
+		        {"value":"regimento.interno","display":"Regimento Interno"}
 			],
-		"casa.legislativa" :
-			[
-				{"value":"norma", "display":"Norma"},
-			],
-		"congresso.nacional": 
+		"congresso.nacional":
 			[
                 {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
 			    {"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
@@ -50,18 +45,17 @@ var tipoNormaByAutoridade = {
 			],
 		"federal": 
 			[
+                {"value" : "lei", "display": "Lei"},
                 {"value" : "decreto", "display": "Decreto"},
                 {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
                 {"value" : "decreto.lei", "display": "Decreto-Lei"},
                 {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
                 {"value" : "emenda.constitucional.revisao", "display": "Emenda Constitucional de Revisão"},
-                {"value" : "lei", "display": "Lei"},
                 {"value" : "lei.complementar", "display": "Lei Complementar"},
                 {"value" : "lei.delegada", "display": "Lei Delegada"},
                 {"value" : "constituicao", "display": "Constituição Federal"},
                 {"value" : "ato.disposicoes.constitucionais.transitorias", "display": "Ato de Disposições Constitucionais Transitórias"},
 			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
-
 			]
 	};
 
@@ -147,7 +141,12 @@ $(document).ready(function() {
 		abrirFormGrupoEffect("#formGrupoVersao");
 		return false;
 	});
-	
+
+	$("#buttonFormGrupoSaidas").click(function (){
+		abrirFormGrupoEffect("#formGrupoSaidas");
+		return false;
+	});
+
 
 	$("#comboLocalidade").change(function(){
 		changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
@@ -158,7 +157,9 @@ $(document).ready(function() {
 	$("#comboAutoridade").change(function(){
 		changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
 	});
-	
+
+    changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
+	changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
 	//abrir parâmetros GET nativos
 	tratarParametros();
 	

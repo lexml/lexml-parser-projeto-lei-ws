@@ -52,7 +52,7 @@ function getXMLRequisicao(){
 	//monta o campo descritorEvento
 	var descritorEvento = ano+";"+numero+"@data.evento;"+evento+";"+dataHora;
 	
-	return valor=
+	var valor=
 		'<Q1:ParserRequisicao xmlns:Q1="http://www.lexml.gov.br/parser-ws" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.lexml.gov.br/parser-ws ../../../../../lexml-parser-projeto-lei-ws-api/src/main/xsd/parser-ws.xsd ">'
 		+'<Q1:metadado>'
 			+'<Q1:localidade>'+localidade+'</Q1:localidade>'
@@ -65,18 +65,19 @@ function getXMLRequisicao(){
 			+'<Q1:TextoAnexo nomeCampo="fonte" />'
 		+'</Q1:texto>'
 		+'<Q1:saidas>'
-			+'<Q1:tipoSaida tipo="DOCUMENTO_ORIGINAL" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="PDF_DERIVADO" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="PDF_ORIGINAL" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="XML_DERIVADO" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="ZIP_DERIVADO" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="DOCX_DERIVADO" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="XML_REMISSOES" formato="EMBUTIDO"/>'
-			+'<Q1:tipoSaida tipo="EPUB_DERIVADO" formato="EXTERNO"/>'			
-			+'<Q1:tipoSaida tipo="PDF_DIFF" formato="EXTERNO"/>'
-			+'<Q1:tipoSaida tipo="XHTML_INTERMEDIARIO" formato="EXTERNO"/>'
+		    + ($("#CHK_DOCUMENTO_ORIGINAL")[0].checked ?  '<Q1:tipoSaida tipo="DOCUMENTO_ORIGINAL" formato="EXTERNO"/>' : '')
+            + ($("#CHK_PDF_DERIVADO")[0].checked ?  '<Q1:tipoSaida tipo="PDF_DERIVADO" formato="EXTERNO"/>' : '')
+            + ($("#CHK_PDF_ORIGINAL")[0].checked ?  '<Q1:tipoSaida tipo="PDF_ORIGINAL" formato="EXTERNO"/>' : '')
+            + ($("#CHK_XML_DERIVADO")[0].checked ?  '<Q1:tipoSaida tipo="XML_DERIVADO" formato="EXTERNO"/>' : '')
+            + ($("#CHK_ZIP_DERIVADO")[0].checked ?  '<Q1:tipoSaida tipo="ZIP_DERIVADO" formato="EXTERNO"/>' : '')
+            + ($("#CHK_DOCX_DERIVADO")[0].checked ?  '<Q1:tipoSaida tipo="DOCX_DERIVADO" formato="EXTERNO"/>' : '')
+            + ($("#CHK_XML_REMISSOES")[0].checked ?  '<Q1:tipoSaida tipo="XML_REMISSOES" formato="EMBUTIDO"/>' : '')
+            + ($("#CHK_EPUB_DERIVADO")[0].checked ?  '<Q1:tipoSaida tipo="EPUB_DERIVADO" formato="EXTERNO"/>' : '')
+            + ($("#CHK_PDF_DIFF")[0].checked ?  '<Q1:tipoSaida tipo="PDF_DIFF" formato="EXTERNO"/>' : '')
+            + ($("#CHK_XHTML_INTERMEDIARIO")[0].checked ?  '<Q1:tipoSaida tipo="XHTML_INTERMEDIARIO" formato="EXTERNO"/>' : '')
 		+'</Q1:saidas>'
 		+'</Q1:ParserRequisicao>';
+	return valor;
 }	
 
 function msgErro(mensagem, objectFocus){
@@ -119,7 +120,7 @@ function buscarResultado(caminhoResultado, tentativa){
 	
 	//timeout
 	if (tentativa>= numMaxTentativas){
-		cancelarProcessamento();
+	    $("#dialogMessageAguardando").dialog("close");
 
 		msgErro("Desculpe, não foi possível converter o documento ou obter retorno do processador de matérias.");
 		
@@ -132,8 +133,8 @@ function buscarResultado(caminhoResultado, tentativa){
 	
 		  success: function(data, textStatus, jqXHR){
 			  //finaliza o processamento
-			  cancelarProcessamento();
-			  
+          	  $("#dialogMessageAguardando").dialog("close");
+
 			  //processa o resultado
 			  $("#divResultado").transform({
 				  	xml: caminhoResultado+"/resultado.xml", 

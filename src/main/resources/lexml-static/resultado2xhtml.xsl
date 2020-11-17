@@ -187,7 +187,7 @@
 				Remissões
 			</xsl:element>
 
-			<xsl:for-each select="/p:ParserResultado/p:resultado/p:saidas/p:elementoSaida[@tipoSaida='XML_REMISSOES']/p:Remissoes/tns:documento">
+			<xsl:for-each select="/p:ParserResultado/p:resultado/p:saidas/p:elementoSaida[@tipoSaida='XML_REMISSOES']/p:conteudoXML/tns:Remissoes/tns:documento">
 				<xsl:element name="div">
 					<xsl:attribute name="class">remissoesDocumento</xsl:attribute>
 					
