@@ -49,7 +49,7 @@ case object CleanIt
 
 class IncompleteCleanActor extends Actor with Logging with ResultCleaner {
   lazy val tolerance: Int = ServiceParams.params.incompleteCleaningIntervalMinutes
-  override def preStart() {
+  override def preStart() : Unit = {
     logger.info("scheduling " + self.path + " to start in " + tolerance +
       " minutes, firing up again every " + (tolerance / 2.0) + " minutes")
     implicit val dispatcher: ExecutionContextExecutor = context.system.dispatcher
@@ -64,7 +64,7 @@ class IncompleteCleanActor extends Actor with Logging with ResultCleaner {
 
 class CompleteCleanActor extends Actor with Logging with ResultCleaner {
   lazy val tolerance: Int = ServiceParams.params.completeCleaningIntervalMinutes
-  override def preStart() {
+  override def preStart() : Unit = {
     logger.info("scheduling " + self.path + " to start in " + tolerance +
       " minutes, firing up again every " + (tolerance / 2.0) + " minutes")
     implicit val dispatcher: ExecutionContextExecutor = context.system.dispatcher

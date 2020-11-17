@@ -22,14 +22,14 @@ object Initializer {
   
   var boot : Option[Boot] = None
   
-  def start(oe : Option[ServletContext] = None) {
+  def start(oe : Option[ServletContext] = None) : Unit = {
     ServiceParams.params = new ServiceParams(oe)
     
     boot = Some(new Boot())
     
     
   }
-  def stop() {
+  def stop() : Unit = {
     boot.foreach(_.system.terminate())
     boot = None
   }

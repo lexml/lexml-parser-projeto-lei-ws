@@ -103,7 +103,7 @@ class ScalaParserService extends Logging {
     @PathParam("dir") dir: String): Response =
     touchId(id) { doReadResult(id, dir, filename) }
 
-  private def touchSession() {
+  private def touchSession() : Unit = {
     if (context != null) {
       val mc = context.getMessageContext
       val session = mc.get(MessageContext.SERVLET_REQUEST).asInstanceOf[HttpServletRequest].getSession()
