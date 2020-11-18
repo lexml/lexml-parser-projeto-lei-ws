@@ -1,5 +1,6 @@
 package br.gov.lexml.parser.pl.ws
 
+import com.hazelcast.core.HazelcastInstance
 import javax.servlet.{ServletContext, ServletContextEvent, ServletContextListener}
 
  /**
@@ -26,8 +27,8 @@ object Initializer {
     ServiceParams.params = new ServiceParams(oe)
     
     boot = Some(new Boot())
-    
-    
+
+
   }
   def stop() : Unit = {
     boot.foreach(_.system.terminate())

@@ -4,16 +4,14 @@ import java.io.File
 import java.net.URI
 
 import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
-import br.gov.lexml.parser.pl.ws.{Dependencies, MimeExtensionRegistry, ServiceParams}
+import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, Dependencies, Initializer, MimeExtensionRegistry, ServiceParams}
 import br.gov.lexml.parser.pl.ws.data._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import grizzled.slf4j.Logging
-import org.apache.commons.io.FileUtils
 
 import scala.language.postfixOps
 import scala.xml._
-import java.nio.charset.Charset
 import java.time.ZonedDateTime
 
 import br.gov.lexml.parser.pl.ws.resources.ScalaParserService
@@ -24,17 +22,16 @@ import io.prometheus.client.Summary
 
 final case class RequestContext(
   resultBuilder: Seq[String] => URI,
-  uniqueId: String,
+  uniqueId: CacheKey,
   req: ParserRequisicao,
-  resultPath: File,
-  waitFile: File,
+  waitId: CacheKey,
   dataHoraProcessamento: ZonedDateTime,
   fonte: Option[Array[Byte]],
   fonteFileName : Option[String])
 
 object RequestProcessor {
-  val createdFilesCount: Counter = Counter.build().name("lexml_parser_created_files_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
-  val bytesWritten: Counter = Counter.build().name("lexml_parser_written_bytes_count").help("Número de arquivos criados no sistema de arquivos pelo Parser").register()
+  val createdFilesCount: Counter = Counter.build().name("lexml_parser_created_files_count").help("Número de arquivos criados pelo Parser").register()
+  val bytesWritten: Counter = Counter.build().name("lexml_parser_written_bytes_count").help("Número de bytes gravados pelo Parser").register()
   val failureCount: Counter = Counter.build().name("lexml_parser_failure_count").help("Número de falhas no Parser")
           .labelNames("codigo_tipo_falha").register()
   val parserLatency: Summary = Summary.build().name("lexml_parser_job_latency").help("Duração da execução do parser").register()
@@ -42,57 +39,32 @@ object RequestProcessor {
   val geracaoLatency: Summary =
     Summary.build().name("lexml_parser_geracao_latency").help("Duração de geração de saídas do parser")
       .labelNames("tipo_saida").register()
-/*  private var _geracaoLatency : Map[TipoSaida,Summary] = Map()
-  def geracaoLatency(ts : TipoSaida) : Summary = synchronized {
-    _geracaoLatency.get(ts) match {
-      case Some(x) => x
-      case None =>
-        val x = Summary.build().name("parse_job_geracao_latency_" + ts.toString.toLowerCase)
-            .help("Latência na geração de saída de tipo " + ts.toString).register()
-        _geracaoLatency = _geracaoLatency + (ts -> x)
-        x
-    }
-  } */
-  
-  /* private var _falhaCounts : Map[Int,Counter] = Map()
-  def falhaCount(tf : TipoFalha) : Counter = synchronized {
-    _falhaCounts.get(tf.codigoTipoFalha) match {
-      case Some(x) => x
-      case None =>
-        val x = Counter.build().name("parse_job_falha_" + tf.nomeTipoFalha.toLowerCase)
-            .help("Número de falhas de tipo " + tf.nomeTipoFalha.toString).register()
-        _falhaCounts = _falhaCounts + (tf.codigoTipoFalha -> x)
-        x
-    }
-  }  */
-  
+
   val problemCount: Summary = Summary.build().name("parse_job_problem_count").help("Número de problemas na execução do parser")
     .labelNames("codigo_problema").register()
 }
   
 class RequestProcessor(ctx: RequestContext) extends Logging {
   import RequestProcessor._
-  import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
-
-  type OutputFileMap = Map[File, (String, Array[Byte])]
-
-  def buildPath(comps: String*): File = comps.foldLeft(ctx.resultPath)(new File(_, _))
+  import scala.collection.mutable.{ListBuffer => MList}
 
 
+  def buildKey(comps: String*): CacheKey = ctx.uniqueId ++ comps
 
-  def buildSaidaComponents(ts: TipoSaida, fmt : FormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (ElementoSaida, Option[File]) = {
+  def buildSaidaComponents(ts: TipoSaida, fmt : FormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (ElementoSaida, Option[(CacheKey,CacheElem)]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
 
-    val (href,teso,f) = fmt match {
+    val (href,teso,keyContents) = fmt match {
       case FS_EMBUTIDO =>
         val xml = XML.load(new java.io.ByteArrayInputStream(data))
         (None,Some(ConteudoXML(xml)),None)
       case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
-        val f = buildPath(extPath: _*)
-        (Some(ctx.resultBuilder(extPath)),None,Some(f))
+        val f = buildKey(extPath: _*)
+        val ce = CacheElem(mimeType = tm.toString, fileName = path.last + ext, contents = data)
+        (Some(ctx.resultBuilder(extPath)),None,Some((f,ce)))
     }
 
     val tes = ElementoSaida(
@@ -102,7 +74,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       href = href,
       conteudoSaida = teso
     )
-    (tes, f)
+    (tes, keyContents)
   }
 
   def fromProblem(p: ParseProblem): Falha = {
@@ -133,11 +105,12 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val falhas: MList[Falha] = MList()
     val caracteristicas: MList[Caracteristica] = MList()
     val saidas: MList[ElementoSaida] = MList()
-    val outMap: MMap[File, (String, Array[Byte])] = MMap()
+    //val outMap: MMap[File, (String, Array[Byte])] = MMap()
     var digest: Option[String] = None
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
 
+    val resMap = Initializer.boot.get.cache.resultMap
     def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: => Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
         case Some(formato) =>
@@ -148,7 +121,12 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
             data map { case (d,r) =>
               val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida(mime), d, path: _*)
               saidas += tes
-              of foreach (f => outMap += (f -> (mime, d)))
+              of foreach {
+                case (key,ce) =>
+                  resMap.put(key,ce)
+                  createdFilesCount.inc()
+                  bytesWritten.inc(ce.contents.length)
+              }
               (d,r)
             }
           }  finally {
@@ -303,25 +281,14 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 
     logger.debug("writing outputs")
-    writeOutputs(outMap.toMap)
-    writeOutputs(Map[File,(String,Array[Byte])](buildPath("resultado.xml") -> ("text/xml", resXml.getBytes("utf-8"))))
+    resMap.put(ctx.uniqueId + "resultado.xml", CacheElem(mimeType="text/xml",fileName="resultado.xml",contents=resXml.getBytes("utf-8")))
   } finally {
-    logger.debug("deleting wait file")    
-    ctx.waitFile.delete()
+    logger.debug("deleting wait file")
+    val resMap = Initializer.boot.get.cache.resultMap
+    resMap.delete(ctx.waitId)
     ScalaParserService.parserJobsInProgress.dec()
   }
 
-  def writeOutputs(m: OutputFileMap): Unit =
-    for { (f, (mime, data)) <- m } {
-      logger.debug("writing " + f)
-      FileUtils.forceMkdir(f.getParentFile)
-      FileUtils.writeByteArrayToFile(f, data)
-      createdFilesCount.inc()
-      bytesWritten.inc(data.length)
-      val mf = new File(f.getParentFile, f.getName + ".mime")      
-      FileUtils.writeStringToFile(mf, mime, Charset.forName("utf-8"))      
-    }
-  
   object ScopeHelper {
     type ScopeMap = Map[Option[String],Option[String]]
     val emptyScopeMap : ScopeMap = Map()

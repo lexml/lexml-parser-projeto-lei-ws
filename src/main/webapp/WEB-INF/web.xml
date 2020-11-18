@@ -5,7 +5,7 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee 
 		 http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
          version="3.1">
-	<context-param>
+<!--	<context-param>
 		<param-name>parseResultDirectory</param-name>
 		<param-value>/areastorage/parser/results</param-value>
 	</context-param>
@@ -24,7 +24,7 @@
 	<context-param>
 	<param-name>mensagemUsuarioDirectory</param-name>
 	<param-value>/areastorage/parser/mensagemUsuario</param-value>
-	</context-param>
+	</context-param> -->
 	<filter>
 	  <filter-name>prometheusFilter</filter-name>
 	  <filter-class>io.prometheus.client.filter.MetricsFilter</filter-class>

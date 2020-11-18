@@ -18,8 +18,12 @@
 		<Logger name="br.gov.lexml.parser.pl" level="INFO" additivity="false">
 			<AppenderRef ref="METRICS"/>
             <AppenderRef ref="ConsoleErr"/>            	
-		</Logger> 
-		<Logger name="br.gov.lexml.schema.validator.Validador$MyLSResourceResolver" level="OFF"/>		
+		</Logger>
+		<Logger name="br.gov.lexml.parser.pl.linker" level="WARN" additivity="false">
+			<AppenderRef ref="METRICS"/>
+			<AppenderRef ref="ConsoleErr"/>
+		</Logger>
+		<Logger name="br.gov.lexml.schema.validator.Validador$MyLSResourceResolver" level="OFF"/>
 		<Root level="info">
             <AppenderRef ref="METRICS"/>
             <AppenderRef ref="ConsoleErr">

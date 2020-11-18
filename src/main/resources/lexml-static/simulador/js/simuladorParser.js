@@ -136,6 +136,7 @@ function buscarResultado(caminhoResultado, tentativa){
 		  url: caminhoResultado+"/resultado.xml",
 	
 		  success: function(data, textStatus, jqXHR){
+		    if(jqXHR.status == 200) {
 			  //finaliza o processamento
           	  $("#dialogMessageAguardando").dialog("close");
 
@@ -162,6 +163,9 @@ function buscarResultado(caminhoResultado, tentativa){
 			                          });						  
 				  	},
 				  	});
+            } else {
+			  setTimeout(function() { buscarResultado(caminhoResultado, tentativa+1) }, tempoEntreTentativas);
+            }
 		  },
 		  
 		  error: function(){

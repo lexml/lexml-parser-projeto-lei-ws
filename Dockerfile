@@ -42,22 +42,17 @@ RUN find . -type f -print
 RUN mvn clean && \
     mvn dependency:analyze-report && \
     cp target/dependency-analysis.html src/main/resources/lexml-static/ && \
-    mvn package
+    mvn package && \
+    rm target/lexml-parser.war
 
 FROM runtime-base
 ARG uid
 ARG gid
-RUN mkdir -p /areastorage/parser/mensagemUsuario && \
-    mkdir -p /areastorage/parser/results && \
-    mkdir -p /areastorage/lexml-static && \
-    groupadd -g $gid -r tomcat && \
+RUN groupadd -g $gid -r tomcat && \
     useradd -u $uid -r -g tomcat -d /usr/local/tomcat tomcat && \
-    chown -R tomcat. /usr/local/tomcat && \
-    chown -R tomcat. /areastorage
-VOLUME /areastorage/parser
+    chown -R tomcat. /usr/local/tomcat
 COPY --from=linker-base /usr/bin/simplelinker /usr/bin/linkertool /usr/local/bin/
 USER tomcat:tomcat
 WORKDIR /usr/local/tomcat
-COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/target/lexml-parser.war ./webapps
-COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/src/main/resources/lexml-static/ /areastorage/lexml-static
-COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/pom.xml /areastorage/lexml-static/lexml-parser-projeto-lei.pom
+COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/target/lexml-parser/ ./webapps/lexml-parser
+COPY --from=build-step-3 /opt/lexml/lexml-parser-projeto-lei-ws/pom.xml ./webapps/lexml-parser/WEB-INF/classes/lexml-static/lexml-parser-projeto-lei.pom

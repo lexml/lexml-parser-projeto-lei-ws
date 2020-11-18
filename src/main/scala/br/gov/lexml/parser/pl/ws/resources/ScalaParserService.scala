@@ -9,27 +9,25 @@ import javax.servlet.http.HttpServletRequest
 import javax.ws.rs._
 import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
-import javax.xml.ws.handler.MessageContext
 import akka.actor.Actor
-import br.gov.lexml.parser.pl.ws.{Initializer, ServiceParams}
+import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, Initializer, LexmlWsConfig, ServiceParams}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import com.sun.jersey.core.header.FormDataContentDisposition
 import com.sun.jersey.multipart.FormDataParam
-import eu.medsea.mimeutil.MimeUtil
+import eu.medsea.mimeutil.{MimeType, MimeUtil}
 import grizzled.slf4j.Logging
 import org.apache.commons.codec.binary.Base32
-import org.apache.commons.io.{FileUtils, IOUtils}
+import org.apache.commons.io.IOUtils
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
 import scala.xml.XML
-import java.nio.charset.Charset
 import java.time.ZonedDateTime
+import java.util
 import java.util.regex.Pattern
 
-import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 import javax.ws.rs.core.CacheControl
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
@@ -92,51 +90,34 @@ class ScalaParserService extends Logging {
   @Path("result/{id}/{filename}")
   @GET
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String): Response =
-    touchId(id) { doReadResult(id, filename) }
+    doReadResult(id, filename)
 
-  
-  
   
   @GET
   @Path("result/{id}/{dir}/{filename}")
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String,
     @PathParam("dir") dir: String): Response =
-    touchId(id) { doReadResult(id, dir, filename) }
+    doReadResult(id, dir, filename)
 
-  private def touchSession() : Unit = {
-    if (context != null) {
-      val mc = context.getMessageContext
-      val session = mc.get(MessageContext.SERVLET_REQUEST).asInstanceOf[HttpServletRequest].getSession()
-      logger.info("Session: " + session.getId)
-    }
-  }
-  
   private def doParseSenado(requisicaoText: String, fonte: Option[Array[Byte]] = None, fileName : Option[String] = None): Response = {
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     val boot = Initializer.boot.get
-    touchSession()
     try{
       val requisicao = ParserRequisicao.fromXML(XML.loadString(requisicaoText))
 
-      var uniqueId: String = null
-      var resultPath: File = null
-      do {
-        uniqueId = newExecutionId()
-        resultPath = new File(ServiceParams.params.parseResultDirectory, uniqueId)
-      } while (resultPath.exists())
+      val uniqueId = CacheKey(newExecutionId())
 
       def resultURI(comps: String*): URI = {
-        buildURIFromRelativePath("parse" :: "result" :: uniqueId :: comps.toList : _*)
+        buildURIFromRelativePath("parse" +: "result" +: (uniqueId.comps.toIndexedSeq ++ comps.toList) : _*)
       }
-
-      FileUtils.forceMkdir(resultPath)
-      val waitFile = new File(resultPath, "wait")
-      FileUtils.touch(waitFile)
+      val resMap = Initializer.boot.get.cache.resultMap
+      val waitKey = uniqueId + "wait.txt"
+      resMap.put(waitKey,CacheElem("text/plain","wait.txt","wait".getBytes("UTF-8")))
       val dataHoraProcessamento = ZonedDateTime.now()
-      logger.info("sending message to actor with uniqueId=%s, requisicao=%s, resultPath=%s, waitFile=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento))
+      logger.info("sending message to actor with uniqueId=%s, requisicao=%s, waitKey=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, waitKey, dataHoraProcessamento))
       parserJobsCounter.inc()
       parserJobsInProgress.inc()
-      boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
+      boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, waitKey, dataHoraProcessamento, fonte, fileName))
       val uri = resultURI()
       logger.info("result for " + uniqueId + ", at  " + uri)
       Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
@@ -152,12 +133,13 @@ class ScalaParserService extends Logging {
 
   private lazy val random = new SecureRandom()
 
+  private val b32 = new Base32()
   private def newExecutionId(): String = {
     val a = new Array[Byte](5)
     synchronized {
       random.nextBytes(a)
     }
-    new Base32().encodeAsString(a)
+    b32.encodeAsString(a)
   }
 
   val notFoundBuilder: Response.ResponseBuilder = Response.status(Response.Status.NOT_FOUND).header("Cache-control", "no-cache") //"s-maxage=1")
@@ -179,47 +161,37 @@ class ScalaParserService extends Logging {
       case Seq("resultado2xhtml.xsl") =>
         Response.ok(getResultado2XhtmlData, "application/xslt+xml")
 
-      case _ => doReadResult2(id, pathComps: _*).map(r => Response.ok(r._1, r._2))
-        .getOrElse(notFoundBuilder)
+      case _ => doReadResult2(id, pathComps: _*).map {
+        r =>
+          logger.info(s"doReadResult: response: $r")
+          Response.ok(r.contents,r.mimeType)
+      }.getOrElse {
+        logger.info(s"doReadResult: id=$id, pathComps=$pathComps, responding with notFoundBuilder")
+        notFoundBuilder
+      }
     }
     res.header("Cache-Control","private").build()
   }
 
-  private def doReadResult2(id: String, pathComps: String*): Option[(File, String)] = {    
+  private def doReadResult2(id: String, pathComps: String*): Option[CacheElem] = {
     logger.info("doReadResult2: id = " + id + ", pathComps = " + pathComps)
-    val resultPath = new File(ServiceParams.params.parseResultDirectory, id)
-    val waitFile = new File(resultPath, "wait")
+    val resMap = Initializer.boot.get.cache.resultMap
+    val waitKey = CacheKey(Array(id,"wait.txt"))
     val pathComps2 = if (pathComps.isEmpty) { List("resultado.xml") } else pathComps
-    val reqFile = pathComps2.foldLeft(resultPath)(new File(_, _))
-    if (reqFile.getPath != waitFile.getPath && waitFile.exists()) {
+    val reqFileKey = CacheKey(id) ++ pathComps2
+    logger.info(s"doReadResult2: reqFileKey = $reqFileKey, waitKey = $waitKey, id = $id")
+    if (reqFileKey != waitKey && resMap.containsKey(waitKey)) {
+      logger.info("doReadResult2: reqFileKey != waitKey and waitKey exists.")
       None
-    } else if (!reqFile.exists()) {
+    } else if (!resMap.containsKey(reqFileKey)) {
+      logger.info("doReadResult2: reqFileKey does not exist (yet).")
       None
     } else {
-      val mimeFile = new File(reqFile.getParentFile, reqFile.getName + ".mime")
-      val mimeType = FileUtils.readFileToString(mimeFile, Charset.forName("utf-8"))
-      logger.info("responding to get with reqFile = " + reqFile + ", and mimeType = " + mimeType)
-      Some((reqFile, mimeType))
+      logger.info("responding to get with reqFileKey = " + reqFileKey)
+      Some(resMap.get(reqFileKey))
     }
   }
   val idRegex: Regex = "^[A-Z0-9]+$"r
-  def touchId(id: String)(rest: => Response): Response = {
-    touchSession()
-    if (idRegex.findFirstIn(id).isDefined) {
-      ServiceParams.params.parseResultDirectory.list()
-      val resultDir = new File(ServiceParams.params.parseResultDirectory, id)
-      if (resultDir.exists && resultDir.isDirectory) {
-        resultDir.listFiles()
-        val waitFile = new File(resultDir, "wait")
-        if (!waitFile.exists) {
-          FileUtils.touch(resultDir)
-          rest
-        } else {
-          notFound
-        }
-      } else { notFound }
-    } else { notFound }
-  }
 
   private def getMostSpecificMimeType(f: File, filterAccept: Boolean = true): Option[String] = {
     import scala.jdk.javaapi.CollectionConverters._
@@ -235,8 +207,8 @@ class ScalaParserService extends Logging {
   
   private def getMostSpecificMimeType(b : Array[Byte], filterAccept: Boolean): Option[String] = {
     import scala.jdk.javaapi.CollectionConverters._
-    def accept(m: Any) = XHTMLProcessor.accept.contains(m.toString)
-    val availableMimes = asScala(MimeUtil.getMimeTypes(b)).toList
+    def accept(m: MimeType) = XHTMLProcessor.accept.contains(m.toString)
+    val availableMimes = asScala(MimeUtil.getMimeTypes(b).asInstanceOf[util.Collection[MimeType]]).toList
     val accepted = if (filterAccept) { availableMimes.filter(accept) } else { availableMimes }
     if (accepted.isEmpty) {
       None
@@ -249,29 +221,28 @@ class ScalaParserService extends Logging {
   @GET
   def serveStatic(@PathParam("file") file: String): Response = {
     logger.debug("serveStatic: file = " + file)    
-    val staticDir = ServiceParams.params.staticOverrideDirectory
-    val f = new File(new File(staticDir, "lexml-static"),file).getCanonicalFile
-    logger.debug("staticDir: " + staticDir)
-    logger.debug("serving: " + f)
-    logger.debug("f.exists = " + f.exists + ", f.isFile = " + f.isFile)
     val noFilterAccept = false
-    if (f.getPath.startsWith(staticDir.getPath) && f.exists() && f.isFile) {
-
-      val mt = getMostSpecificMimeType(f, noFilterAccept)
-      logger.debug("serveStatic: found on static dir. f = " + f + ", mt = " + mt)
-      Response.ok(f, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
-    } else {      
-      Option(this.getClass.getResourceAsStream("lexml-static/" + file)) match {
+    val resourceName = s"lexml-static/$file"
+    logger.info(s"serveStatic: looking for $resourceName")
+    val cl = Thread.currentThread().getContextClassLoader()
+    Option(cl.getResourceAsStream(resourceName)) match {
         case None =>
-          logger.info("serveStatic: not found.")
+          logger.info(s"serveStatic: '$resourceName' not found.")
           notFound
         case Some(is) =>
           val d = IOUtils.toByteArray(is)
-          val mt = getMostSpecificMimeType(d, noFilterAccept)
-          logger.debug("serveStatic: found on classpath. mt = " + mt)
+          val mtByExt = resourceName.replaceAll(""".*\.""","") match {
+            case "js" => Some("application/javascript")
+            case "css" => Some("text/css")
+            case "html" => Some("text/html")
+            case "png"   => Some("image/png")
+            case "jpg"   => Some("image/jpg")
+            case "xsl" => Some("application/xslt+xml")
+            case _ => None
+          }
+          val mt = mtByExt.orElse(getMostSpecificMimeType(d, noFilterAccept))
+          logger.info(s"serveStatic: '$resourceName' found on classpath. mt = $mt")
           Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
-
-      }
     }
   }
   
