@@ -14,6 +14,9 @@
     <!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
     <akka.version>2.5.32</akka.version>
+    <jetty.version>9.4.34.v20201102</jetty.version>
+    <jersey.version>2.32</jersey.version>
+    <prometheus.version>0.9.0</prometheus.version>
   </properties>
   <scm>
     <url>https://github.com/lexml/${project.artifactId}</url>
@@ -106,39 +109,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- <plugin>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.8.1</version>
-        <configuration>
-          <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.github</groupId>
-        <artifactId>site-maven-plugin</artifactId>
-        <version>0.11</version>
-        <configuration>
-          <message>Maven artifacts for ${project.artifactId} ${project.version}</message>
-          <noJekyll>true</noJekyll>
-          <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
-          <branch>refs/heads/master</branch>
-          <includes>
-            <include>**/*</include>
-          </includes>
-          <repositoryName>mvn-repo</repositoryName>
-          <repositoryOwner>lexml</repositoryOwner>
-          <merge>true</merge>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>site</goal>
-            </goals>
-            <phase>deploy</phase>
-          </execution>
-        </executions>
-      </plugin> -->
-      <plugin>
+<!--      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.1</version>
@@ -146,7 +117,7 @@
           <source>1.8</source>
           <target>1.8</target>
         </configuration>
-      </plugin>
+      </plugin> -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -169,12 +140,27 @@
             <arg>-deprecation</arg>
           </args>
           <scalaVersion>${scala.version}</scalaVersion>
-          <!-- <javaRebelPath>/home/joao/jrebel/jrebel.jar</javaRebelPath> -->
         </configuration>
       </plugin>      
     </plugins>
   </build>
   <dependencies>
+    <!-- LEXML dependencies -->
+    <dependency>
+      <groupId>br.gov.lexml.parser.pl</groupId>
+      <artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
+      <version>1.6.5</version>
+    </dependency>
+    <dependency>
+      <groupId>br.gov.lexml</groupId>
+      <artifactId>lexml-renderer-docx</artifactId>
+      <version>1.0.28</version>
+    </dependency>
+    <dependency>
+      <groupId>br.gov.lexml.parser.pl</groupId>
+      <artifactId>lexml-parser-projeto-lei-ws-nuxeo-diff</artifactId>
+      <version>1.1.12</version>
+    </dependency>
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
@@ -200,11 +186,6 @@
       </exclusions>
     </dependency>
     <dependency>
-	    <groupId>xerces</groupId>
-	    <artifactId>xercesImpl</artifactId>
-	    <version>2.12.0</version>
-	</dependency>
-    <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-rtf</artifactId>
       <version>0.3.13</version>
@@ -216,105 +197,6 @@
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.4</version>
-      <type>jar</type>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-core</artifactId>
-      <type>jar</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.logging.log4j</groupId>
-      <artifactId>log4j-slf4j-impl</artifactId>
-      <type>jar</type>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>br.gov.lexml.parser.pl</groupId>
-      <artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
-      <version>1.6.5</version>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_${scala.version}</artifactId>
-      <version>${akka.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>scala-library</artifactId>
-          <groupId>org.scala-lang</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-slf4j_${scala.version}</artifactId>
-      <version>${akka.version}</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>scala-library</artifactId>
-          <groupId>org.scala-lang</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-multipart</artifactId>
-      <version>1.19.4</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.5</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mortbay.jetty</groupId>
-      <artifactId>jetty</artifactId>
-      <version>6.1.26</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>eu.medsea.mimeutil</groupId>
-      <artifactId>mime-util</artifactId>
-      <version>2.1.3</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>log4j</groupId>
-          <artifactId>log4j</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -337,91 +219,264 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <!-- Misc -->
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-client</artifactId>
-      <version>1.19.4</version>
+      <groupId>xerces</groupId>
+      <artifactId>xercesImpl</artifactId>
+      <version>2.12.0</version>
     </dependency>
     <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-servlet</artifactId>
-      <version>1.19.4</version>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.4</version>
+      <type>jar</type>
+      <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>eu.medsea.mimeutil</groupId>
+      <artifactId>mime-util</artifactId>
+      <version>2.1.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-api</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.ccil.cowan.tagsoup</groupId>
+      <artifactId>tagsoup</artifactId>
+      <version>1.2</version>
+    </dependency>
+
+    <!-- Logging API -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
+
+    <!-- Logging Implementation -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>3.4.2</version>
+    </dependency>
+
+    <!-- Akka Dependencies -->
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>scala-library</artifactId>
+          <groupId>org.scala-lang</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <exclusions>
+        <exclusion>
+          <artifactId>scala-library</artifactId>
+          <groupId>org.scala-lang</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>slf4j-api</artifactId>
+          <groupId>org.slf4j</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
       <version>1.2.1</version>
     </dependency>
-    <dependency>
-      <groupId>br.gov.lexml</groupId>
-      <artifactId>lexml-renderer-docx</artifactId>
-      <version>1.0.28</version>
-    </dependency>
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-server</artifactId>
-      <version>1.19.4</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.xml.bind</groupId>
-      <artifactId>jaxb-api</artifactId>
-      <version>2.1</version>
-    </dependency>
-    <dependency>
-      <groupId>javax.annotation</groupId>
-      <artifactId>jsr250-api</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>osgi_R4_core</artifactId>
-      <version>1.0</version>
-    </dependency>
-    <dependency>
-	    <groupId>org.ccil.cowan.tagsoup</groupId>
-	    <artifactId>tagsoup</artifactId>
-	    <version>1.2</version>
-	</dependency>
-	
+
+    <!-- Metrics -->
 	<dependency>
   <groupId>io.prometheus</groupId>
 	  <artifactId>simpleclient</artifactId>
-	  <version>0.6.0</version>
+	  <version>${prometheus.version}</version>
 	</dependency>
 	<!-- Hotspot JVM metrics-->
 	<dependency>
 	  <groupId>io.prometheus</groupId>
 	  <artifactId>simpleclient_hotspot</artifactId>
-	  <version>0.6.0</version>
+	  <version>${prometheus.version}</version>
 	</dependency>
 	<!-- Exposition HTTPServer-->
 	<dependency>
 	  <groupId>io.prometheus</groupId>
 	  <artifactId>simpleclient_servlet</artifactId>
-	  <version>0.6.0</version>
+	  <version>${prometheus.version}</version>
 	</dependency>
-	  <dependency>
-          <groupId>br.gov.lexml.parser.pl</groupId>
-          <artifactId>lexml-parser-projeto-lei-ws-nuxeo-diff</artifactId>
-          <version>1.1.12</version>
-        </dependency>
+    <!-- https://mvnrepository.com/artifact/io.prometheus/simpleclient_log4j2 -->
     <dependency>
-      <groupId>javax.xml.ws</groupId>
-      <artifactId>jaxws-api</artifactId>
-      <version>2.3.1</version>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient_log4j2</artifactId>
+      <version>${prometheus.version}</version>
     </dependency>
-	<!-- Pushgateway exposition-->
+    <dependency>
+      <groupId>io.prometheus</groupId>
+      <artifactId>simpleclient_jetty</artifactId>
+      <version>${prometheus.version}</version>
+    </dependency>
+
+    <!-- Pushgateway exposition-->
 <!-- 	<dependency>
 	  <groupId>io.prometheus</groupId>
 	  <artifactId>simpleclient_pushgateway</artifactId>
 	  <version>0.6.0</version>
 	</dependency>
  -->
-      <dependency>
-        <groupId>com.hazelcast</groupId>
-        <artifactId>hazelcast-all</artifactId>
-        <version>4.1</version>
-      </dependency>
+
+    <!--- A -->
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>3.1.0</version>
+    </dependency>
+<!--    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
+      <version>2.1.1</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>jsr311-api</artifactId>
+      <version>1.1.1</version>
+    </dependency> -->
+   <!-- <dependency>
+      <groupId>com.sun.jersey.contribs</groupId>
+      <artifactId>jersey-multipart</artifactId>
+      <version>1.19.4</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <version>2.3.1</version>
+    </dependency> -->
+
+<!--    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>1.19.4</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-servlet</artifactId>
+      <version>1.19.4</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>1.19.4</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <version>2.1</version>
+    </dependency> -->
+<!--    <dependency>
+      <groupId>javax.annotation</groupId>
+      <artifactId>jsr250-api</artifactId>
+      <version>1.0</version>
+    </dependency> -->
+    <!-- <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi_R4_core</artifactId>
+      <version>1.0</version>
+    </dependency> -->
+    <!-- B -->
+
+    <!-- Hazelcast support -->
+    <dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast-all</artifactId>
+      <version>4.1</version>
+    </dependency>
+
+    <!-- Jetty Server -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-util</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>${jetty.version}</version>
+    </dependency>
+
+    <!-- Jersey Implementation -->
+
+    <!--> <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-jetty-http</artifactId>
+      <version>${jersey.version}</version>
+    </dependency> -->
+
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet-core</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.inject</groupId>
+      <artifactId>jersey-hk2</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.media</groupId>
+      <artifactId>jersey-media-multipart</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
+
   </dependencies>
   <dependencyManagement>
     <dependencies>
@@ -435,20 +490,20 @@
         <artifactId>log4j-core</artifactId>
         <version>2.14.0</version>
         <type>jar</type>
-        <scope>runtime</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-slf4j-impl</artifactId>
         <version>2.14.0</version>
         <type>jar</type>
-        <scope>runtime</scope>
+        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.30</version>
       </dependency>
-    </dependencies>	
+    </dependencies>
   </dependencyManagement>  
 </project>

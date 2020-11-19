@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" packages="io.prometheus.client.log4j2">
+	<Filters>
+		<RegexFilter regex=".*Componente com versão fora da especificação.*" onMatch="DENY" onMismatch="NEUTRAL"/>
+	</Filters>	
+	<Appenders>
+		<Console name="ConsoleErr" target="SYSTEM_ERR">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />				
+		</Console>
+		<Prometheus name="METRICS"/>
+		<RollingFile name="rollingFileAppender"
+			fileName="/var/log/lexml-parser-ws/lexml-parser-ws.log" append="true"
+			filePattern="/var/log/lexml-parser-ws/lexml-parser-ws-%d{yyyy-MM-dd-HH}-%i.log">
+			<PatternLayout pattern="%d{ISO8601} %p [%c] (%t) %m%n"/>
+			<Policies>
+				<OnStartupTriggeringPolicy />
+				<SizeBasedTriggeringPolicy size="10 MB"/>
+				<TimeBasedTriggeringPolicy />
+			</Policies>
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="WARN">
+			<AppenderRef ref="rollingFileAppender"/>
+			<AppenderRef ref="METRICS"/>
+			<AppenderRef ref="ConsoleErr"/>
+		</Root>
+		<Logger name="br.gov.lexml.schema.validator.Validador$MyLSResourceResolver" level="OFF"/>
+	</Loggers>
+</Configuration>

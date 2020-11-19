@@ -28,7 +28,7 @@ import br.gov.lexml.renderer.docx.renderers.Constants
 
 object Tasks extends Logging {
   
-  val config: Config = LexmlWsConfig.config.getConfig("tasks")
+  val config: Config = LexmlWsConfig.appConfig.getConfig("tasks")
      
   def calcDigest(data: Array[Byte]): String = {
     val alg = config.getString("digest.algorithm")

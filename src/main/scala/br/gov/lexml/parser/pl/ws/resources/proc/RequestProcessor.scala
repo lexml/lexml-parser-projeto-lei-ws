@@ -1,10 +1,9 @@
 package br.gov.lexml.parser.pl.ws.resources.proc
 
-import java.io.File
 import java.net.URI
 
 import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
-import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, Dependencies, Initializer, MimeExtensionRegistry, ServiceParams}
+import br.gov.lexml.parser.pl.ws.{Cache, CacheElem, CacheKey, Dependencies, MimeExtensionRegistry}
 import br.gov.lexml.parser.pl.ws.data._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
@@ -110,7 +109,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
 
-    val resMap = Initializer.boot.get.cache.resultMap
+    val resMap = Cache().resultMap
     def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: => Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
         case Some(formato) =>
@@ -274,7 +273,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       digestFonte = digest.getOrElse(""),
       dataHoraProcessamento = ctx.dataHoraProcessamento,
       numeroDiferencas = numDiffs,
-      componentes = ServiceParams.configuracao)
+      componentes = Vector(Componente(nome="parser", versao="1.0")))
 
     val psXml = ScopeHelper.removeEmptyNsNodeSeq(ps.asXML)
     val psXmlTxt = psXml.toString
@@ -284,7 +283,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     resMap.put(ctx.uniqueId + "resultado.xml", CacheElem(mimeType="text/xml",fileName="resultado.xml",contents=resXml.getBytes("utf-8")))
   } finally {
     logger.debug("deleting wait file")
-    val resMap = Initializer.boot.get.cache.resultMap
+    val resMap = Cache().resultMap
     resMap.delete(ctx.waitId)
     ScalaParserService.parserJobsInProgress.dec()
   }

@@ -1,11 +1,9 @@
 package br.gov.lexml.parser.pl.ws
 
-import akka.actor.{ActorRef, ActorSystem, OneForOneStrategy, Props}
-import akka.routing._
-import br.gov.lexml.parser.pl.ws.resources.ParserServiceActor
+import java.util.concurrent.TimeUnit
+
 import com.hazelcast.config.MaxSizePolicy
-import com.hazelcast.map.listener.EntryExpiredListener
-import io.prometheus.client.hotspot.DefaultExports
+import grizzled.slf4j.Logging
 
 final case class CacheElem(mimeType : String, fileName : String, contents : Array[Byte]) extends Serializable {
   override def toString() : String = s"CacheElem(mimeType = '$mimeType', fileName = '$fileName'', contents.length = ${contents.length})"
@@ -19,13 +17,13 @@ object CacheKey {
   def apply(k : String) : CacheKey = CacheKey(Array(k))
 }
 
-class Cache {
+class Cache extends Logging {
   import com.hazelcast.config.Config
   import com.hazelcast.map.IMap
   import com.hazelcast.core.Hazelcast
   import com.hazelcast.core.HazelcastInstance
 
-  import com.hazelcast.core.EntryEvent
+/*  import com.hazelcast.core.EntryEvent
   import com.hazelcast.map.MapEvent
   import com.hazelcast.map.listener.EntryAddedListener
   import com.hazelcast.map.listener.EntryEvictedListener
@@ -35,7 +33,7 @@ class Cache {
   import com.hazelcast.map.listener.MapClearedListener
   import com.hazelcast.map.listener.MapEvictedListener
 
-  class MyEntryListener extends EntryAddedListener[CacheKey, CacheElem]
+    class MyEntryListener extends EntryAddedListener[CacheKey, CacheElem]
     with EntryRemovedListener[CacheKey, CacheElem]
     with EntryUpdatedListener[CacheKey, CacheElem]
     with EntryEvictedListener[CacheKey, CacheElem]
@@ -74,43 +72,40 @@ class Cache {
     override def entryExpired(entryEvent: EntryEvent[CacheKey, CacheElem]): Unit = {
       System.err.println("Entry expired:" + entryEvent)
     }
-  }
+  } */
 
   val hazelcastCfg = new Config()
-  hazelcastCfg.setClusterName("lexml-parser")
+  val clusterName = LexmlWsConfig.config.getString("hazelcast.cluster-name")
+  logger.info(s"Creating Hazelcast cluster name='$clusterName'")
+  hazelcastCfg.setClusterName(clusterName) //"lexml-parser"
+  hazelcastCfg.setProperty("hazelcast.logging.type", "slf4j")
   private val mCfg = hazelcastCfg.getMapConfig("results")
-  mCfg.setTimeToLiveSeconds(300)
-  mCfg.setMaxIdleSeconds(120)
+  val ttl = LexmlWsConfig.config.getDuration("hazelcast.time-to-live",TimeUnit.SECONDS).toInt
+  logger.info(s"Setting time-to-live to $ttl")
+  mCfg.setTimeToLiveSeconds(ttl) // 300 seconds
+  val maxIdle = LexmlWsConfig.config.getDuration("hazelcast.max-idle-time",TimeUnit.SECONDS).toInt
+  logger.info(s"Setting max idle time to $maxIdle")
+  mCfg.setMaxIdleSeconds(maxIdle)
   private val evCfg = mCfg.getEvictionConfig
   evCfg.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
-  evCfg.setSize(100)
+  val maxSize = LexmlWsConfig.config.getInt("hazelcast.max-size")
+  logger.info(s"Setting max size to $maxSize")
+  evCfg.setSize(maxSize)
   val hazelcastInstance: HazelcastInstance = Hazelcast.newHazelcastInstance(hazelcastCfg)
+  logger.info("Hazelcast instance created")
   val resultMap : IMap[CacheKey,CacheElem] = hazelcastInstance.getMap("results").asInstanceOf[IMap[CacheKey,CacheElem]]
-  resultMap.addEntryListener(new MyEntryListener,true)
+  logger.info("result map created")
+//  resultMap.addEntryListener(new MyEntryListener,true)
 
 
 }
 
-class Boot {
-
-  val cache = new Cache()
-
-  val system: ActorSystem = ActorSystem("lexml-parser-system")
-  
-  
-  import akka.actor.SupervisorStrategy._
-  
-  val parserServiceSupervisionStrategy: OneForOneStrategy = OneForOneStrategy() {
-    case _ : Exception => Restart
+object Cache {
+  private var _cache : Option[Cache] = None
+  def init(): Unit = {
+    _cache = Some(new Cache())
   }
-  
-  val parserServiceRouter: ActorRef =
-    system.actorOf(Props[ParserServiceActor].withRouter(SmallestMailboxPool(8,
-    supervisorStrategy = parserServiceSupervisionStrategy)))
-
-
-  MimeExtensionRegistry.init()
-  
-  DefaultExports.initialize()
+  def apply() : Cache = _cache.getOrElse(throw new RuntimeException("Cache accessed before initialization!"))
 }
+
 

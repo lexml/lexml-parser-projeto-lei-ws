@@ -10,12 +10,10 @@ import javax.ws.rs._
 import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
 import akka.actor.Actor
-import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, Initializer, LexmlWsConfig, ServiceParams}
+import br.gov.lexml.parser.pl.ws.{Cache, CacheElem, CacheKey, LexmlWsConfig, Main}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
-import com.sun.jersey.core.header.FormDataContentDisposition
-import com.sun.jersey.multipart.FormDataParam
 import eu.medsea.mimeutil.{MimeType, MimeUtil}
 import grizzled.slf4j.Logging
 import org.apache.commons.codec.binary.Base32
@@ -31,6 +29,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.core.CacheControl
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
+import org.glassfish.jersey.media.multipart.{FormDataContentDisposition, FormDataParam}
 
 
 
@@ -101,7 +100,7 @@ class ScalaParserService extends Logging {
 
   private def doParseSenado(requisicaoText: String, fonte: Option[Array[Byte]] = None, fileName : Option[String] = None): Response = {
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
-    val boot = Initializer.boot.get
+    //val boot = Initializer.boot.get
     try{
       val requisicao = ParserRequisicao.fromXML(XML.loadString(requisicaoText))
 
@@ -110,14 +109,14 @@ class ScalaParserService extends Logging {
       def resultURI(comps: String*): URI = {
         buildURIFromRelativePath("parse" +: "result" +: (uniqueId.comps.toIndexedSeq ++ comps.toList) : _*)
       }
-      val resMap = Initializer.boot.get.cache.resultMap
+      val resMap = Cache().resultMap
       val waitKey = uniqueId + "wait.txt"
       resMap.put(waitKey,CacheElem("text/plain","wait.txt","wait".getBytes("UTF-8")))
       val dataHoraProcessamento = ZonedDateTime.now()
       logger.info("sending message to actor with uniqueId=%s, requisicao=%s, waitKey=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, waitKey, dataHoraProcessamento))
       parserJobsCounter.inc()
       parserJobsInProgress.inc()
-      boot.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, waitKey, dataHoraProcessamento, fonte, fileName))
+      Main.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, waitKey, dataHoraProcessamento, fonte, fileName))
       val uri = resultURI()
       logger.info("result for " + uniqueId + ", at  " + uri)
       Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
@@ -175,7 +174,7 @@ class ScalaParserService extends Logging {
 
   private def doReadResult2(id: String, pathComps: String*): Option[CacheElem] = {
     logger.info("doReadResult2: id = " + id + ", pathComps = " + pathComps)
-    val resMap = Initializer.boot.get.cache.resultMap
+    val resMap = Cache().resultMap
     val waitKey = CacheKey(Array(id,"wait.txt"))
     val pathComps2 = if (pathComps.isEmpty) { List("resultado.xml") } else pathComps
     val reqFileKey = CacheKey(id) ++ pathComps2
@@ -283,7 +282,7 @@ class ScalaParserService extends Logging {
   
   
   private val linkerToolPath =
-    LexmlWsConfig.config.getString("linkerTool")
+    LexmlWsConfig.appConfig.getString("linkerTool")
         
   @POST
   @Path("linkerDecorator")

@@ -67,19 +67,11 @@
 	</servlet>
 	<servlet>
 		<servlet-name>Akka</servlet-name>
-		<servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
-		<!-- And you want to configure your services -->
-		<init-param>
-			<param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
-			<param-value>com.sun.jersey.api.core.PackagesResourceConfig</param-value>
-		</init-param>
-		<init-param>
-			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>br.gov.lexml.parser.pl.ws.resources</param-value>
-		</init-param>
+		<servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+
 		<load-on-startup>1</load-on-startup>
 	</servlet>
-	
+
 	<servlet-mapping>
 	   <servlet-name>prometheus</servlet-name>
 	   <url-pattern>/sfstatus/metrics</url-pattern>

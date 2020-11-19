@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="TRACE" packages="io.prometheus.client.log4j2">
+	<Filters>
+		<RegexFilter regex=".*Componente com versão fora da especificação.*" onMatch="DENY" onMismatch="NEUTRAL"/>
+	</Filters>	
+	<Appenders>
+		<Console name="ConsoleErr" target="SYSTEM_ERR">
+			<PatternLayout
+				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />				
+		</Console>
+		<Prometheus name="METRICS"/>
+	</Appenders>
+	<Loggers>
+		<Root level="WARN">
+			<AppenderRef ref="METRICS"/>
+			<AppenderRef ref="ConsoleErr"/>
+		</Root>
+		<Logger name="br.gov.lexml.parser.pl" level="INFO"/>
+		<Logger name="br.gov.lexml.parser.pl.linker" level="WARN"/>
+		<Logger name="br.gov.lexml.schema.validator.Validador$MyLSResourceResolver" level="OFF"/>
+	</Loggers>
+</Configuration>
