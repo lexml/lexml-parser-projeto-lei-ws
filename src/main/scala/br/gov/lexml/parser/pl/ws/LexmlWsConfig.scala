@@ -12,7 +12,7 @@ object LexmlWsConfig {
       case Some(x) => throw new RuntimeException(s"LexmlWsConfig alread initialized for env $x")
     }
     _config = Some {
-      val baseConfig = ConfigFactory.load()
+      val baseConfig = ConfigFactory.load("config/application.conf")
       ConfigFactory.load(s"config/$env/application.conf")
         .withFallback(baseConfig)
     }

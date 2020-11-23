@@ -2,7 +2,9 @@ package br.gov.lexml.parser.pl.ws
 
 import java.util.concurrent.TimeUnit
 
+import be.geertvanheusden.hazelcast.discovery.RancherDiscoveryStrategyFactory
 import com.hazelcast.config.MaxSizePolicy
+import com.hazelcast.config.DiscoveryStrategyConfig
 import grizzled.slf4j.Logging
 
 final case class CacheElem(mimeType : String, fileName : String, contents : Array[Byte]) extends Serializable {
@@ -74,27 +76,44 @@ class Cache extends Logging {
     }
   } */
 
-  val hazelcastCfg = new Config()
+  val config = new Config()
   val clusterName = LexmlWsConfig.config.getString("hazelcast.cluster-name")
-  logger.info(s"Creating Hazelcast cluster name='$clusterName'")
-  hazelcastCfg.setClusterName(clusterName) //"lexml-parser"
-  hazelcastCfg.setProperty("hazelcast.logging.type", "slf4j")
-  private val mCfg = hazelcastCfg.getMapConfig("results")
+  info(s"Creating Hazelcast cluster name='$clusterName'")
+  config.setClusterName(clusterName) //"lexml-parser"
+  config.setProperty("hazelcast.logging.type", "slf4j")
+
+  if(LexmlWsConfig.config.getString("hazelcast.discovery") == "rancher") {
+    info("Hazelcast discovery using Rancher metadata api")
+    config.setProperty("hazelcast.discovery.enabled", "true")
+
+    val joinConfig = config.getNetworkConfig.getJoin
+    joinConfig.getMulticastConfig.setEnabled(false)
+    val discoveryConfig = joinConfig.getDiscoveryConfig
+
+    val factory = new RancherDiscoveryStrategyFactory()
+    val strategyConfig = new DiscoveryStrategyConfig(factory)
+
+    discoveryConfig.addDiscoveryStrategyConfig(strategyConfig)
+  } else {
+    info("Hazelcast discovery using default strategy")
+  }
+
+  private val mCfg = config.getMapConfig("results")
   val ttl = LexmlWsConfig.config.getDuration("hazelcast.time-to-live",TimeUnit.SECONDS).toInt
-  logger.info(s"Setting time-to-live to $ttl")
+  info(s"Setting time-to-live to $ttl")
   mCfg.setTimeToLiveSeconds(ttl) // 300 seconds
   val maxIdle = LexmlWsConfig.config.getDuration("hazelcast.max-idle-time",TimeUnit.SECONDS).toInt
-  logger.info(s"Setting max idle time to $maxIdle")
+  info(s"Setting max idle time to $maxIdle")
   mCfg.setMaxIdleSeconds(maxIdle)
   private val evCfg = mCfg.getEvictionConfig
   evCfg.setMaxSizePolicy(MaxSizePolicy.PER_NODE)
   val maxSize = LexmlWsConfig.config.getInt("hazelcast.max-size")
-  logger.info(s"Setting max size to $maxSize")
+  info(s"Setting max size to $maxSize")
   evCfg.setSize(maxSize)
-  val hazelcastInstance: HazelcastInstance = Hazelcast.newHazelcastInstance(hazelcastCfg)
-  logger.info("Hazelcast instance created")
+  val hazelcastInstance: HazelcastInstance = Hazelcast.newHazelcastInstance(config)
+  info("Hazelcast instance created")
   val resultMap : IMap[CacheKey,CacheElem] = hazelcastInstance.getMap("results").asInstanceOf[IMap[CacheKey,CacheElem]]
-  logger.info("result map created")
+  info("result map created")
 //  resultMap.addEntryListener(new MyEntryListener,true)
 
 

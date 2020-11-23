@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>br.gov.lexml.parser.pl</groupId>
   <artifactId>lexml-parser-projeto-lei-ws</artifactId>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   <version>1.7.36-SNAPSHOT</version>
   <name>Web Service do Parser de Projetos de Lei do LexML</name>
   <url>http://www.lexml.gov.br</url>
@@ -17,6 +17,7 @@
     <jetty.version>9.4.34.v20201102</jetty.version>
     <jersey.version>2.32</jersey.version>
     <prometheus.version>0.9.0</prometheus.version>
+    <rancher-hazelcast-discovery-spi.version>1.0.1</rancher-hazelcast-discovery-spi.version>
   </properties>
   <scm>
     <url>https://github.com/lexml/${project.artifactId}</url>
@@ -58,7 +59,11 @@
            <name>nuxeo-public-releases</name>
            <url>https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases</url>
         </repository>
-    
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+
   </repositories>
   <build>
     <finalName>lexml-parser</finalName>
@@ -141,7 +146,141 @@
           </args>
           <scalaVersion>${scala.version}</scalaVersion>
         </configuration>
-      </plugin>      
+      </plugin>
+
+
+      <plugin>
+        <groupId>io.fabric8</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+        <version>0.34.1</version>
+
+        <configuration>
+          <verbose>build</verbose>
+          <images>
+
+            <!-- A single's image configuration -->
+            <image>
+              <alias>lexml-parser-test</alias>
+              <name>lexmlbr/lexml-parser-pl-test:${project.version}</name>
+              <build>
+                <from>java:8</from>
+                <dockerFile>Dockerfile</dockerFile>
+                <assembly>
+                  <mode>dir</mode>
+                  <targetDir>/lexml-parser-pl</targetDir>
+                  <inline>
+                    <dependencySets>
+                      <dependencySet>
+                        <outputDirectory>libs</outputDirectory>
+                        <useProjectArtifact>true</useProjectArtifact>
+                        <scope>runtime</scope>
+                      </dependencySet>
+                    </dependencySets>
+                    <fileSets>
+                      <fileSet>
+                        <directory>src/main/bash</directory>
+                        <outputDirectory>bin</outputDirectory>
+                      </fileSet>
+                    </fileSets>
+                  </inline>
+                </assembly>
+                <entryPoint>
+                  <exec>
+                    <arg>/bin/bash</arg>
+                    <arg>/lexml-parser-pl/bin/lexml-parser.sh</arg>
+                  </exec>
+                </entryPoint>
+              </build>
+
+              <run>
+                <ports>
+                  <port>8080:8080</port>
+                </ports>
+                <wait>
+                  <http>
+                    <url>http://localhost:${8080}/access</url>
+                  </http>
+                  <time>10000</time>
+                </wait>
+              </run>
+            </image>
+          </images>
+        </configuration>
+      </plugin>
+
+
+<!--      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>standalone</shadedClassifierName>
+              <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                  <mainClass>br.gov.lexml.parser.pl.ws.Main$</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin> -->
+
+<!--      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.1</version>
+
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <archive>
+            <manifest>
+              <mainClass>br.gov.lexml.parser.pl.ws.Main</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+
+      </plugin> -->
+
+  <!--    <plugin>
+        <groupId>com.creditkarma</groupId>
+        <artifactId>exec-jar-plugin</artifactId>
+        <version>1.0.6</version>
+        <executions>
+          <execution>
+            <id>exec-jar</id>
+            <configuration>
+              <attachToBuild>true</attachToBuild>
+              <filename>lexml-parser-ws-standalone</filename>
+              <mainclass>br.gov.lexml.parser.pl.ws.Main</mainclass>
+            </configuration>
+            <goals>
+              <goal>exec-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin> -->
+
+
+
     </plugins>
   </build>
   <dependencies>
@@ -365,16 +504,18 @@
       <artifactId>javax.servlet-api</artifactId>
       <version>3.1.0</version>
     </dependency>
-<!--    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>javax.ws.rs-api</artifactId>
-      <version>2.1.1</version>
-    </dependency> -->
-<!--    <dependency>
-      <groupId>javax.ws.rs</groupId>
-      <artifactId>jsr311-api</artifactId>
-      <version>1.1.1</version>
-    </dependency> -->
+    <dependency>
+      <groupId>jakarta.ws.rs</groupId>
+      <artifactId>jakarta.ws.rs-api</artifactId>
+<!--      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId> -->
+      <version>2.1.4</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.ws</groupId>
+      <artifactId>jaxws-api</artifactId>
+      <version>2.1</version>
+    </dependency>
    <!-- <dependency>
       <groupId>com.sun.jersey.contribs</groupId>
       <artifactId>jersey-multipart</artifactId>
@@ -423,6 +564,12 @@
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast-all</artifactId>
       <version>4.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>be.geertvanheusden</groupId>
+      <artifactId>rancher-hazelcast-discovery-spi</artifactId>
+      <version>${rancher-hazelcast-discovery-spi.version}</version>
     </dependency>
 
     <!-- Jetty Server -->
@@ -505,5 +652,6 @@
         <version>1.7.30</version>
       </dependency>
     </dependencies>
-  </dependencyManagement>  
+  </dependencyManagement>
+
 </project>

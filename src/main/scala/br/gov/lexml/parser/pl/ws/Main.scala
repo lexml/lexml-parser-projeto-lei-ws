@@ -8,7 +8,6 @@ import io.prometheus.client.exporter.MetricsServlet
 import io.prometheus.client.filter.MetricsFilter
 import io.prometheus.client.hotspot.DefaultExports
 import io.prometheus.client.jetty.JettyStatisticsCollector
-import org.apache.commons.io.FileUtils
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.ConfigurationSource
 import org.eclipse.jetty.server.handler.StatisticsHandler
@@ -161,10 +160,5 @@ class Main(environment : String) extends Logging {
 
     (system,parserServiceRouter)
   }
-}
-
-class Boot {
-
-
 
 }
