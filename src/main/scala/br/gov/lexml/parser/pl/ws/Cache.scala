@@ -84,16 +84,23 @@ class Cache extends Logging {
 
   if(LexmlWsConfig.config.getString("hazelcast.discovery") == "rancher") {
     info("Hazelcast discovery using Rancher metadata api")
-    config.setProperty("hazelcast.discovery.enabled", "true")
+
+    //config.setProperty("hazelcast.discovery.enabled", "true")
 
     val joinConfig = config.getNetworkConfig.getJoin
     joinConfig.getMulticastConfig.setEnabled(false)
-    val discoveryConfig = joinConfig.getDiscoveryConfig
+    val tcpIpConfig = joinConfig.getTcpIpConfig()
+    tcpIpConfig.addMember("parser1")
+    tcpIpConfig.addMember("parser2")
+    tcpIpConfig.setConnectionTimeoutSeconds(60)
+    tcpIpConfig.setEnabled(true)
+
+   /* val discoveryConfig = joinConfig.getDiscoveryConfig
 
     val factory = new RancherDiscoveryStrategyFactory()
     val strategyConfig = new DiscoveryStrategyConfig(factory)
 
-    discoveryConfig.addDiscoveryStrategyConfig(strategyConfig)
+    discoveryConfig.addDiscoveryStrategyConfig(strategyConfig) */
   } else {
     info("Hazelcast discovery using default strategy")
   }
