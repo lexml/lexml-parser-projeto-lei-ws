@@ -17,7 +17,7 @@
     <jetty.version>9.4.34.v20201102</jetty.version>
     <jersey.version>2.32</jersey.version>
     <prometheus.version>0.9.0</prometheus.version>
-    <rancher-hazelcast-discovery-spi.version>1.0.1</rancher-hazelcast-discovery-spi.version>
+    <rancher-hazelcast-discovery-spi.version>1.0.1-hazelcast4_1</rancher-hazelcast-discovery-spi.version>
   </properties>
   <scm>
     <url>https://github.com/lexml/${project.artifactId}</url>
@@ -161,7 +161,7 @@
             <!-- A single's image configuration -->
             <image>
               <alias>lexml-parser-test</alias>
-              <name>lexmlbr/lexml-parser-pl-test:${project.version}</name>
+              <name>lexmlbr/parser-projeto-lei-ws:${project.version}</name>
               <build>
                 <from>java:8</from>
                 <dockerFile>Dockerfile</dockerFile>
@@ -567,7 +567,7 @@
     </dependency>
 
     <dependency>
-      <groupId>be.geertvanheusden</groupId>
+      <groupId>br.gov.lexml</groupId>
       <artifactId>rancher-hazelcast-discovery-spi</artifactId>
       <version>${rancher-hazelcast-discovery-spi.version}</version>
     </dependency>
