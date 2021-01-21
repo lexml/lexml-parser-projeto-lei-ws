@@ -1,4 +1,4 @@
-FROM lexmlbr/lexml-linker:1.4.4 as linker-base
+FROM lexmlbr/lexml-linker:1.4.5 as linker-base
 
 FROM adoptopenjdk:11.0.9.1_1-jre-hotspot as runtime-base
 RUN apt-get update    && \
