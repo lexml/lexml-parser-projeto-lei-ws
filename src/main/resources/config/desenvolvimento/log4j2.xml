@@ -26,7 +26,7 @@
 			<AppenderRef ref="METRICS"/>
 			<AppenderRef ref="ConsoleErr"/>
 		</Root>
-		<Logger name="br.gov.lexml.parser.pl" level="INFO"/>
+		<Logger name="br.gov.lexml.parser.pl" level="DEBUG"/>
 		<Logger name="br.gov.lexml.parser.pl.linker" level="WARN"/>
 		<Logger name="br.gov.lexml.schema.validator.Validador$MyLSResourceResolver" level="OFF"/>
 	</Loggers>

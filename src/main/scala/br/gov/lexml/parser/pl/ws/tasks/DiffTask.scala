@@ -1,8 +1,9 @@
 package br.gov.lexml.parser.pl.ws.tasks
 
+import br.gov.lexml.parser.pl.ws.LexmlWsConfig
 import com.typesafe.config.ConfigFactory
-import java.lang.reflect.Method
 
+import java.lang.reflect.Method
 import grizzled.slf4j.{Logger, Logging}
 
 trait DiffTask {
@@ -64,7 +65,7 @@ object DelegatedDiffTask extends Logging {
   override val logger: Logger = super.logger
   def apply() : Option[DiffTask] = {    
     logger.debug("initializing DelegatedDiffTask object")
-    lazy val config = ConfigFactory.load().getConfig("lexml.parser.ws.tasks.diff")
+    lazy val config = LexmlWsConfig.appConfig.getConfig("tasks.diff")
     logger.debug(s"config=$config")
     lazy val className = try {
       val cn = Option(config.getString("diff-task-impl-class")).filterNot(_.isEmpty())
