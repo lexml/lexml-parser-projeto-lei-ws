@@ -11,8 +11,6 @@
     <scala.version>2.13</scala.version>
     <scala.lib.version>${scala.version}.2</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-    <github.global.server>github</github.global.server>
     <akka.version>2.5.32</akka.version>
     <jetty.version>9.4.35.v20201120</jetty.version>
     <jersey.version>2.32</jersey.version>
@@ -20,26 +18,13 @@
     <rancher-hazelcast-discovery-spi.version>1.0.1-hazelcast4_1</rancher-hazelcast-discovery-spi.version>
   </properties>
   <scm>
-    <url>https://github.com/lexml/${project.artifactId}</url>
-    <developerConnection>scm:git:https://github.com/lexml/${project.artifactId}.git</developerConnection>
-    <connection>scm:git:https://github.com/lexml/${project.artifactId}.git</connection>
-    <tag>1.6.14</tag>
+    <url>https://github.com/lexml/lexml-parser-projeto-lei-ws</url>
+    <developerConnection>scm:git:https://github.com/lexml/lexml-parser-projeto-lei-ws.git</developerConnection>
+    <connection>scm:git:https://github.com/lexml/lexml-parser-projeto-lei-ws.git</connection>
+    <tag>HEAD</tag>
   </scm>
-  <distributionManagement>
-    <repository>
-      <id>releases</id>
-      <name>GitHub ${project.artifactId} Repository</name>
-      <url>https://raw.github.com/lexml/mvn-repo/master</url>
-    </repository>
-  </distributionManagement>
   <repositories>
-    <repository>
-      <id>jcenter</id>
-      <name>jcenter</name>
-      <url>https://jcenter.bintray.com</url>
-    </repository>
-    
-        <repository>
+	<repository>
             <id>sfmvnrepo</id>
             <name>sfmvnrepo-releases</name>
             <url>http://www20.senado.leg.br/artifactory/libs-releases-local</url>
@@ -53,18 +38,18 @@
             	<updatePolicy>always</updatePolicy>
             	<enabled>true</enabled>
             </snapshots>
-        </repository>
-        <repository>
+        </repository> 
+	<repository>
            <id>nuxeo-public-releases</id>
            <name>nuxeo-public-releases</name>
            <url>https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases</url>
         </repository>
-    <repository>
+	<!--    <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
-    </repository>
+	</repository> -->
 
-  </repositories>
+  </repositories> 
   <build>
     <finalName>lexml-parser</finalName>
     <plugins>
@@ -167,7 +152,6 @@
                 <dockerFile>Dockerfile</dockerFile>
                 <assembly>
                   <mode>dir</mode>
-                  <targetDir>/lexml-parser-pl</targetDir>
                   <inline>
                     <dependencySets>
                       <dependencySet>
@@ -208,79 +192,6 @@
         </configuration>
       </plugin>
 
-
-<!--      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>standalone</shadedClassifierName>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>br.gov.lexml.parser.pl.ws.Main$</mainClass>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin> -->
-
-<!--      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>3.1.1</version>
-
-        <configuration>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-          <archive>
-            <manifest>
-              <mainClass>br.gov.lexml.parser.pl.ws.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-
-      </plugin> -->
-
-  <!--    <plugin>
-        <groupId>com.creditkarma</groupId>
-        <artifactId>exec-jar-plugin</artifactId>
-        <version>1.0.6</version>
-        <executions>
-          <execution>
-            <id>exec-jar</id>
-            <configuration>
-              <attachToBuild>true</attachToBuild>
-              <filename>lexml-parser-ws-standalone</filename>
-              <mainclass>br.gov.lexml.parser.pl.ws.Main</mainclass>
-            </configuration>
-            <goals>
-              <goal>exec-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin> -->
-
-
-
     </plugins>
   </build>
   <dependencies>
@@ -288,12 +199,12 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei-ws-api</artifactId>
-      <version>1.6.5</version>
+      <version>1.6.6</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-docx</artifactId>
-      <version>1.0.28</version>
+      <version>1.0.29</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
@@ -303,12 +214,12 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
-      <version>1.12.0</version>
+      <version>1.13.3</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-pdf</artifactId>
-      <version>0.4.8</version>
+      <version>0.4.9</version>
       <exclusions>
         <exclusion>
           <groupId>ch.qos.logback</groupId>
@@ -327,7 +238,7 @@
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-rtf</artifactId>
-      <version>0.3.13</version>
+      <version>0.3.14</version>
       <exclusions>
         <exclusion>
           <groupId>ch.qos.logback</groupId>
@@ -342,7 +253,7 @@
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-scala</artifactId>
-      <version>1.1.1</version>
+      <version>1.1.2</version>
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
@@ -368,9 +279,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.4</version>
-      <type>jar</type>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
@@ -398,7 +306,7 @@
     <dependency>
       <groupId>org.ccil.cowan.tagsoup</groupId>
       <artifactId>tagsoup</artifactId>
-      <version>1.2</version>
+      <version>1.2.1</version>
     </dependency>
 
     <!-- Logging API -->
@@ -421,7 +329,7 @@
     <dependency>
       <groupId>com.lmax</groupId>
       <artifactId>disruptor</artifactId>
-      <version>3.4.2</version>
+      <version>3.4.4</version>
     </dependency>
 
     <!-- Akka Dependencies -->
@@ -456,7 +364,7 @@
     <dependency>
       <groupId>com.typesafe</groupId>
       <artifactId>config</artifactId>
-      <version>1.2.1</version>
+      <version>1.4.1</version>
     </dependency>
 
     <!-- Metrics -->
@@ -628,21 +536,26 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.7</version>
+      </dependency>
+      <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.5</version>
+        <version>1.15</version>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-core</artifactId>
-        <version>2.14.0</version>
+        <version>2.14.1</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.logging.log4j</groupId>
         <artifactId>log4j-slf4j-impl</artifactId>
-        <version>2.14.0</version>
+        <version>2.14.1</version>
         <type>jar</type>
         <scope>compile</scope>
       </dependency>
