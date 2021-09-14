@@ -4,7 +4,7 @@ FROM eclipse-temurin:8u302-b08-jdk-focal as runtime-base
 RUN apt-get update    && \
     apt-get -y --no-install-recommends install abiword \
         dnsutils iputils-ping iproute2 vim wget lsof httpie \
-	jq  && \
+	jq  netcat && \
 #    groupadd -r -g 200 parser && \
 #    useradd -r -g parser -u 200 -d /lexml-parser-pl parser  && \
     apt-get clean && \
