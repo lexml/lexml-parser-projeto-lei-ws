@@ -1,6 +1,6 @@
 #!/bin/bash
 
-get_cluster_ips() {
+get_ips() {
 	http -j GET 'http://rancher-metadata/2015-12-19/self/stack' \
 		| jq -r '.services[].containers[] | select(.service_name | test("^parser[0-9]+$")) | select (.state != "stopped") | .ips[0]' \
 		| grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" 
@@ -18,17 +18,19 @@ sleep 10
 echo "Esperando IPs do cluster ...." > /dev/stderr
 FOUND=0
 while true ; do
-	cluster_ips=( $(get_cluster_ips) )
-	FOUND="${#cluster_ips[@]}"
+	ips=( $(get_ips) )
+	FOUND="${#ips[@]}"
 	if (( $FOUND != $PARSER_CLUSTER_SIZE )) ; then
 		echo "... cluster ainda não subiu totalmente. $FOUND/$PARSER_CLUSTER_SIZE" > /dev/stderr
 		sleep 1
 	else
-		echo "IPs localizados: ${cluster_ips[@]}"
+		echo "IPs localizados: ${ips[@]}"
 		break
 	fi
 done
 
-export cluster_ips
+export cluster_ips="${ips[@]}"
 
-java br.gov.lexml.parser.pl.ws.Main "-Dcluster_ips=${cluster_ips[@]}" "$@"
+echo "cluster_ips=${cluster_ips}"
+
+java br.gov.lexml.parser.pl.ws.Main "-Dcluster_ips=${ips[@]}" "$@"
