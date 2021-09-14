@@ -13,12 +13,14 @@ export LC_ALL=C.UTF_8
 
 PARSER_CLUSTER_SIZE="${PARSER_CLUSTER_SIZE:-2}"
 
+echo "Pause de 10s antes de procurar o cluster"
+sleep 10
 echo "Esperando IPs do cluster ...." > /dev/stderr
 FOUND=0
 while true ; do
 	cluster_ips=( $(get_cluster_ips) )
 	FOUND="${#cluster_ips[@]}"
-	if (( $FOUND < $PARSER_CLUSTER_SIZE )) ; then
+	if (( $FOUND != $PARSER_CLUSTER_SIZE )) ; then
 		echo "... cluster ainda não subiu totalmente. $FOUND/$PARSER_CLUSTER_SIZE" > /dev/stderr
 		sleep 1
 	else

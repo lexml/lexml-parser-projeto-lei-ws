@@ -90,14 +90,20 @@ class Cache extends Logging {
     val joinConfig = config.getNetworkConfig.getJoin
     joinConfig.getMulticastConfig.setEnabled(false)
     val tcpIpConfig = joinConfig.getTcpIpConfig()
+    val cluster_ips_env = Option(System.getenv("cluster_ips"))
+    val cluster_ips_prop = Option(System.getProperty("cluster_ips",null))
+    val cluster_ips_opt = cluster_ips_prop.orElse(cluster_ips_env)
+    info(s"cluster_ips_env=$cluster_ips_env")
+    info(s"cluster_ips_prop=$cluster_ips_prop")
+    info(s"cluster_ips_opt=$cluster_ips_opt")
     for {
-      cluster_ips <- Option(System.getProperty("cluster_ips",System.getenv("cluster_ips")))
+      cluster_ips <- cluster_ips_opt
       ip <- cluster_ips.split(" +")
     } {
       info(s"Adding hazelcast member: $ip")
       tcpIpConfig.addMember(ip.trim)
     }
-    
+
     tcpIpConfig.setConnectionTimeoutSeconds(60)
     tcpIpConfig.setEnabled(true)
 
