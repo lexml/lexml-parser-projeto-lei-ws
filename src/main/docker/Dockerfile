@@ -1,6 +1,6 @@
 FROM lexmlbr/lexml-linker:1.4.5 as linker-base
 
-FROM eclipse-temurin:8u302-b08-jdk-focal as runtime-base
+FROM eclipse-temurin:8u322-b06-jdk-focal as runtime-base
 RUN apt-get update    && \
     apt-get -y --no-install-recommends install abiword \
         dnsutils iputils-ping iproute2 vim wget lsof httpie \

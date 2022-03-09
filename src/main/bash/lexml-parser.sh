@@ -2,7 +2,7 @@
 
 get_ips() {
 	http -j GET 'http://rancher-metadata/2015-12-19/self/stack' \
-		| jq -r '.services[].containers[] | select(.service_name | test("^parser[0-9]+$")) | select (.state != "stopped") | .ips[0]' \
+		| jq -r '.services[].containers[] | select(.service_name | test("^lexml-parser$")) | select (.state != "stopped") | .ips[0]' \
 		| grep -E -o "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" 
 }
 
