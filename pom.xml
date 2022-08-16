@@ -6,7 +6,7 @@
   <packaging>jar</packaging>
   <version>1.7.51-SNAPSHOT</version>
   <name>Web Service do Parser de Projetos de Lei do LexML</name>
-  <url>http://www.lexml.gov.br</url>
+  <url>https://www.lexml.gov.br</url>
   <properties>
     <scala.version>2.13</scala.version>
     <scala.lib.version>${scala.version}.2</scala.lib.version>
@@ -27,13 +27,13 @@
 	<repository>
             <id>sfmvnrepo</id>
             <name>sfmvnrepo-releases</name>
-            <url>http://www20.senado.leg.br/artifactory/libs-releases-local</url>
+            <url>https://www20.senado.leg.br/artifactory/libs-releases-local</url>
         </repository>
     
         <repository>
             <id>sfmvnrepo-snapshot</id>
             <name>sfmvnrepo-snapshots</name>
-            <url>http://www20.senado.leg.br/artifactory/libs-snapshots-local</url>
+            <url>https://www20.senado.leg.br/artifactory/libs-snapshots-local</url>
             <snapshots>
             	<updatePolicy>always</updatePolicy>
             	<enabled>true</enabled>
@@ -214,7 +214,7 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
-      <version>1.13.7</version>
+      <version>1.13.9</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
