@@ -3,13 +3,13 @@ package br.gov.lexml.parser.pl.ws.resources
 import java.io.{ByteArrayOutputStream, File, InputStream}
 import java.net.URI
 import java.security.SecureRandom
-
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import javax.ws.rs._
 import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
 import akka.actor.Actor
+import br.gov.lexml.parser.pl.ArticulacaoParser
 import br.gov.lexml.parser.pl.ws.{Cache, CacheElem, CacheKey, LexmlWsConfig, Main}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
@@ -25,11 +25,11 @@ import scala.xml.XML
 import java.time.ZonedDateTime
 import java.util
 import java.util.regex.Pattern
-
 import javax.ws.rs.core.CacheControl
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import org.glassfish.jersey.media.multipart.{FormDataContentDisposition, FormDataParam}
+import sun.nio.cs.StandardCharsets
 
 
 
@@ -363,7 +363,26 @@ class ParserServiceHealth extends Logging {
   def metrics() : Response = {
     Response.ok().cacheControl(noCache).build()
   } */
-  
+
+  @POST
+  @Path("fragmentParser")
+  @Consumes(Array(MediaType.TEXT_PLAIN))
+  @Produces(Array(MediaType.TEXT_XML))
+  def fragmentParser(
+                      @Context request: HttpServletRequest,
+                      content: Array[Byte]): Response = {
+     val text = new String(content,"UTF-8")
+       .split("""\r?\n\s*\r?""")
+       .toList
+    val res = new ArticulacaoParser().parseList(text)
+    Response
+      .ok(res.getBytes("UTF-8"))
+      .`type`("text/xml")
+      .header("Cache-control", "no-cache, no-store, no-transform, must-revalidate")
+      .build()
+  }
+
+
 }
 
 object HealthCheck {
@@ -371,6 +390,8 @@ object HealthCheck {
     true
   }
 }
+
+
 
 class ParserServiceActor extends Actor with Logging {
 
