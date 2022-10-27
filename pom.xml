@@ -15,7 +15,6 @@
     <jetty.version>9.4.49.v20220914</jetty.version>
     <jersey.version>2.37</jersey.version>
     <prometheus.version>0.9.0</prometheus.version>
-    <rancher-hazelcast-discovery-spi.version>1.0.1-hazelcast4_1</rancher-hazelcast-discovery-spi.version>
   </properties>
   <scm>
     <url>https://github.com/lexml/lexml-parser-projeto-lei-ws</url>
@@ -502,19 +501,6 @@
       <version>2.9.3</version>
     </dependency>
 
-    <!-- Hazelcast support -->
-    <!-- <dependency>
-      <groupId>com.hazelcast</groupId>
-      <artifactId>hazelcast-all</artifactId>
-      <version>4.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>br.gov.lexml</groupId>
-      <artifactId>rancher-hazelcast-discovery-spi</artifactId>
-      <version>${rancher-hazelcast-discovery-spi.version}</version>
-    </dependency> -->
-
     <!-- Jetty Server -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -606,6 +592,11 @@
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>1.7.30</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.13.4</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
