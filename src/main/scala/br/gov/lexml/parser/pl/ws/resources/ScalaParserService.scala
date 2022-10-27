@@ -10,7 +10,7 @@ import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ArticulacaoParser
-import br.gov.lexml.parser.pl.ws.{Cache, CacheElem, CacheKey, LexmlWsConfig, Main}
+import br.gov.lexml.parser.pl.ws.{DataCache, CacheElem, CacheKey, LexmlWsConfig, Main}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
@@ -109,9 +109,9 @@ class ScalaParserService extends Logging {
       def resultURI(comps: String*): URI = {
         buildURIFromRelativePath("parse" +: "result" +: (uniqueId.comps.toIndexedSeq ++ comps.toList) : _*)
       }
-      val resMap = Cache().resultMap
+      val cache = DataCache()
       val waitKey = uniqueId + "wait.txt"
-      resMap.put(waitKey,CacheElem("text/plain","wait.txt","wait".getBytes("UTF-8")))
+      cache.put(waitKey,CacheElem("text/plain","wait.txt","wait".getBytes("UTF-8")))
       val dataHoraProcessamento = ZonedDateTime.now()
       logger.info("sending message to actor with uniqueId=%s, requisicao=%s, waitKey=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, waitKey, dataHoraProcessamento))
       parserJobsCounter.inc()
@@ -174,20 +174,23 @@ class ScalaParserService extends Logging {
 
   private def doReadResult2(id: String, pathComps: String*): Option[CacheElem] = {
     logger.info("doReadResult2: id = " + id + ", pathComps = " + pathComps)
-    val resMap = Cache().resultMap
+    val cache = DataCache()
     val waitKey = CacheKey(Array(id,"wait.txt"))
     val pathComps2 = if (pathComps.isEmpty) { List("resultado.xml") } else pathComps
     val reqFileKey = CacheKey(id) ++ pathComps2
     logger.info(s"doReadResult2: reqFileKey = $reqFileKey, waitKey = $waitKey, id = $id")
-    if (reqFileKey != waitKey && resMap.containsKey(waitKey)) {
+    if (reqFileKey != waitKey && cache.has(waitKey)) {
       logger.info("doReadResult2: reqFileKey != waitKey and waitKey exists.")
       None
-    } else if (!resMap.containsKey(reqFileKey)) {
-      logger.info("doReadResult2: reqFileKey does not exist (yet).")
-      None
-    } else {
-      logger.info("responding to get with reqFileKey = " + reqFileKey)
-      Some(resMap.get(reqFileKey))
+    } else  {
+      cache.get(reqFileKey) match {
+        case None =>
+          logger.info("doReadResult2: reqFileKey does not exist (yet).")
+          None
+        case Some(data) =>
+        logger.info("responding to get with reqFileKey = " + reqFileKey)
+        Some(data)
+      }
     }
   }
   val idRegex: Regex = "^[A-Z0-9]+$"r

@@ -9,11 +9,11 @@
   <url>https://www.lexml.gov.br</url>
   <properties>
     <scala.version>2.13</scala.version>
-    <scala.lib.version>${scala.version}.2</scala.lib.version>
+    <scala.lib.version>${scala.version}.10</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <akka.version>2.5.32</akka.version>
-    <jetty.version>9.4.44.v20210927</jetty.version>
-    <jersey.version>2.32</jersey.version>
+    <jetty.version>9.4.49.v20220914</jetty.version>
+    <jersey.version>2.37</jersey.version>
     <prometheus.version>0.9.0</prometheus.version>
     <rancher-hazelcast-discovery-spi.version>1.0.1-hazelcast4_1</rancher-hazelcast-discovery-spi.version>
   </properties>
@@ -24,12 +24,23 @@
     <tag>HEAD</tag>
   </scm>
   <repositories>
-	<repository>
+         <repository>
+                <releases>
+                    <enabled>true</enabled>
+                </releases>
+                <snapshots>
+                    <enabled>true</enabled>
+                </snapshots>
+                <id>central</id>
+                <url>http://repo1.maven.org/maven2</url>
+            </repository>
+	    
+	    <repository>
             <id>sfmvnrepo</id>
             <name>sfmvnrepo-releases</name>
             <url>https://www20.senado.leg.br/artifactory/libs-releases-local</url>
         </repository>
-    
+	
         <repository>
             <id>sfmvnrepo-snapshot</id>
             <name>sfmvnrepo-snapshots</name>
@@ -38,12 +49,12 @@
             	<updatePolicy>always</updatePolicy>
             	<enabled>true</enabled>
             </snapshots>
-        </repository> 
+	    </repository> 
 	<repository>
            <id>nuxeo-public-releases</id>
            <name>nuxeo-public-releases</name>
            <url>https://maven-eu.nuxeo.org/nexus/content/repositories/public-releases</url>
-        </repository>
+	    </repository> 
 	<!--    <repository>
       <id>jitpack.io</id>
       <url>https://jitpack.io</url>
@@ -247,6 +258,18 @@
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>bouncycastle</groupId>
+          <artifactId>bcmail-jdk14</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>bouncycastle</groupId>
+          <artifactId>bcprov-jdk14</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bctsp-jdk14</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -467,8 +490,20 @@
     </dependency> -->
     <!-- B -->
 
-    <!-- Hazelcast support -->
+    <!-- <dependency>
+      <groupId>com.github.cb372</groupId>
+      <artifactId>scalacache-caffeine_${scala.version}</artifactId>
+      <version>1.0.0-M6</version>
+    </dependency> -->
+    <!-- Caffeine Cache support -->
     <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>2.9.3</version>
+    </dependency>
+
+    <!-- Hazelcast support -->
+    <!-- <dependency>
       <groupId>com.hazelcast</groupId>
       <artifactId>hazelcast-all</artifactId>
       <version>4.1</version>
@@ -478,7 +513,7 @@
       <groupId>br.gov.lexml</groupId>
       <artifactId>rancher-hazelcast-discovery-spi</artifactId>
       <version>${rancher-hazelcast-discovery-spi.version}</version>
-    </dependency>
+    </dependency> -->
 
     <!-- Jetty Server -->
     <dependency>
@@ -531,6 +566,14 @@
       <version>${jersey.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk14</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcmail-jdk14</artifactId>
+    </dependency>
 
   </dependencies>
   <dependencyManagement>
@@ -564,7 +607,58 @@
         <artifactId>slf4j-api</artifactId>
         <version>1.7.30</version>
       </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-annotations</artifactId>
+        <version>2.13.4</version>
+      </dependency> 
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.13.4.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jsr310</artifactId>
+        <version>2.13.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+	<version>${scala.lib.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.itextpdf</groupId>
+        <artifactId>itextpdf</artifactId>
+        <version>5.5.13.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>retrofit</artifactId>
+        <version>2.9.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>3.12.13</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcprov-jdk14</artifactId>
+        <version>1.72</version>
+      </dependency>
+      <dependency>
+        <groupId>org.bouncycastle</groupId>
+        <artifactId>bcmail-jdk14</artifactId>
+        <version>1.72</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>31.1-jre</version>
+      </dependency>
     </dependencies>
+
   </dependencyManagement>
 
 </project>

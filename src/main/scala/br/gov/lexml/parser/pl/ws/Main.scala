@@ -142,7 +142,7 @@ class Main(environment : String) extends Logging {
   }
 
   def setupCache() : Unit = {
-    Cache.init()
+    DataCache.init()
   }
 
   def makeActorSystem(): (ActorSystem,ActorRef) = {
@@ -155,7 +155,7 @@ class Main(environment : String) extends Logging {
     }
 
     val parserServiceRouter: ActorRef =
-      system.actorOf(Props[ParserServiceActor].withRouter(SmallestMailboxPool(8,
+      system.actorOf(Props[ParserServiceActor]().withRouter(SmallestMailboxPool(8,
         supervisorStrategy = parserServiceSupervisionStrategy)))
 
     (system,parserServiceRouter)

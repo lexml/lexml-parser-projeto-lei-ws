@@ -3,7 +3,7 @@ package br.gov.lexml.parser.pl.ws.resources.proc
 import java.net.URI
 
 import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
-import br.gov.lexml.parser.pl.ws.{Cache, CacheElem, CacheKey, Dependencies, MimeExtensionRegistry}
+import br.gov.lexml.parser.pl.ws.{DataCache, CacheElem, CacheKey, Dependencies, MimeExtensionRegistry}
 import br.gov.lexml.parser.pl.ws.data._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
@@ -109,7 +109,6 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
 
-    val resMap = Cache().resultMap
     def geraSaida[T](ts: TipoSaida, mime: String, path: String*)(data: => Option[(Array[Byte],T)]): Option[(Array[Byte],T)] = {
       reqSaidas.get(ts) match {
         case Some(formato) =>
@@ -122,7 +121,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
               saidas += tes
               of foreach {
                 case (key,ce) =>
-                  resMap.put(key,ce)
+                  DataCache().put(key,ce)
                   createdFilesCount.inc()
                   bytesWritten.inc(ce.contents.length)
               }
@@ -280,11 +279,10 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 
     logger.debug("writing outputs")
-    resMap.put(ctx.uniqueId + "resultado.xml", CacheElem(mimeType="text/xml",fileName="resultado.xml",contents=resXml.getBytes("utf-8")))
+    DataCache().put(ctx.uniqueId + "resultado.xml", CacheElem(mimeType="text/xml",fileName="resultado.xml",contents=resXml.getBytes("utf-8")))
   } finally {
     logger.debug("deleting wait file")
-    val resMap = Cache().resultMap
-    resMap.delete(ctx.waitId)
+    DataCache().delete(ctx.waitId)
     ScalaParserService.parserJobsInProgress.dec()
   }
 
