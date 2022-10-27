@@ -6,11 +6,11 @@ import java.security.SecureRandom
 import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 import javax.ws.rs._
-import javax.ws.rs.core.{Context, MediaType, Response, UriInfo}
+import javax.ws.rs.core.{CacheControl, Context, MediaType, NewCookie, Response, UriInfo}
 import javax.xml.ws.WebServiceContext
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ArticulacaoParser
-import br.gov.lexml.parser.pl.ws.{DataCache, CacheElem, CacheKey, LexmlWsConfig, Main}
+import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, DataCache, LexmlWsConfig, Main}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
@@ -25,11 +25,10 @@ import scala.xml.XML
 import java.time.ZonedDateTime
 import java.util
 import java.util.regex.Pattern
-import javax.ws.rs.core.CacheControl
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import org.glassfish.jersey.media.multipart.{FormDataContentDisposition, FormDataParam}
-import sun.nio.cs.StandardCharsets
+import org.glassfish.jersey.message.internal.NewCookieProvider
 
 
 
@@ -62,19 +61,20 @@ class ScalaParserService extends Logging {
   @Consumes(Array(MediaType.MULTIPART_FORM_DATA))
   def parseSenado(@FormDataParam("requisicao") requisicaoText: String,
     @FormDataParam("fonte") fonteStream: InputStream,
-    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {    
+    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition,
+                  @Context request: HttpServletRequest): Response = {
     if(fonteStream == null) {
       throw new RuntimeException("Erro: fonteStream == null")
     }
-    doParseSenado(requisicaoText, Some(IOUtils.toByteArray(fonteStream)),Some(fonteDetail.getFileName))
+    doParseSenado(requisicaoText, Some(IOUtils.toByteArray(fonteStream)),Some(fonteDetail.getFileName),request)
   }
 
   @POST
   @Path("parseSenado")
   @Consumes(Array("text/xml"))
   @Produces(Array("text/xml"))
-  def parseSenado(requisicaoText: String): Response = {
-    doParseSenado(requisicaoText)
+  def parseSenado(requisicaoText: String, @Context request: HttpServletRequest): Response = {
+    doParseSenado(requisicaoText,None,None,request)
   }
 
   @GET
@@ -98,14 +98,19 @@ class ScalaParserService extends Logging {
     @PathParam("dir") dir: String): Response =
     doReadResult(id, dir, filename)
 
-  private def doParseSenado(requisicaoText: String, fonte: Option[Array[Byte]] = None, fileName : Option[String] = None): Response = {
+  private def doParseSenado(
+                             requisicaoText: String,
+                             fonte: Option[Array[Byte]] = None,
+                             fileName : Option[String] = None,
+                             @Context request: HttpServletRequest): Response = {
+    //val session = request.getSession(true)
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     //val boot = Initializer.boot.get
     try{
       val requisicao = ParserRequisicao.fromXML(XML.loadString(requisicaoText))
 
-      val uniqueId = CacheKey(newExecutionId())
-
+      val uniqueId = CacheKey(newExecutionId())//CacheKey(session.getId)
+      logger.info(s"doParseSenado: uniqueId =${uniqueId}")
       def resultURI(comps: String*): URI = {
         buildURIFromRelativePath("parse" +: "result" +: (uniqueId.comps.toIndexedSeq ++ comps.toList) : _*)
       }
@@ -119,7 +124,11 @@ class ScalaParserService extends Logging {
       Main.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, waitKey, dataHoraProcessamento, fonte, fileName))
       val uri = resultURI()
       logger.info("result for " + uniqueId + ", at  " + uri)
-      Response.created(uri).entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString).build()
+      Response
+        .created(uri)
+        .entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString)
+        .cookie(new NewCookie("JSESSIONID",uniqueId.toString()))
+        .build()
     } catch {
       case ex: Exception =>
         logger.error("Erro durante a execução: " + ex.getMessage + ", input: " + requisicaoText, ex)
