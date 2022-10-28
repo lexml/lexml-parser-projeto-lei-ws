@@ -184,7 +184,7 @@ class ScalaParserService extends Logging {
   private def doReadResult2(id: String, pathComps: String*): Option[CacheElem] = {
     logger.info("doReadResult2: id = " + id + ", pathComps = " + pathComps)
     val cache = DataCache()
-    val waitKey = CacheKey(Array(id,"wait.txt"))
+    val waitKey = CacheKey(Vector(id,"wait.txt"))
     val pathComps2 = if (pathComps.isEmpty) { List("resultado.xml") } else pathComps
     val reqFileKey = CacheKey(id) ++ pathComps2
     logger.info(s"doReadResult2: reqFileKey = $reqFileKey, waitKey = $waitKey, id = $id")
