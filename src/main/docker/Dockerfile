@@ -1,4 +1,4 @@
-FROM lexmlbr/lexml-linker:1.4.5 as linker-base
+FROM lexmlbr/lexml-linker:1.4.7 as linker-base
 
 FROM eclipse-temurin:8u322-b06-jdk-focal as runtime-base
 RUN apt-get update    && \
