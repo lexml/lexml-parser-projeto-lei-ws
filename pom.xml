@@ -4,7 +4,7 @@
   <groupId>br.gov.lexml.parser.pl</groupId>
   <artifactId>lexml-parser-projeto-lei-ws</artifactId>
   <packaging>jar</packaging>
-  <version>1.7.51-6</version>
+  <version>1.7.51-7</version>
   <name>Web Service do Parser de Projetos de Lei do LexML</name>
   <url>https://www.lexml.gov.br</url>
   <properties>
@@ -204,7 +204,7 @@
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-docx</artifactId>
-      <version>1.0.31</version>
+      <version>1.1.2</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
