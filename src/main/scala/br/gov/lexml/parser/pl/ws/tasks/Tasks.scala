@@ -13,7 +13,8 @@ import br.gov.lexml.parser.pl.profile.{DocumentProfile, DocumentProfileOverride,
 import br.gov.lexml.parser.pl.ws.{LexmlWsConfig, MimeExtensionRegistry}
 import br.gov.lexml.parser.pl.ws.data.{OpcoesRequisicao, Metadado => RMetadado, MimeEntrada}
 import br.gov.lexml.parser.pl.ws.data.{RemissaoDocumento, RemissaoFragmento, Remissoes, XT_Simple}
-import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.{defaultConverter, pipeline}
+import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor.pipeline
+import br.gov.lexml.parser.pl.xhtml.{DOCXConverter, AbiwordConverter}
 import br.gov.lexml.renderer.pdf.{PDFConfigs, RendererPDF}
 import br.gov.lexml.renderer.strategies.XhtmlRenderer
 import com.typesafe.config.Config
@@ -40,7 +41,7 @@ object Tasks extends Logging {
   final case class SrcToXhtmlResult(res: List[Node], digest: String)
 
   def srcToXhtmlTask(texto: Array[Byte], mime: MimeEntrada): List[Node] =
-    pipeline(texto, mime.value, defaultConverter).getOrElse(throw ParseException(FalhaConversaoXHTML(mime.value)))
+    pipeline(texto, mime.value, new DOCXConverter(new AbiwordConverter)).getOrElse(throw ParseException(FalhaConversaoXHTML(mime.value)))
 
   def buildMetadado(metadado: RMetadado, digest: String): Metadado = {
     if (!DocumentProfileRegister.autoridades.contains(metadado.autoridade)) {
