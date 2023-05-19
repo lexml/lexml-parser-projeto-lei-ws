@@ -80,30 +80,37 @@ class ScalaParserService extends Logging {
   @GET
   @Path("result/{id}")
   @Produces(Array("text/xml"))
-  def readResultGet(@PathParam("id") id: String): Response = {
-    logger.info("readResultGet: id = " + id)    
+  def readResultGet(@PathParam("id") id: String, @Context request: HttpServletRequest): Response = {
+    logger.info("readResultGet: id = " + id)
+    val session = request.getSession(true)
     Response.temporaryRedirect(uriInfo.getRequestUriBuilder.path("resultado.xml").build()).build
   }
 
   
   @Path("result/{id}/{filename}")
   @GET
-  def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String): Response =
+  def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String
+                 ,@Context request: HttpServletRequest): Response = {
+    val session = request.getSession(true)
     doReadResult(id, filename)
+  }
 
   
   @GET
   @Path("result/{id}/{dir}/{filename}")
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String,
-    @PathParam("dir") dir: String): Response =
+                 @PathParam("dir") dir: String,
+                 @Context request: HttpServletRequest): Response = {
+    val session = request.getSession(true)
     doReadResult(id, dir, filename)
+  }
 
   private def doParseSenado(
                              requisicaoText: String,
                              fonte: Option[Array[Byte]] = None,
                              fileName : Option[String] = None,
                              @Context request: HttpServletRequest): Response = {
-    //val session = request.getSession(true)
+    val session = request.getSession(true)
     logger.info(s"doParseSenado: starting. requisicaoText.length=${requisicaoText.length()}, fonte.size=${fonte.map(_.length).toString}, fileName=${fileName.toString}")
     //val boot = Initializer.boot.get
     try{
@@ -127,7 +134,7 @@ class ScalaParserService extends Logging {
       Response
         .created(uri)
         .entity(<Location>{ uri.toURL.toExternalForm }</Location>.toString)
-        .cookie(new NewCookie("JSESSIONID",uniqueId.toString()))
+        //.cookie(new NewCookie("JSESSIONID",uniqueId.toString()))
         .build()
     } catch {
       case ex: Exception =>

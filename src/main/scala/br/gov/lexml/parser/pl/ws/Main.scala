@@ -11,6 +11,7 @@ import io.prometheus.client.jetty.JettyStatisticsCollector
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.ConfigurationSource
 import org.eclipse.jetty.server.handler.StatisticsHandler
+import org.eclipse.jetty.server.session.SessionHandler
 import org.eclipse.jetty.server.{Server, ServerConnector}
 import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.component.LifeCycle.start
@@ -108,8 +109,11 @@ class Main(environment : String) extends Logging {
 
     val ctxPath = LexmlWsConfig.appConfig.getString("base-context") // "/lexml-parser/"
     debug(s"creating context handler (ctx) for path $ctxPath")
-    val ctx = new ServletContextHandler(ServletContextHandler.NO_SESSIONS)
-    ctx.setContextPath(ctxPath)
+
+    val ctx = new ServletContextHandler(
+      null,ctxPath,
+      ServletContextHandler.SESSIONS|ServletContextHandler.NO_SECURITY)
+    //ctx.setContextPath(ctxPath)
 
     debug("adding metrics filter, with path = /parse/*")
     val mf = new MetricsFilter("servlet","Servlet metrics", 3,
