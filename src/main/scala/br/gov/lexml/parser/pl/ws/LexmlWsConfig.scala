@@ -2,6 +2,8 @@ package br.gov.lexml.parser.pl.ws
 
 import com.typesafe.config.{Config, ConfigFactory}
 
+import java.io.File
+
 object LexmlWsConfig {
   private var environment : Option[String] = None
   private var _config : Option[Config] = None
@@ -21,4 +23,7 @@ object LexmlWsConfig {
   def appConfig : Config = config.getConfig("lexml.parser.ws")
 
   def config : Config = _config.getOrElse(throw new RuntimeException("Config not loaded yet"))
+
+  lazy val parserResultDir = new File(appConfig.getString("cache.directory"))
+
 }

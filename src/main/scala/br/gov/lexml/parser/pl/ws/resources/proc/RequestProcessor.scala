@@ -1,69 +1,75 @@
 package br.gov.lexml.parser.pl.ws.resources.proc
 
+import java.io.File
 import java.net.URI
-
 import br.gov.lexml.parser.pl.errors.{ErroSistema, FalhaConversaoPrimaria, ParseException, ParseProblem}
-import br.gov.lexml.parser.pl.ws.{DataCache, CacheElem, CacheKey, Dependencies, MimeExtensionRegistry}
+import br.gov.lexml.parser.pl.ws.{Dependencies, MimeExtensionRegistry}
 import br.gov.lexml.parser.pl.ws.data._
 import br.gov.lexml.parser.pl.ws.tasks.Tasks
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import grizzled.slf4j.Logging
+import org.apache.commons.io.FileUtils
 
 import scala.language.postfixOps
 import scala.xml._
+import java.nio.charset.Charset
 import java.time.ZonedDateTime
-
 import br.gov.lexml.parser.pl.ws.resources.ScalaParserService
 import io.prometheus.client.Counter
 import io.prometheus.client.Summary
+
+import scala.annotation.tailrec
 
 
 
 final case class RequestContext(
   resultBuilder: Seq[String] => URI,
-  uniqueId: CacheKey,
+  uniqueId: String,
   req: ParserRequisicao,
-  waitId: CacheKey,
+  resultPath: File,
+  waitFile: File,
   dataHoraProcessamento: ZonedDateTime,
   fonte: Option[Array[Byte]],
   fonteFileName : Option[String])
 
 object RequestProcessor {
-  val createdFilesCount: Counter = Counter.build().name("lexml_parser_created_files_count").help("Número de arquivos criados pelo Parser").register()
-  val bytesWritten: Counter = Counter.build().name("lexml_parser_written_bytes_count").help("Número de bytes gravados pelo Parser").register()
-  val failureCount: Counter = Counter.build().name("lexml_parser_failure_count").help("Número de falhas no Parser")
+  private val createdFilesCount: Counter = Counter.build().name("lexml_parser_created_files_count").help("Número de arquivos criados pelo Parser").register()
+  private val bytesWritten: Counter = Counter.build().name("lexml_parser_written_bytes_count").help("Número de bytes gravados pelo Parser").register()
+  private val failureCount: Counter = Counter.build().name("lexml_parser_failure_count").help("Número de falhas no Parser")
           .labelNames("codigo_tipo_falha").register()
-  val parserLatency: Summary = Summary.build().name("lexml_parser_job_latency").help("Duração da execução do parser").register()
-  val srcToXhtmlLatency: Summary = Summary.build().name("lexml_parser_src_to_xhtml_latency").help("Duração da coversão da fonte em XHTML").register()
-  val geracaoLatency: Summary =
+  private val parserLatency: Summary = Summary.build().name("lexml_parser_job_latency").help("Duração da execução do parser").register()
+  private val srcToXhtmlLatency: Summary = Summary.build().name("lexml_parser_src_to_xhtml_latency").help("Duração da coversão da fonte em XHTML").register()
+  private val geracaoLatency: Summary =
     Summary.build().name("lexml_parser_geracao_latency").help("Duração de geração de saídas do parser")
       .labelNames("tipo_saida").register()
 
-  val problemCount: Summary = Summary.build().name("parse_job_problem_count").help("Número de problemas na execução do parser")
+  private val problemCount: Summary = Summary.build().name("parse_job_problem_count").help("Número de problemas na execução do parser")
     .labelNames("codigo_problema").register()
 }
   
 class RequestProcessor(ctx: RequestContext) extends Logging {
   import RequestProcessor._
-  import scala.collection.mutable.{ListBuffer => MList}
+  import scala.collection.mutable.{ListBuffer => MList, Map => MMap}
+
+  private type OutputFileMap = Map[File, (String, Array[Byte])]
+
+  private def buildPath(comps: String*): File = comps.foldLeft(ctx.resultPath)(new File(_, _))
 
 
-  def buildKey(comps: String*): CacheKey = ctx.uniqueId ++ comps
 
-  def buildSaidaComponents(ts: TipoSaida, fmt : FormatoSaida , tm: TipoMimeSaida, data: Array[Byte], path: String*): (ElementoSaida, Option[(CacheKey,CacheElem)]) = {
+  private def buildSaidaComponents(ts: TipoSaida, fmt : FormatoSaida, tm: TipoMimeSaida, data: Array[Byte], path: String*): (ElementoSaida, Option[File]) = {
     val digest = Tasks.calcDigest(data)
     logger.debug("buildSaidaComponents: tm = " + tm)
 
-    val (href,teso,keyContents) = fmt match {
+    val (href,teso,f) = fmt match {
       case FS_EMBUTIDO =>
         val xml = XML.load(new java.io.ByteArrayInputStream(data))
         (None,Some(ConteudoXML(xml)),None)
       case _ =>
         val ext = "." + MimeExtensionRegistry.mimeToExtension(tm.toString).getOrElse("txt")
         val extPath = path.init :+ (path.last ++ ext)
-        val f = buildKey(extPath: _*)
-        val ce = CacheElem(mimeType = tm.toString, fileName = path.last + ext, contents = data)
-        (Some(ctx.resultBuilder(extPath)),None,Some((f,ce)))
+        val f = buildPath(extPath: _*)
+        (Some(ctx.resultBuilder(extPath)),None,Some(f))
     }
 
     val tes = ElementoSaida(
@@ -73,10 +79,10 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       href = href,
       conteudoSaida = teso
     )
-    (tes, keyContents)
+    (tes, f)
   }
 
-  def fromProblem(p: ParseProblem): Falha = {
+  private def fromProblem(p: ParseProblem): Falha = {
     val msg = UsuarioMensagem.mensagemUsuario(p).map(_.toString)
     Falha(
       codigoTipoFalha = p.problemType.code,
@@ -86,15 +92,16 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       mensagemUsuario = msg)
   }
 
-  def fromCaracteristica: ((String, Boolean)) => Caracteristica = {
+  private def fromCaracteristica: ((String, Boolean)) => Caracteristica = {
     case (x: String, f: Boolean) => Caracteristica(
       descricao = x, presente = f, suportadoLexEdit = isCaracteristicaSupported(x))
   }
 
-  def isCaracteristicaSupported(s: String): Boolean =
+  private def isCaracteristicaSupported(s: String): Boolean =
     !CaracteristicasImpeditivas.caracteristicaImpeditiva(s)
 
-  def classChain(c: Class[_], l: List[String] = List()): String = c match {
+  @tailrec
+  private def classChain(c: Class[_], l: List[String] = List()): String = c match {
     case null => l.mkString(">")
     case _ => classChain(c.getSuperclass, c.getName :: l)
   }
@@ -104,7 +111,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val falhas: MList[Falha] = MList()
     val caracteristicas: MList[Caracteristica] = MList()
     val saidas: MList[ElementoSaida] = MList()
-    //val outMap: MMap[File, (String, Array[Byte])] = MMap()
+    val outMap: MMap[File, (String, Array[Byte])] = MMap()
     var digest: Option[String] = None
 
     val reqSaidas = Dependencies.completeDependencies(ctx.req).saidas.map(t => (t.tipo,t.formato)).toMap
@@ -119,12 +126,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
             data map { case (d,r) =>
               val (tes, of) = buildSaidaComponents(ts, formato, TipoMimeSaida(mime), d, path: _*)
               saidas += tes
-              of foreach {
-                case (key,ce) =>
-                  DataCache().put(key,ce)
-                  createdFilesCount.inc()
-                  bytesWritten.inc(ce.contents.length)
-              }
+              of foreach (f => outMap += (f -> (mime, d)))
               (d,r)
             }
           }  finally {
@@ -279,18 +281,30 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
     val resXml = """<?xml-stylesheet type="text/xsl" href="../../static/resultado2xhtml.xsl"?>""" + psXmlTxt
 
     logger.debug("writing outputs")
-    DataCache().put(ctx.uniqueId + "resultado.xml", CacheElem(mimeType="text/xml",fileName="resultado.xml",contents=resXml.getBytes("utf-8")))
+    writeOutputs(outMap.toMap)
+    writeOutputs(Map[File,(String,Array[Byte])](buildPath("resultado.xml") -> ("text/xml", resXml.getBytes("utf-8"))))
   } finally {
     logger.debug("deleting wait file")
-    DataCache().delete(ctx.waitId)
+    ctx.waitFile.delete()
     ScalaParserService.parserJobsInProgress.dec()
   }
 
-  object ScopeHelper {
-    type ScopeMap = Map[Option[String],Option[String]]
-    val emptyScopeMap : ScopeMap = Map()
+  private def writeOutputs(m: OutputFileMap): Unit =
+    for { (f, (mime, data)) <- m } {
+      logger.debug("writing " + f)
+      FileUtils.forceMkdir(f.getParentFile)
+      FileUtils.writeByteArrayToFile(f, data)
+      createdFilesCount.inc()
+      bytesWritten.inc(data.length)
+      val mf = new File(f.getParentFile, f.getName + ".mime")
+      FileUtils.writeStringToFile(mf, mime, Charset.forName("utf-8"))
+    }
+
+  private object ScopeHelper {
+    private type ScopeMap = Map[Option[String],Option[String]]
+    private val emptyScopeMap : ScopeMap = Map()
     
-    def scopeToMap(ns : NamespaceBinding) : ScopeMap = {
+    private def scopeToMap(ns : NamespaceBinding) : ScopeMap = {
       if(ns == null) {
         Map() 
       } else if (ns.prefix == null && ns.uri == null) {
@@ -300,24 +314,24 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
       }
     }
     
-    def mapToScope(m : ScopeMap) : NamespaceBinding = {      
+    private def mapToScope(m : ScopeMap) : NamespaceBinding = {
         m.foldLeft[NamespaceBinding](TopScope) { 
           case (parent, (okey,ouri)) => 
              NamespaceBinding(okey orNull, ouri orNull,parent) 
         }
     }
-      
-    def fixScope(e : Elem, m : ScopeMap = emptyScopeMap) : Elem = {
+
+    private def fixScope(e : Elem, m : ScopeMap = emptyScopeMap) : Elem = {
       val scopeMap = m ++ scopeToMap(e.scope)
       val childs = e.child.map { case e : Elem => fixScope(e,scopeMap) ; case n => n }
       e copy (scope = mapToScope(scopeMap), child = childs)
     }
-    
+
     def fixScopeNodeSeq(ns : NodeSeq, scopeMap : ScopeMap = emptyScopeMap) : NodeSeq =  {
       ns.map { case e : Elem => fixScope(e,scopeMap) ; case n => n }
     }
     
-    def removeEmptyNs(ns : NamespaceBinding) : NamespaceBinding = { 
+    private def removeEmptyNs(ns : NamespaceBinding) : NamespaceBinding = {
        if (ns == null) { ns } 
        else if (ns.prefix == null && ns.uri == null ) {
          removeEmptyNs(ns.parent) 
@@ -325,7 +339,7 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
        else { ns copy (parent = removeEmptyNs(ns.parent)) }       
     }
      
-    def removeEmptyNs(e : Elem) : Elem = {
+    private def removeEmptyNs(e : Elem) : Elem = {
         val newScope = Option(removeEmptyNs(e.scope)).getOrElse(TopScope)        
         e copy (scope = newScope, child = e.child.map { case ee : Elem => removeEmptyNs(ee) ; case n => n })
     }

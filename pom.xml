@@ -7,9 +7,10 @@
   <version>1.7.63-SNAPSHOT</version>
   <name>Web Service do Parser de Projetos de Lei do LexML</name>
   <url>https://www.lexml.gov.br</url>
-  <properties>
-    <scala.version>2.13</scala.version>
-    <scala.lib.version>${scala.version}.10</scala.lib.version>
+  <properties>  
+    <scala.compat.version>2.13</scala.compat.version>
+    <scala.version>${scala.compat.version}.11</scala.version>
+    <scala.lib.version>${scala.version}</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <akka.version>2.5.32</akka.version>
     <jetty.version>9.4.51.v20230217</jetty.version>
@@ -121,7 +122,7 @@
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
-        <version>4.3.1</version>
+        <version>4.8.1</version>
         <executions>
           <execution>
             <goals>
@@ -139,7 +140,6 @@
           <args>
             <arg>-deprecation</arg>
           </args>
-          <scalaVersion>${scala.version}</scalaVersion>
         </configuration>
       </plugin>
 
@@ -192,13 +192,21 @@
                 </ports>
                 <wait>
                   <http>
-                    <url>http://localhost:${8080}/access</url>
+                    <url>http://localhost:8080/access</url>
                   </http>
                   <time>10000</time>
                 </wait>
               </run>
             </image>
           </images>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
         </configuration>
       </plugin>
 
@@ -357,7 +365,7 @@
     <!-- Akka Dependencies -->
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-actor_${scala.version}</artifactId>
+      <artifactId>akka-actor_${scala.compat.version}</artifactId>
       <version>${akka.version}</version>
       <exclusions>
         <exclusion>
@@ -369,7 +377,7 @@
 
     <dependency>
       <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-slf4j_${scala.version}</artifactId>
+      <artifactId>akka-slf4j_${scala.compat.version}</artifactId>
       <version>${akka.version}</version>
       <exclusions>
         <exclusion>
@@ -489,17 +497,6 @@
     </dependency> -->
     <!-- B -->
 
-    <!-- <dependency>
-      <groupId>com.github.cb372</groupId>
-      <artifactId>scalacache-caffeine_${scala.version}</artifactId>
-      <version>1.0.0-M6</version>
-    </dependency> -->
-    <!-- Caffeine Cache support -->
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
-      <version>2.9.3</version>
-    </dependency>
 
     <!-- Jetty Server -->
     <dependency>
@@ -560,7 +557,11 @@
       <groupId>org.bouncycastle</groupId>
       <artifactId>bcmail-jdk14</artifactId>
     </dependency>
-
+    <!--<dependency>
+      <groupId>com.github.nscala-time</groupId>
+      <artifactId>nscala-time_${scala.compat.version}</artifactId>
+      <version>2.32.0</version>
+    </dependency>-->
   </dependencies>
   <dependencyManagement>
     <dependencies>

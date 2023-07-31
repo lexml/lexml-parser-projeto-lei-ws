@@ -10,14 +10,14 @@ import javax.ws.rs.core.{CacheControl, Context, MediaType, NewCookie, Response, 
 import javax.xml.ws.WebServiceContext
 import akka.actor.Actor
 import br.gov.lexml.parser.pl.ArticulacaoParser
-import br.gov.lexml.parser.pl.ws.{CacheElem, CacheKey, DataCache, LexmlWsConfig, Main}
+import br.gov.lexml.parser.pl.ws.{LexmlWsConfig, Main}
 import br.gov.lexml.parser.pl.ws.data.ParserRequisicao
 import br.gov.lexml.parser.pl.ws.resources.proc.{RequestContext, RequestProcessor}
 import br.gov.lexml.parser.pl.xhtml.XHTMLProcessor
 import eu.medsea.mimeutil.{MimeType, MimeUtil}
 import grizzled.slf4j.Logging
 import org.apache.commons.codec.binary.Base32
-import org.apache.commons.io.IOUtils
+import org.apache.commons.io.{FileUtils, IOUtils}
 
 import scala.language.postfixOps
 import scala.util.matching.Regex
@@ -29,6 +29,9 @@ import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import org.glassfish.jersey.media.multipart.{FormDataContentDisposition, FormDataParam}
 import org.glassfish.jersey.message.internal.NewCookieProvider
+
+import java.nio.file.Files
+import scala.+:
 
 
 
@@ -116,19 +119,22 @@ class ScalaParserService extends Logging {
     try{
       val requisicao = ParserRequisicao.fromXML(XML.loadString(requisicaoText))
 
-      val uniqueId = CacheKey(newExecutionId())//CacheKey(session.getId)
-      logger.info(s"doParseSenado: uniqueId =${uniqueId}")
+      val uniqueId = session.getId()
+      val resultPath = new File(LexmlWsConfig.parserResultDir,uniqueId)
+      logger.info(s"doParseSenado: uniqueId =$uniqueId")
       def resultURI(comps: String*): URI = {
-        buildURIFromRelativePath("parse" +: "result" +: (uniqueId.comps.toIndexedSeq ++ comps.toList) : _*)
+        val pathElems = Seq("parse", "result", uniqueId)  ++ comps
+        buildURIFromRelativePath(pathElems : _*)
       }
-      val cache = DataCache()
-      val waitKey = uniqueId + "wait.txt"
-      cache.put(waitKey,CacheElem("text/plain","wait.txt","wait".getBytes("UTF-8")))
+      resultPath.mkdirs()
+      val waitFile = new File(resultPath, "wait")
+      FileUtils.touch(waitFile)
+
       val dataHoraProcessamento = ZonedDateTime.now()
-      logger.info("sending message to actor with uniqueId=%s, requisicao=%s, waitKey=%s, dataHoraProcessamento=%s".format(uniqueId, requisicao, waitKey, dataHoraProcessamento))
+      logger.info(s"sending message to actor with uniqueId=$uniqueId, requisicao=$requisicao, dataHoraProcessamento=$dataHoraProcessamento")
       parserJobsCounter.inc()
       parserJobsInProgress.inc()
-      Main.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, waitKey, dataHoraProcessamento, fonte, fileName))
+      Main.parserServiceRouter ! new RequestProcessor(RequestContext(resultURI, uniqueId, requisicao, resultPath, waitFile, dataHoraProcessamento, fonte, fileName))
       val uri = resultURI()
       logger.info("result for " + uniqueId + ", at  " + uri)
       Response
@@ -171,45 +177,58 @@ class ScalaParserService extends Logging {
     resultado2XhtmlData
   }
 
-  private def doReadResult(id: String, pathComps: String*): Response = {    
+  private def doReadResult(id: String, pathComps: String*): Response = {
     val res = pathComps match {
-      case Seq("resultado2xhtml.xsl") =>
+      case Seq("resultado2xhtml.xsl") ⇒
         Response.ok(getResultado2XhtmlData, "application/xslt+xml")
 
-      case _ => doReadResult2(id, pathComps: _*).map {
-        r =>
-          logger.info(s"doReadResult: response: $r")
-          Response.ok(r.contents,r.mimeType)
-      }.getOrElse {
-        logger.info(s"doReadResult: id=$id, pathComps=$pathComps, responding with notFoundBuilder")
-        notFoundBuilder
-      }
+      case _ ⇒ doReadResult2(id, pathComps: _*).map(r ⇒ Response.ok(r._1, r._2))
+        .getOrElse(notFoundBuilder)
     }
-    res.header("Cache-Control","private").build()
+    res.header("Cache-Control", "private").build()
   }
 
-  private def doReadResult2(id: String, pathComps: String*): Option[CacheElem] = {
+  private def doReadResult2(id: String, pathComps: String*): Option[(File, String)] = {
     logger.info("doReadResult2: id = " + id + ", pathComps = " + pathComps)
-    val cache = DataCache()
-    val waitKey = CacheKey(Vector(id,"wait.txt"))
-    val pathComps2 = if (pathComps.isEmpty) { List("resultado.xml") } else pathComps
-    val reqFileKey = CacheKey(id) ++ pathComps2
-    logger.info(s"doReadResult2: reqFileKey = $reqFileKey, waitKey = $waitKey, id = $id")
-    if (reqFileKey != waitKey && cache.has(waitKey)) {
-      logger.info("doReadResult2: reqFileKey != waitKey and waitKey exists.")
+    val resultPath = new File(LexmlWsConfig.parserResultDir, id)
+    val waitFile = new File(resultPath, "wait")
+    val pathComps2 = if (pathComps.isEmpty) {
+      List("resultado.xml")
+    } else pathComps
+    val reqFile = pathComps2.foldLeft(resultPath)(new File(_, _))
+    if (reqFile.getPath != waitFile.getPath && waitFile.exists()) {
       None
-    } else  {
-      cache.get(reqFileKey) match {
-        case None =>
-          logger.info("doReadResult2: reqFileKey does not exist (yet).")
-          None
-        case Some(data) =>
-        logger.info("responding to get with reqFileKey = " + reqFileKey)
-        Some(data)
-      }
+    } else if (!reqFile.exists()) {
+      None
+    } else {
+      val mimeFile = new File(reqFile.getParentFile, reqFile.getName + ".mime")
+      val mimeType = Files.readString(mimeFile.toPath)
+      logger.info("responding to get with reqFile = " + reqFile + ", and mimeType = " + mimeType)
+      Some((reqFile, mimeType))
     }
   }
-  val idRegex: Regex = "^[A-Z0-9]+$"r
+  val idRegex: Regex = "^[a-zA-Z0-9-]+$"r
+
+  def touchId(id: String)(rest: => Response): Response = {
+    //touchSession()
+    if (idRegex.findFirstIn(id).isDefined) {
+      val resultDir = new File(LexmlWsConfig.parserResultDir, id)
+      if (resultDir.exists && resultDir.isDirectory) {
+        resultDir.listFiles()
+        val waitFile = new File(resultDir, "wait")
+        if (!waitFile.exists) {
+          FileUtils.touch(resultDir)
+          rest
+        } else {
+          notFound
+        }
+      } else {
+        notFound
+      }
+    } else {
+      notFound
+    }
+  }
 
   private def getMostSpecificMimeType(f: File, filterAccept: Boolean = true): Option[String] = {
     import scala.jdk.javaapi.CollectionConverters._

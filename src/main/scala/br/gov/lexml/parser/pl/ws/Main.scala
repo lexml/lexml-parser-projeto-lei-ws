@@ -17,6 +17,7 @@ import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHo
 import org.eclipse.jetty.util.component.LifeCycle.start
 import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.servlet.ServletContainer
+import br.gov.lexml.parser.pl.ws.actors.{CompleteCleanActor, IncompleteCleanActor}
 
 
 
@@ -146,7 +147,7 @@ class Main(environment : String) extends Logging {
   }
 
   def setupCache() : Unit = {
-    DataCache.init()
+
   }
 
   def makeActorSystem(): (ActorSystem,ActorRef) = {
@@ -161,6 +162,10 @@ class Main(environment : String) extends Logging {
     val parserServiceRouter: ActorRef =
       system.actorOf(Props[ParserServiceActor]().withRouter(SmallestMailboxPool(8,
         supervisorStrategy = parserServiceSupervisionStrategy)))
+
+    val incompleteCleanActor: ActorRef = system.actorOf(Props[IncompleteCleanActor]())
+    val completeCleanActor: ActorRef = system.actorOf(Props[CompleteCleanActor]())
+
 
     (system,parserServiceRouter)
   }
