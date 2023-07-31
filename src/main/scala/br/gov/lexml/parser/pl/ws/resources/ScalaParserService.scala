@@ -178,10 +178,10 @@ class ScalaParserService extends Logging {
 
   private def doReadResult(id: String, pathComps: String*): Response = {
     val res = pathComps match {
-      case Seq("resultado2xhtml.xsl") ⇒
+      case Seq("resultado2xhtml.xsl") =>
         Response.ok(getResultado2XhtmlData, "application/xslt+xml")
 
-      case _ ⇒ doReadResult2(id, pathComps: _*).map(r ⇒ Response.ok(r._1, r._2))
+      case _ => doReadResult2(id, pathComps: _*).map(r => Response.ok(r._1, r._2))
         .getOrElse(notFoundBuilder)
     }
     res.header("Cache-Control", "private").build()
