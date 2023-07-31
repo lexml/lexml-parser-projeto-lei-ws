@@ -28,10 +28,9 @@ import java.util.regex.Pattern
 import io.prometheus.client.Counter
 import io.prometheus.client.Gauge
 import org.glassfish.jersey.media.multipart.{FormDataContentDisposition, FormDataParam}
-import org.glassfish.jersey.message.internal.NewCookieProvider
 
-import java.nio.file.Files
-import scala.+:
+import java.nio.charset.StandardCharsets
+
 
 
 
@@ -43,7 +42,7 @@ object ScalaParserService {
 @Path("/parse")
 class ScalaParserService extends Logging {
   import ScalaParserService._
-  
+
   @Resource
   var context : WebServiceContext = _
 
@@ -63,8 +62,8 @@ class ScalaParserService extends Logging {
   @Path("parseSenado")
   @Consumes(Array(MediaType.MULTIPART_FORM_DATA))
   def parseSenado(@FormDataParam("requisicao") requisicaoText: String,
-    @FormDataParam("fonte") fonteStream: InputStream,
-    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition,
+                  @FormDataParam("fonte") fonteStream: InputStream,
+                  @FormDataParam("fonte") fonteDetail: FormDataContentDisposition,
                   @Context request: HttpServletRequest): Response = {
     if(fonteStream == null) {
       throw new RuntimeException("Erro: fonteStream == null")
@@ -89,7 +88,7 @@ class ScalaParserService extends Logging {
     Response.temporaryRedirect(uriInfo.getRequestUriBuilder.path("resultado.xml").build()).build
   }
 
-  
+
   @Path("result/{id}/{filename}")
   @GET
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String
@@ -98,7 +97,7 @@ class ScalaParserService extends Logging {
     doReadResult(id, filename)
   }
 
-  
+
   @GET
   @Path("result/{id}/{dir}/{filename}")
   def readResult(@PathParam("id") id: String, @PathParam("filename") filename: String,
@@ -202,7 +201,7 @@ class ScalaParserService extends Logging {
       None
     } else {
       val mimeFile = new File(reqFile.getParentFile, reqFile.getName + ".mime")
-      val mimeType = Files.readString(mimeFile.toPath)
+      val mimeType = FileUtils.readFileToString(mimeFile,StandardCharsets.UTF_8)
       logger.info("responding to get with reqFile = " + reqFile + ", and mimeType = " + mimeType)
       Some((reqFile, mimeType))
     }
@@ -241,7 +240,7 @@ class ScalaParserService extends Logging {
       Some(MimeUtil.getMostSpecificMimeType(asJava(accepted)).toString)
     }
   }
-  
+
   private def getMostSpecificMimeType(b : Array[Byte], filterAccept: Boolean): Option[String] = {
     import scala.jdk.javaapi.CollectionConverters._
     def accept(m: MimeType) = XHTMLProcessor.accept.contains(m.toString)
@@ -253,58 +252,58 @@ class ScalaParserService extends Logging {
       Some(MimeUtil.getMostSpecificMimeType(asJava(accepted)).toString)
     }
   }
-   
+
   @Path("static/{file: .*}")
   @GET
   def serveStatic(@PathParam("file") file: String): Response = {
-    logger.debug("serveStatic: file = " + file)    
+    logger.debug("serveStatic: file = " + file)
     val noFilterAccept = false
     val resourceName = s"lexml-static/$file"
     logger.info(s"serveStatic: looking for $resourceName")
     val cl = Thread.currentThread().getContextClassLoader()
     Option(cl.getResourceAsStream(resourceName)) match {
-        case None =>
-          logger.info(s"serveStatic: '$resourceName' not found.")
-          notFound
-        case Some(is) =>
-          val d = IOUtils.toByteArray(is)
-          val mtByExt = resourceName.replaceAll(""".*\.""","") match {
-            case "js" => Some("application/javascript")
-            case "css" => Some("text/css")
-            case "html" => Some("text/html")
-            case "png"   => Some("image/png")
-            case "jpg"   => Some("image/jpg")
-            case "xsl" => Some("application/xslt+xml")
-            case _ => None
-          }
-          val mt = mtByExt.orElse(getMostSpecificMimeType(d, noFilterAccept))
-          logger.info(s"serveStatic: '$resourceName' found on classpath. mt = $mt")
-          Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
+      case None =>
+        logger.info(s"serveStatic: '$resourceName' not found.")
+        notFound
+      case Some(is) =>
+        val d = IOUtils.toByteArray(is)
+        val mtByExt = resourceName.replaceAll(""".*\.""","") match {
+          case "js" => Some("application/javascript")
+          case "css" => Some("text/css")
+          case "html" => Some("text/html")
+          case "png"   => Some("image/png")
+          case "jpg"   => Some("image/jpg")
+          case "xsl" => Some("application/xslt+xml")
+          case _ => None
+        }
+        val mt = mtByExt.orElse(getMostSpecificMimeType(d, noFilterAccept))
+        logger.info(s"serveStatic: '$resourceName' found on classpath. mt = $mt")
+        Response.ok(d, mt.getOrElse("application/binary")).header("Cache-control", "public").build()
     }
   }
-  
+
   @POST
-  @Path("renderDocx")    
+  @Path("renderDocx")
   @Consumes(Array(MediaType.MULTIPART_FORM_DATA))
   @Produces(Array("application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
   def renderDocx(
-    @FormDataParam("fonte") fonteStream: InputStream,
-    @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {    
+                  @FormDataParam("fonte") fonteStream: InputStream,
+                  @FormDataParam("fonte") fonteDetail: FormDataContentDisposition): Response = {
     if(fonteStream == null) {
       throw new RuntimeException("Erro: fonteStream == null")
     }
-    val source = IOUtils.toByteArray(fonteStream)    
-    val fileName = fonteDetail.getFileName    
+    val source = IOUtils.toByteArray(fonteStream)
+    val fileName = fonteDetail.getFileName
     val outputFileName = if(fileName.endsWith(".xml")) {
       fileName.substring(0,fileName.lastIndexOf(".xml")) + ".docx"
-    } else { 
+    } else {
       fileName + ".docx"
-    }    
-    import br.gov.lexml.renderer.docx._    
+    }
+    import br.gov.lexml.renderer.docx._
     val cfg = LexmlToDocxConfig()
     val r = new LexmlToDocx(cfg)
     try {
-      val res = r.convert(source)     
+      val res = r.convert(source)
       Response
         .ok(res)
         .`type`("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
@@ -312,54 +311,54 @@ class ScalaParserService extends Logging {
         .header("Cache-control","no-cache, no-store, no-transform, must-revalidate")
         .build()
     } catch {
-      case ex : Exception =>        
-        logger.error("erro na geração de DOCX: " + ex.getMessage,ex)        
+      case ex : Exception =>
+        logger.error("erro na geração de DOCX: " + ex.getMessage,ex)
         Response.serverError().build()
     }
   }
-  
-  
+
+
   private val linkerToolPath =
     LexmlWsConfig.appConfig.getString("linkerTool")
-        
+
   @POST
   @Path("linkerDecorator")
   //@Consumes(Array(MediaType.TEXT_PLAIN,MediaType.TEXT_HTML,MediaType.TEXT_XML))
   @Produces(Array(MediaType.TEXT_HTML))
   def linkerDecorator(
-      @QueryParam("contexto") contextStr : String,
-      @QueryParam("resolver") resolverStr : String,
-      @Context request : HttpServletRequest,      
-      content : Array[Byte]) : Array[Byte] = {    
+                       @QueryParam("contexto") contextStr : String,
+                       @QueryParam("resolver") resolverStr : String,
+                       @Context request : HttpServletRequest,
+                       content : Array[Byte]) : Array[Byte] = {
     val context = Option(contextStr).map(_.trim()).filterNot(_.isEmpty)
     val somenteLinks = request.getParameterMap.containsKey("somenteLinks")
     val linksParaSiteLexml = request.getParameterMap.containsKey("linksParaSiteLexml")
     val resolver = Option(resolverStr).map(_.trim).filter(_.contains("URNLEXML"))
-          .getOrElse("http://www.lexml.gov.br/urn/URNLEXML")
+      .getOrElse("http://www.lexml.gov.br/urn/URNLEXML")
     import scala.sys.process._
-    val tipo = 
+    val tipo =
       if (request.getContentType.startsWith(MediaType.TEXT_PLAIN)) { "--text" }
       else { "--hxml" }
-    
+
     val saida = if (somenteLinks) { "--urns" } else { "--html" }
-    val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")    
+    val ctx = context.map(x => s"--contexto=$x").getOrElse("--contexto=federal")
     val output = new java.io.ByteArrayOutputStream
     Process(Seq(linkerToolPath,tipo,saida,ctx,s"--enderecoresolver=$resolver"))
-        .#<(new java.io.ByteArrayInputStream(content))
-        .#>(output)
-        .!(ProcessLogger(_ => ()))
+      .#<(new java.io.ByteArrayInputStream(content))
+      .#>(output)
+      .!(ProcessLogger(_ => ()))
     val out = output.toByteArray
     val outStr = new String(out,"utf-8")
     if(!linksParaSiteLexml && !somenteLinks) {
       val pat = resolver.replaceAll("URNLEXML","""(urn:lex:[^"]*)""")
-      val linkerHrefPattern =         
+      val linkerHrefPattern =
         Pattern.compile(s"""<a href="$pat"[^>]*>(.*?)</a>""",
           Pattern.DOTALL)
       linkerHrefPattern.matcher(outStr).replaceAll("""<remissao xlink:href="$1">$2</remissao>""")
-          .getBytes("utf-8")
+        .getBytes("utf-8")
     } else { outStr.getBytes("utf-8") }
   }
-        
+
 }
 
 @Path("/sfstatus")
@@ -372,35 +371,35 @@ class ParserServiceHealth extends Logging {
     cacheControl.setNoStore(true)
     cacheControl
   }
-  
+
   @GET
-  @Path("ping")  
-  def ping() : Response = {    
+  @Path("ping")
+  def ping() : Response = {
     Response.ok().cacheControl(noCache).build()
   }
-  
+
   @GET
-  @Path("health")  
+  @Path("health")
   def health() : Response = {
     val rb = try {
-        if(HealthCheck.check()) {
-          Response.ok()
-        } else {
-          Response.serverError()
-        }
-      } catch {
-        case ex : Exception =>
-          logger.error("Erro em health check:" + ex, ex)
-          Response.serverError()
+      if(HealthCheck.check()) {
+        Response.ok()
+      } else {
+        Response.serverError()
       }
+    } catch {
+      case ex : Exception =>
+        logger.error("Erro em health check:" + ex, ex)
+        Response.serverError()
+    }
     rb.cacheControl(noCache).build()
   }
-  
- /* @GET
-  @Path("metrics")
-  def metrics() : Response = {
-    Response.ok().cacheControl(noCache).build()
-  } */
+
+  /* @GET
+   @Path("metrics")
+   def metrics() : Response = {
+     Response.ok().cacheControl(noCache).build()
+   } */
 
   @POST
   @Path("fragmentParser")
@@ -409,9 +408,9 @@ class ParserServiceHealth extends Logging {
   def fragmentParser(
                       @Context request: HttpServletRequest,
                       content: Array[Byte]): Response = {
-     val text = new String(content,"UTF-8")
-       .split("""\r?\n\s*\r?""")
-       .toList
+    val text = new String(content,"UTF-8")
+      .split("""\r?\n\s*\r?""")
+      .toList
     val res = new ArticulacaoParser().parseList(text)
     Response
       .ok(res.getBytes("UTF-8"))
@@ -424,7 +423,7 @@ class ParserServiceHealth extends Logging {
 }
 
 object HealthCheck {
-  def check() : Boolean = {    
+  def check() : Boolean = {
     true
   }
 }
