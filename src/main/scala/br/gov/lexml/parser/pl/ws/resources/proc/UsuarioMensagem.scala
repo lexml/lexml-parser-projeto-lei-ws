@@ -45,7 +45,7 @@ object UsuarioMensagem {
 
      case p@DispositivosDescontinuos(id1, id2) =>
        <div>
-         <p>Foi detectada uma discontinuidade na sequência de dispositivos:</p>
+         <p>Foi detectada uma descontinuidade na sequência de dispositivos:</p>
          <ul><li> {rid(id1)}</li><li>{rid(id2)}.</li></ul>
          {contexto(p)}
        </div>
