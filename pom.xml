@@ -637,17 +637,17 @@
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcprov-jdk14</artifactId>
-        <version>1.72</version>
+        <version>1.76</version>
       </dependency>
       <dependency>
         <groupId>org.bouncycastle</groupId>
         <artifactId>bcmail-jdk14</artifactId>
-        <version>1.72</version>
+        <version>1.76</version>
       </dependency>
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>31.1-jre</version>
+        <version>32.1.2-jre</version>
       </dependency>
     </dependencies>
 
