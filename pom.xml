@@ -9,7 +9,7 @@
   <url>https://www.lexml.gov.br</url>
   <properties>  
     <scala.compat.version>2.13</scala.compat.version>
-    <scala.version>${scala.compat.version}.11</scala.version>
+    <scala.version>${scala.compat.version}.12</scala.version>
     <scala.lib.version>${scala.version}</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <akka.version>2.5.32</akka.version>
