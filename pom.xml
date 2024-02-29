@@ -232,7 +232,7 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
-      <version>1.14.5</version>
+      <version>1.14.7</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
