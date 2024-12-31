@@ -63,8 +63,8 @@ object Tasks extends Logging {
     
     val profile : DocumentProfile = opcoes.flatMap(_.profile) match {
       case Some(p) => DocumentProfileOverride(baseProfile,
-	    				overrideRegexLocalData = p.regexLocalData.map(_.toList.map(new Regex(_))),
-	    				overrideRegexJustificativa = p.regexJustificativa.map(_.toList.map(new Regex(_))),
+	    			overrideRegexLocalData = p.regexLocalData.map(_.toList.map(new Regex(_))),
+	    			overrideRegexJustificativa = p.regexJustificativa.map(_.toList.map(new Regex(_))),
 						overrideRegexAnexos = p.regexAnexos.map(_.toList.map(new Regex(_))),
 						overrideRegexLegislacaoCitada = p.regexLegislacaoCitada.map(_.toList.map(new Regex(_))),
 						overrideRegexAssinatura = p.regexAssinatura.map(_.toList.map(new Regex(_))),
@@ -188,7 +188,7 @@ object Tasks extends Logging {
       }
     })    
     val urnMap = urnFrags.groupBy(x => normalizeAno(x._1)).view.mapValues(l => l.map(_._2).foldLeft(Set[String]())(_ union _)).toMap
-    val docs = urnMap.toVector.sortBy(_._1).map {
+    val docs : Vector[RemissaoDocumento] = urnMap.toVector.sortBy(_._1).map {
       case (urnDoc,fragSet) =>
         val frags = fragSet.toVector.map(x => (normalizeUrnForSorting(x),x)).sortBy(_._1).map(_._2).map { frag =>
           val urnFrag = urnDoc + "!" + frag
@@ -223,14 +223,28 @@ object Tasks extends Logging {
   
   def buidDisplayDocumento(urnDoc : String): String = {
     val parser = tagSoupParserFactory.newSAXParser()
-    val source = new org.xml.sax.InputSource(lexmlUrlFormatString.format(urnDoc))
-    source.setEncoding("UTF-8")
-    val adapter = new scala.xml.parsing.NoBindingFactoryAdapter
-    val doc = adapter.loadXML(source, parser)
-    val t = (doc \ "head" \ "title").text
-    val i = t.indexOf("::") 
-    val res = (if( i >= 0) { t.substring(0,i) } else { t }).trim
-    if (res.length == 0) { urnDoc } else { res }
+    try {
+      val source = new org.xml.sax.InputSource(lexmlUrlFormatString.format(urnDoc))
+      source.setEncoding("UTF-8")
+      val adapter = new scala.xml.parsing.NoBindingFactoryAdapter
+      val doc = adapter.loadXML(source, parser)
+      val t = (doc \ "head" \ "title").text
+      val i = t.indexOf("::")
+      val res = (if (i >= 0) {
+        t.substring(0, i)
+      } else {
+        t
+      }).trim
+      if (res.isEmpty) {
+        urnDoc
+      } else {
+        res
+      }
+    } catch {
+      case ex : Exception =>
+        logger.warn(s"Erro ao buscar documento no site lexml. urnDoc = $urnDoc",ex)
+        urnDoc
+    }
   }
   
   def buildDisplayFragmento(frag : String): String = FragmentFormatter.format(frag)
