@@ -1,6 +1,6 @@
 FROM lexmlbr/lexml-linker:1.4.10 as linker-base
 
-FROM eclipse-temurin:8u432-b06-jdk-focal as runtime-base
+FROM eclipse-temurin:11.0.25_9-jdk-focal as runtime-base
 RUN apt-get update    && \
     apt-get upgrade -y && \
     apt-get -y --no-install-recommends install abiword \
