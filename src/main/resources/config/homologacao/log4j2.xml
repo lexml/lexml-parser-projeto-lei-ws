@@ -6,10 +6,10 @@
 	<Appenders>
 		<Console name="ConsoleErr" target="SYSTEM_ERR">
 			<PatternLayout
-				pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />				
+					pattern="%d{yyy-MM-dd'T'HH:mm:ss.SSS} %level [%logger] (%t) %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%ex{short}}" />
 		</Console>
 		<Prometheus name="METRICS"/>
-		<RollingFile name="rollingFileAppender"
+		<!--<RollingFile name="rollingFileAppender"
 					 fileName="/lexml-parser-pl/logs/lexml-parser-ws.log" append="true"
 					 filePattern="/lexml-parser-pl/logs/lexml-parser-ws-%d{yyyy-MM-dd-HH}-%i.log">
 			<PatternLayout pattern="%d{ISO8601} %p [%c] (%t) %m%n"/>
@@ -18,11 +18,11 @@
 				<SizeBasedTriggeringPolicy size="10 MB"/>
 				<TimeBasedTriggeringPolicy />
 			</Policies>
-		</RollingFile>
+		</RollingFile>-->
 	</Appenders>
 	<Loggers>
 		<Root level="WARN">
-			<AppenderRef ref="rollingFileAppender"/>
+			<!--<AppenderRef ref="rollingFileAppender"/>-->
 			<AppenderRef ref="METRICS"/>
 			<AppenderRef ref="ConsoleErr"/>
 		</Root>
