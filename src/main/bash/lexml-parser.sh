@@ -34,4 +34,5 @@ export LC_ALL=C.UTF_8
 #echo "cluster_ips=${cluster_ips}"
 
 #java br.gov.lexml.parser.pl.ws.Main "-Dcluster_ips=${ips[@]}" "$@"
+JAVA_OPTS=${JAVA_OPTS:- -Xmx8G -Xms64m}
 java br.gov.lexml.parser.pl.ws.Main "$@"
