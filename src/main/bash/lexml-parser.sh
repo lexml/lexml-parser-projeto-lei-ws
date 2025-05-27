@@ -35,4 +35,4 @@ export LC_ALL=C.UTF_8
 
 #java br.gov.lexml.parser.pl.ws.Main "-Dcluster_ips=${ips[@]}" "$@"
 JAVA_OPTS=${JAVA_OPTS:- -Xmx8G -Xms64m}
-java br.gov.lexml.parser.pl.ws.Main $JAVA_OPTS "$@"
+java $JAVA_OPTS br.gov.lexml.parser.pl.ws.Main "$@"
