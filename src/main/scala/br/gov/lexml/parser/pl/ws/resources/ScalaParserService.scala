@@ -359,6 +359,24 @@ class ScalaParserService extends Logging {
     } else { outStr.getBytes("utf-8") }
   }
 
+  @POST
+  @Path("fragmentParser")
+  @Consumes(Array(MediaType.TEXT_PLAIN))
+  @Produces(Array(MediaType.TEXT_XML))
+  def fragmentParser(
+                      @Context request: HttpServletRequest,
+                      content: Array[Byte]): Response = {
+    val text = new String(content, "UTF-8")
+      .split("""\r?\n\s*\r?""")
+      .toList
+    val res = new ArticulacaoParser().parseList(text)
+    Response
+      .ok(res.getBytes("UTF-8"))
+      .`type`("text/xml")
+      .header("Cache-control", "no-cache, no-store, no-transform, must-revalidate")
+      .build()
+  }
+
 }
 
 @Path("/sfstatus")
@@ -401,23 +419,7 @@ class ParserServiceHealth extends Logging {
      Response.ok().cacheControl(noCache).build()
    } */
 
-  @POST
-  @Path("fragmentParser")
-  @Consumes(Array(MediaType.TEXT_PLAIN))
-  @Produces(Array(MediaType.TEXT_XML))
-  def fragmentParser(
-                      @Context request: HttpServletRequest,
-                      content: Array[Byte]): Response = {
-    val text = new String(content,"UTF-8")
-      .split("""\r?\n\s*\r?""")
-      .toList
-    val res = new ArticulacaoParser().parseList(text)
-    Response
-      .ok(res.getBytes("UTF-8"))
-      .`type`("text/xml")
-      .header("Cache-control", "no-cache, no-store, no-transform, must-revalidate")
-      .build()
-  }
+ 
 
 
 }
