@@ -9,7 +9,7 @@
   <url>https://www.lexml.gov.br</url>
   <properties>  
     <scala.compat.version>2.13</scala.compat.version>
-    <scala.version>${scala.compat.version}.16</scala.version>
+    <scala.version>${scala.compat.version}.18</scala.version>
     <scala.lib.version>${scala.version}</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <akka.version>2.5.32</akka.version>
@@ -222,7 +222,7 @@
     <dependency>
       <groupId>br.gov.lexml</groupId>
       <artifactId>lexml-renderer-docx</artifactId>
-      <version>1.1.4</version>
+      <version>1.1.5</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
@@ -232,7 +232,7 @@
     <dependency>
       <groupId>br.gov.lexml.parser.pl</groupId>
       <artifactId>lexml-parser-projeto-lei</artifactId>
-      <version>1.14.23</version>
+      <version>1.15.0</version>
     </dependency>
     <dependency>
       <groupId>br.gov.lexml</groupId>
