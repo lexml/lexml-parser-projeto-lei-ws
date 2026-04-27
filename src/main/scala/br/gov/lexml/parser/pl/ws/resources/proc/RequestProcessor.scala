@@ -45,6 +45,13 @@ object RequestProcessor {
 
   private val problemCount: Summary = Summary.build().name("parse_job_problem_count").help("Número de problemas na execução do parser")
     .labelNames("codigo_problema").register()
+
+  def contemEmendaDeEmenta(xml: NodeSeq) = !(xml \\ "Alteracao" \ "Ementa").isEmpty
+
+  def caracteristicasDoXml(xml: NodeSeq): Map[String, Boolean] =
+    Map(
+      "contem emenda de ementa" -> contemEmendaDeEmenta(xml)
+    ).filter(_._2)
 }
   
 class RequestProcessor(ctx: RequestContext) extends Logging {
@@ -233,6 +240,8 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
 
       pl.caracteristicas.foreach(caracteristicas += fromCaracteristica(_))
 
+      caracteristicas ++= caracteristicasDoXml(xml).map(fromCaracteristica)
+
       lazy val oXmlBytes = geraSaida(TS_XML_DERIVADO, "text/xml", "gerado", "documento") {
         Some((xml.toString.getBytes("utf-8"),()))
       }.map(_._1)
@@ -348,3 +357,5 @@ class RequestProcessor(ctx: RequestContext) extends Logging {
   }
   
 }
+
+
