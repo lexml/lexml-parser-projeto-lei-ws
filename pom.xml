@@ -13,7 +13,7 @@
     <scala.lib.version>${scala.version}</scala.lib.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <akka.version>2.5.32</akka.version>
-    <jetty.version>9.4.51.v20230217</jetty.version>
+    <jetty.version>12.1.8</jetty.version>
     <jersey.version>2.37</jersey.version>
     <prometheus.version>0.9.0</prometheus.version>
     <log4j.version>2.25.4</log4j.version>
@@ -154,7 +154,7 @@
               <alias>lexml-parser-test</alias>
               <name>lexmlbr/parser-projeto-lei-ws:${project.version}</name>
               <build>
-                <from>java:8</from>
+                <from>eclipse-temurin:17-jdk</from>
                 <dockerFile>Dockerfile</dockerFile>
                 <assembly>
                   <mode>dir</mode>
@@ -202,8 +202,8 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.15.0</version>
         <configuration>
-          <source>11</source>
-          <target>11</target>
+          <source>17</source>
+          <target>17</target>
         </configuration>
       </plugin>
 
@@ -391,12 +391,6 @@
       <artifactId>simpleclient_log4j2</artifactId>
       <version>${prometheus.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.prometheus</groupId>
-      <artifactId>simpleclient_jetty</artifactId>
-      <version>${prometheus.version}</version>
-    </dependency>
-
     <!-- Pushgateway exposition-->
 <!-- 	<dependency>
 	  <groupId>io.prometheus</groupId>
@@ -410,7 +404,7 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
-      <version>3.1.0</version>
+      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>jakarta.ws.rs</groupId>
@@ -482,8 +476,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-servlet</artifactId>
+      <groupId>org.eclipse.jetty.ee8</groupId>
+      <artifactId>jetty-ee8-servlet</artifactId>
       <version>${jetty.version}</version>
     </dependency>
 

@@ -3,17 +3,15 @@ package br.gov.lexml.parser.pl.ws
 import akka.actor.{ActorRef, ActorSystem, OneForOneStrategy, Props}
 import akka.routing.SmallestMailboxPool
 import br.gov.lexml.parser.pl.ws.resources.ParserServiceActor
+import br.gov.lexml.parser.pl.ws.resources.{ParserServiceHealth, ScalaParserService}
 import grizzled.slf4j.{Logger, Logging}
 import io.prometheus.client.exporter.MetricsServlet
 import io.prometheus.client.filter.MetricsFilter
 import io.prometheus.client.hotspot.DefaultExports
-import io.prometheus.client.jetty.JettyStatisticsCollector
 import org.apache.logging.log4j.core.config.Configurator
 import org.apache.logging.log4j.core.config.ConfigurationSource
-import org.eclipse.jetty.server.handler.StatisticsHandler
-import org.eclipse.jetty.server.session.SessionHandler
+import org.eclipse.jetty.ee8.servlet.{FilterHolder, ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.server.{Server, ServerConnector}
-import org.eclipse.jetty.servlet.{FilterHolder, ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.component.LifeCycle.start
 import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.servlet.ServletContainer
@@ -127,21 +125,16 @@ class Main(environment : String) extends Logging {
     val serHol: ServletHolder = ctx.addServlet(classOf[ServletContainer], "/*")
     serHol.setInitOrder(1)
     serHol.setInitParameter("jersey.config.server.provider.classnames",
-      classOf[MultiPartFeature].getName)
-    serHol.setInitParameter("jersey.config.server.provider.packages",
-      this.getClass.getPackage.getName)
+      Seq(
+        classOf[MultiPartFeature].getName,
+        classOf[ScalaParserService].getName,
+        classOf[ParserServiceHealth].getName
+      ).mkString(","))
 
     debug("adding metrics export servlet to context")
     ctx.addServlet(classOf[MetricsServlet],"/sfstatus/metrics")
 
-    debug("creating statics handler for jetty server metrics")
-    val statisticsHandler = new StatisticsHandler()
-    statisticsHandler.setServer(server)
-    statisticsHandler.setHandler(ctx)
-
-    new JettyStatisticsCollector(statisticsHandler).register()
-
-    server.setHandler(statisticsHandler)
+    server.setHandler(ctx)
     debug("server configured")
     server
   }
