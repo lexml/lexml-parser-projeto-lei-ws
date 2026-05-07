@@ -10,7 +10,8 @@ object CaracteristicasImpeditivas  {
         POSSUI_TABELA_ARTICULACAO,        
         POSSUI_TITULO,
         POSSUI_PENA,
-        POSSUI_IMAGEM
+        POSSUI_IMAGEM,
+        POSSUI_EMENDA_DE_EMENTA
         )
   
 	
