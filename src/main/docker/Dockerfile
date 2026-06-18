@@ -1,4 +1,4 @@
-FROM lexmlbr/lexml-linker:1.4.10.1 as linker-base
+FROM lexmlbr/lexml-linker:1.4.11 as linker-base
 
 FROM eclipse-temurin:25-jdk-jammy as runtime-base
 RUN apt-get update    && \
