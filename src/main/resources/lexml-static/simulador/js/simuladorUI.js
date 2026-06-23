@@ -1,76 +1,73 @@
 /* Dados válidos para cada combo selecionado */
 
 var autoridadeByLocalidade = {
-		"br": 
-			[
-				{"value":"federal", "display":"Presidência da República"},
-				{"value":"senado.federal", "display":"Senado Federal"},
-				{"value":"congresso.nacional", "display":"Congresso Nacional"},
-				{"value":"camara.deputados", "display":"Câmara dos Deputados"}
-			]
-	};
+                "br": 
+                        [
+                                {"value":"federal", "display":"Presidência da República"},
+                                {"value":"senado.federal", "display":"Senado Federal"},
+                                {"value":"congresso.nacional", "display":"Congresso Nacional"},
+                                {"value":"camara.deputados", "display":"Câmara dos Deputados"}
+                        ]
+        };
 
 var tipoNormaByAutoridade = {
-		"senado.federal": 
-			[
-                {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
-				{"value":"projeto.lei;pls", "display":"PLS - Projeto de Lei"},
-				{"value":"projeto.lei.complementar;pls", "display":"PLS - Projeto de Lei Complementar"},
-				{"value":"projeto.lei;plc", "display":"PLC - Projeto de Lei"},
-				{"value":"projeto.lei.complementar;plc", "display":"PLC - Projeto de Lei Complementar"},
-                {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
-				{"value":"projeto.resolucao;prs", "display":"PRS - Projeto de Resolução"},
-				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
-				{"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
-                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
-                {"value":"resolucao", "display":"Resolução"},
-		        {"value":"regimento.interno","display":"Regimento Interno"}
-			],
-		"camara.deputados" :
-			[
-				{"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
-                {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
-                {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
-				{"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
-                {"value":"resolucao", "display":"Resolução"},
-		        {"value":"regimento.interno","display":"Regimento Interno"}
-			],
-		"congresso.nacional":
-			[
-                {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
-			    {"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
-                {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"},
-                {"value" : "resolucao", "display":"Resolução"},
-                {"value" : "regimento.interno", "display":"Regimento Comum"}
-			],
-		"federal": 
-			[
-                {"value" : "lei", "display": "Lei"},
-                {"value" : "decreto", "display": "Decreto"},
-                {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
-                {"value" : "decreto.lei", "display": "Decreto-Lei"},
-                {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
-                {"value" : "emenda.constitucional.revisao", "display": "Emenda Constitucional de Revisão"},
-                {"value" : "lei.complementar", "display": "Lei Complementar"},
-                {"value" : "lei.delegada", "display": "Lei Delegada"},
-                {"value" : "constituicao", "display": "Constituição Federal"},
-                {"value" : "ato.disposicoes.constitucionais.transitorias", "display": "Ato de Disposições Constitucionais Transitórias"},
-			 	{"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
-			]
-	};
+                "senado.federal": [
+                    {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
+                    {"value":"projeto.lei;pls", "display":"PLS - Projeto de Lei"},
+                    {"value":"projeto.lei.complementar;pls", "display":"PLS - Projeto de Lei Complementar"},
+                    {"value":"projeto.lei;plc", "display":"PLC - Projeto de Lei"},
+                    {"value":"projeto.lei.complementar;plc", "display":"PLC - Projeto de Lei Complementar"},
+                    {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
+                    {"value":"projeto.resolucao;prs", "display":"PRS - Projeto de Resolução"},
+                    {"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
+                    {"value":"projeto.decreto.legislativo;pds", "display":"PDS - Projeto de Decreto Legislativo"},
+                    {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
+                    {"value":"resolucao", "display":"Resolução"},
+                    {"value":"regimento.interno","display":"Regimento Interno"}
+                ],
+                "camara.deputados" : [
+                    {"value":"projeto.lei;pl", "display": "PL - Projeto de Lei"},
+                    {"value":"projeto.lei.complementar;plp", "display":"PLP - Projeto de Lei Complementar"},
+                    {"value":"projeto.decreto.legislativo;pdl", "display":"PDL - Projeto de Decreto Legislativo"},
+                    {"value":"proposta.emenda.constitucional;pec", "display":"PEC - Proposta de Emenda Constitucional"},
+                    {"value":"resolucao", "display":"Resolução"},
+                    {"value":"regimento.interno","display":"Regimento Interno"}
+                ],
+                "congresso.nacional": [
+                    {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
+                    {"value" : "medida.provisoria;mpv", "display": "MPV - Medida Provisória (Projeto)"},
+                    {"value" : "projeto.lei;pln", "display": "MPV - Medida Provisória (Projeto)"},
+                    {"value" : "resolucao", "display":"Resolução"},
+                    {"value" : "regimento.interno", "display":"Regimento Comum"},
+                    {"value" : "projeto.lei.conversao;plv", "display": "PLV - Projeto de Lei de Conversão"}
+                ],
+                "federal": [
+                    {"value" : "lei", "display": "Lei"},
+                    {"value" : "decreto", "display": "Decreto"},
+                    {"value" : "decreto.legislativo", "display":"Decreto Legislativo"},
+                    {"value" : "decreto.lei", "display": "Decreto-Lei"},
+                    {"value" : "emenda.constitucional", "display": "Emenda Constitucional"},
+                    {"value" : "emenda.constitucional.revisao", "display": "Emenda Constitucional de Revisão"},
+                    {"value" : "lei.complementar", "display": "Lei Complementar"},
+                    {"value" : "lei.delegada", "display": "Lei Delegada"},
+                    {"value" : "constituicao", "display": "Constituição Federal"},
+                    {"value" : "ato.disposicoes.constitucionais.transitorias", "display": "Ato de Disposições Constitucionais Transitórias"},
+                    {"value" : "medida.provisoria", "display": "Medida Provisória (Norma)"}
+                ]
+        };
 
 function changeCombo(idFonte, idDestino, data){
-	var combo = $(idDestino).empty();
-	var valueSelected = data[$(idFonte).val()];
-	
-	jQuery.each(valueSelected, function(){
-		combo.append("<option value=\""+this.value+"\">"+this.display+"</option>");
-	});
+        var combo = $(idDestino).empty();
+        var valueSelected = data[$(idFonte).val()];
+        
+        jQuery.each(valueSelected, function(){
+                combo.append("<option value=\""+this.value+"\">"+this.display+"</option>");
+        });
 
 }
 
 function abrirFormGrupoEffect(obj){
-	$(obj).toggle("blind", "slow");
+        $(obj).toggle("blind", "slow");
 }
 
 
@@ -78,94 +75,94 @@ function abrirFormGrupoEffect(obj){
  * Trata parâmetros vindos da URL
  */
 function tratarParametros(){
-	var paramLocalidade = $.getQueryString('comboLocalidade');
-	var paramAutoridade = $.getQueryString('comboAutoridade');
-	var paramTipoNorma = $.getQueryString('comboTipoNorma');
-	
-	if (paramLocalidade!= null){
-		$("#comboLocalidade").val(paramLocalidade);
-	}
-	
-	if (paramAutoridade!= null){
-		$("#comboAutoridade").val(paramAutoridade);
-	}
-	
-	if (paramTipoNorma!= null){
-		$("#comboTipoNorma").val(paramTipoNorma);
-	}
+        var paramLocalidade = $.getQueryString('comboLocalidade');
+        var paramAutoridade = $.getQueryString('comboAutoridade');
+        var paramTipoNorma = $.getQueryString('comboTipoNorma');
+        
+        if (paramLocalidade!= null){
+                $("#comboLocalidade").val(paramLocalidade);
+        }
+        
+        if (paramAutoridade!= null){
+                $("#comboAutoridade").val(paramAutoridade);
+        }
+        
+        if (paramTipoNorma!= null){
+                $("#comboTipoNorma").val(paramTipoNorma);
+        }
 }
 
 //configurações de UI
 $(document).ready(function() {
-	
-	//botões
-	$("input:submit, input:button, input:file, button").button();
-	
-	//formatação dos botões para os outros controles
-	$("input:text, select").addClass("ui-state-default");
-	
-	//campos de formato numérico
-	$('.inputNumber').forceNumericOnly();
+        
+        //botões
+        $("input:submit, input:button, input:file, button").button();
+        
+        //formatação dos botões para os outros controles
+        $("input:text, select").addClass("ui-state-default");
+        
+        //campos de formato numérico
+        $('.inputNumber').forceNumericOnly();
 
-	//campos de formato data
-	$('.inputDate').mask("99/99/9999");
-	$('.inputDate').datepicker({
-		altFormat: 'dd/mm/yy',
-		dateFormat: 'dd/mm/yy',
-		buttonText: 'Escolher',
-		prevText: 'Anterior',
-		nextText: 'Próximo',
-		constrainInput: true,
-		monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembero'],
-		dayNamesMin: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
-		showButtonPanel: true,
-		closeText: 'X',
-		currentText: 'Hoje',
-		defaultDate: null,
-	}).datepicker("setDate", "+0");
+        //campos de formato data
+        $('.inputDate').mask("99/99/9999");
+        $('.inputDate').datepicker({
+                altFormat: 'dd/mm/yy',
+                dateFormat: 'dd/mm/yy',
+                buttonText: 'Escolher',
+                prevText: 'Anterior',
+                nextText: 'Próximo',
+                constrainInput: true,
+                monthNames: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembero'],
+                dayNamesMin: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+                showButtonPanel: true,
+                closeText: 'X',
+                currentText: 'Hoje',
+                defaultDate: null,
+        }).datepicker("setDate", "+0");
 
-	//campo ano
-	$("#editAno").mask("9999");
-	$("#editAno").val((new Date()).getFullYear());
-	
-	//oculta os grupos de formulário	
-	$(".formGrupo").hide();	
-	
-	//anexão efeito de exibir
-	$("#buttonFormGrupoInformatIdent").click(function (){
-		abrirFormGrupoEffect("#formGrupoIdentificacao");
-		return false;
-	});
-	
-	$("#buttonFormGrupoVersao").click(function (){
-		abrirFormGrupoEffect("#formGrupoVersao");
-		return false;
-	});
+        //campo ano
+        $("#editAno").mask("9999");
+        $("#editAno").val((new Date()).getFullYear());
+        
+        //oculta os grupos de formulário        
+        $(".formGrupo").hide(); 
+        
+        //anexão efeito de exibir
+        $("#buttonFormGrupoInformatIdent").click(function (){
+                abrirFormGrupoEffect("#formGrupoIdentificacao");
+                return false;
+        });
+        
+        $("#buttonFormGrupoVersao").click(function (){
+                abrirFormGrupoEffect("#formGrupoVersao");
+                return false;
+        });
 
-	$("#buttonFormGrupoSaidas").click(function (){
-		abrirFormGrupoEffect("#formGrupoSaidas");
-		return false;
-	});
+        $("#buttonFormGrupoSaidas").click(function (){
+                abrirFormGrupoEffect("#formGrupoSaidas");
+                return false;
+        });
 
-	$("#buttonFormGrupoParametros").click(function (){
-		abrirFormGrupoEffect("#formGrupoParametros");
-		return false;
-	});
+        $("#buttonFormGrupoParametros").click(function (){
+                abrirFormGrupoEffect("#formGrupoParametros");
+                return false;
+        });
 
 
-	$("#comboLocalidade").change(function(){
-		changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
-		$("#comboTipoNorma").empty();
-		$("#comboAutoridade").change();
-	});
-	
-	$("#comboAutoridade").change(function(){
-		changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
-	});
+        $("#comboLocalidade").change(function(){
+                changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
+                $("#comboTipoNorma").empty();
+                $("#comboAutoridade").change();
+        });
+        
+        $("#comboAutoridade").change(function(){
+                changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
+        });
 
     changeCombo("#comboLocalidade", "#comboAutoridade", autoridadeByLocalidade);
-	changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
-	//abrir parâmetros GET nativos
-	tratarParametros();
-	
+        changeCombo("#comboAutoridade", "#comboTipoNorma", tipoNormaByAutoridade)
+        //abrir parâmetros GET nativos
+        tratarParametros();
+        
 });
