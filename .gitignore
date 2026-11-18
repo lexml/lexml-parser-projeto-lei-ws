@@ -16,6 +16,7 @@
 
 release.properties
 /**/*.swp
+/**/.*.sw*
 pom.xml.releaseBackup
 
 *.iml

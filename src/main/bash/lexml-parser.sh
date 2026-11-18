@@ -35,4 +35,7 @@ export LC_ALL=C.UTF_8
 
 #java br.gov.lexml.parser.pl.ws.Main "-Dcluster_ips=${ips[@]}" "$@"
 JAVA_OPTS=${JAVA_OPTS:- -Xmx8G -Xms64m}
+if [ "$CVE_2026_114938_MITIGATION" != "off" ] ; then
+	JAVA_OPTS="$JAVA_OPTS -XX:-UseBASE64Intrinsics"
+fi	
 java $JAVA_OPTS br.gov.lexml.parser.pl.ws.Main "$@"
